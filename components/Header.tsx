@@ -22,6 +22,7 @@ interface HeaderProps {
     setEditingUser: (user: User | null) => void;
     notifications: Notification[];
     setNotifications: React.Dispatch<React.SetStateAction<Notification[]>>;
+    onNotificationClick: (notification: Notification) => void;
 }
 
 const ProjectActionsMenu: React.FC<{
@@ -90,6 +91,7 @@ const Header: React.FC<HeaderProps> = ({
     setEditingUser,
     notifications,
     setNotifications,
+    onNotificationClick,
 }) => {
     const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
     const notificationsPanelRef = useRef<HTMLDivElement>(null);
@@ -149,10 +151,7 @@ const Header: React.FC<HeaderProps> = ({
                             notifications={notifications}
                             setNotifications={setNotifications}
                             onClose={() => setIsNotificationsOpen(false)}
-                            onSelectList={(listId) => {
-                                onNavigateToList(listId);
-                                setIsNotificationsOpen(false);
-                            }}
+                            onNotificationClick={onNotificationClick}
                         />
                     )}
                     <button 

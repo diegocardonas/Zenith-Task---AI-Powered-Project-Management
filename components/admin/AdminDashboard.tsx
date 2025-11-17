@@ -23,11 +23,12 @@ interface AdminDashboardProps {
   setEditingUser: (user: User | null) => void;
   notifications: Notification[];
   setNotifications: React.Dispatch<React.SetStateAction<Notification[]>>;
+  onNotificationClick: (notification: Notification) => void;
 }
 
 type TaskFilter = 'all' | 'completed' | 'overdue';
 
-const AdminDashboard: React.FC<AdminDashboardProps> = ({ tasks, users, lists, onToggleSidebar, isSidebarOpen, currentUser, onOpenUserProfile, onSelectTask, onNavigateToList, setEditingUser, notifications, setNotifications }) => {
+const AdminDashboard: React.FC<AdminDashboardProps> = ({ tasks, users, lists, onToggleSidebar, isSidebarOpen, currentUser, onOpenUserProfile, onSelectTask, onNavigateToList, setEditingUser, notifications, setNotifications, onNotificationClick }) => {
   const [activeFilter, setActiveFilter] = useState<TaskFilter>('all');
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [selectedStatus, setSelectedStatus] = useState<Status | null>(null);
@@ -114,6 +115,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ tasks, users, lists, on
         setEditingUser={setEditingUser}
         notifications={notifications}
         setNotifications={setNotifications}
+        onNotificationClick={onNotificationClick}
       />
       
       <div className="flex-grow p-3 sm:p-6">

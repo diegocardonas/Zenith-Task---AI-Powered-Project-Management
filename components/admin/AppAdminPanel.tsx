@@ -86,6 +86,7 @@ interface AppAdminPanelProps {
   notifications: Notification[];
   setNotifications: React.Dispatch<React.SetStateAction<Notification[]>>;
   onSelectWorkspace: (workspaceId: string) => void;
+  onNotificationClick: (notification: Notification) => void;
 }
 
 const AppAdminPanel: React.FC<AppAdminPanelProps> = ({
@@ -110,6 +111,7 @@ const AppAdminPanel: React.FC<AppAdminPanelProps> = ({
   notifications,
   setNotifications,
   onSelectWorkspace,
+  onNotificationClick,
 }) => {
     const [newUserName, setNewUserName] = useState('');
     const [newUserRole, setNewUserRole] = useState<Role>(Role.Member);
@@ -166,6 +168,7 @@ const AppAdminPanel: React.FC<AppAdminPanelProps> = ({
                 setEditingUser={setEditingUser}
                 notifications={notifications}
                 setNotifications={setNotifications}
+                onNotificationClick={onNotificationClick}
             />
             <div className="flex-grow p-3 sm:p-6 space-y-6">
                 {/* Global Stats */}

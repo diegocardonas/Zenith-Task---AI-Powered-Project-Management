@@ -362,6 +362,65 @@ const App: React.FC = () => {
     setNotifications(prev => [newNotification, ...prev]);
   }, []);
 
+  useEffect(() => {
+    if (!currentUser) return;
+
+    const checkReminders = () => {
+        const now = new Date();
+        const sentReminders = JSON.parse(localStorage.getItem('sentReminders') || '{}');
+        const updatedSentReminders = { ...sentReminders };
+        let newNotifications = 0;
+
+        tasks.forEach(task => {
+            if (!task.reminder || task.status === Status.Done || sentReminders[task.id]) {
+                return;
+            }
+
+            const dueDate = new Date(task.dueDate);
+            let reminderDate = new Date(dueDate);
+
+            switch (task.reminder) {
+                case 'En la fecha de vencimiento':
+                    reminderDate.setHours(9, 0, 0, 0);
+                    break;
+                case '1 día antes':
+                    reminderDate.setDate(reminderDate.getDate() - 1);
+                    reminderDate.setHours(9, 0, 0, 0);
+                    break;
+                case '2 días antes':
+                    reminderDate.setDate(reminderDate.getDate() - 2);
+                    reminderDate.setHours(9, 0, 0, 0);
+                    break;
+                case '1 semana antes':
+                    reminderDate.setDate(reminderDate.getDate() - 7);
+                    reminderDate.setHours(9, 0, 0, 0);
+                    break;
+                default:
+                    return;
+            }
+
+            if (now >= reminderDate) {
+                addNotification({
+                    userId: task.assigneeId || currentUser.id,
+                    text: `Recordatorio: La tarea "${task.title}" vence pronto.`,
+                    link: { type: 'task', taskId: task.id, listId: task.listId }
+                });
+                updatedSentReminders[task.id] = true;
+                newNotifications++;
+            }
+        });
+
+        if (newNotifications > 0) {
+            localStorage.setItem('sentReminders', JSON.stringify(updatedSentReminders));
+        }
+    };
+
+    const intervalId = setInterval(checkReminders, 60000); // Check every minute
+    checkReminders(); // Initial check
+
+    return () => clearInterval(intervalId);
+  }, [tasks, addNotification, currentUser]);
+
   const logActivity = useCallback((taskId: string, text: string, user: User) => {
       setTasks(prevTasks => prevTasks.map(task => {
           if (task.id === taskId) {
@@ -378,7 +437,17 @@ const App: React.FC = () => {
   }, []);
   
   const handleUpdateTask = (updatedTask: Task) => {
-    setTasks(prevTasks => prevTasks.map(task => task.id === updatedTask.id ? updatedTask : task));
+    setTasks(prevTasks => {
+        const originalTask = prevTasks.find(task => task.id === updatedTask.id);
+        if (originalTask && (originalTask.dueDate !== updatedTask.dueDate || originalTask.reminder !== updatedTask.reminder)) {
+            const sentReminders = JSON.parse(localStorage.getItem('sentReminders') || '{}');
+            if (sentReminders[updatedTask.id]) {
+                delete sentReminders[updatedTask.id];
+                localStorage.setItem('sentReminders', JSON.stringify(sentReminders));
+            }
+        }
+        return prevTasks.map(task => task.id === updatedTask.id ? updatedTask : task);
+    });
     setSelectedTaskId(null);
   };
 
@@ -694,12 +763,23 @@ const App: React.FC = () => {
                     else addToast(`Usuario "${assigneeName}" no encontrado.`, 'info');
                 }
                 
+                if (typeof args.title !== 'string' || !args.title) {
+                    addToast('La IA no proporcionó un título de tarea válido.', 'error');
+                    return;
+                }
+                
+                // Fix: The AI can return arguments of any type. This ensures that the properties of `taskData`
+                // are of the correct type before they are used to create a new task, preventing runtime errors.
+                // The TypeScript error was likely pointing to the 'title' property due to cascading type issues
+                // from other properties in the object literal.
                 const taskData: Partial<Task> = {
                     title: args.title,
-                    description: args.description || '',
-                    priority: args.priority || Priority.Medium,
+                    description: typeof args.description === 'string' ? args.description : '',
+                    // Fix: Added a type check to ensure `args.priority` is a valid string and Priority enum member before using it.
+                    // This resolves an error where an `unknown` type could be passed to `Array.prototype.includes`.
+                    priority: typeof args.priority === 'string' && Object.values(Priority).includes(args.priority as Priority) ? args.priority as Priority : Priority.Medium,
                     assigneeId: assigneeId,
-                    dueDate: args.dueDate || new Date(Date.now() + 86400000).toISOString().split('T')[0],
+                    dueDate: typeof args.dueDate === 'string' ? args.dueDate : new Date(Date.now() + 86400000).toISOString().split('T')[0],
                 };
 
                 handleAddTask(listToAddTo, { id: '', name: 'AI Template', taskData });
@@ -888,6 +968,20 @@ const App: React.FC = () => {
     addToast(`Plantilla "${name}" guardada.`, "success");
   };
 
+  const handleNotificationClick = (notification: Notification) => {
+    setNotifications(prev => prev.map(n => n.id === notification.id ? { ...n, read: true } : n));
+    if (notification.link?.type === 'task') {
+        const { taskId, listId } = notification.link;
+        const list = lists.find(l => l.id === listId);
+        if (list) {
+            setSelectedWorkspaceId(list.workspaceId);
+            setSelectedListId(list.id);
+            setActiveView('list');
+            setSelectedTaskId(taskId);
+        }
+    }
+  };
+
   if (isLoading) {
       return <WelcomePage />;
   }
@@ -942,6 +1036,7 @@ const App: React.FC = () => {
           setEditingUser={(user) => setEditingUserId(user?.id || null)}
           notifications={notifications}
           setNotifications={setNotifications}
+          onNotificationClick={handleNotificationClick}
         />
       ) : activeView === 'app_admin' ? (
         <AppAdminPanel
@@ -974,6 +1069,7 @@ const App: React.FC = () => {
             setEditingUser={(user) => setEditingUserId(user?.id || null)}
             notifications={notifications}
             setNotifications={setNotifications}
+            onNotificationClick={handleNotificationClick}
         />
       ) : activeView === 'my_tasks' ? (
         <MyTasksView 
@@ -997,6 +1093,7 @@ const App: React.FC = () => {
           notifications={notifications}
           setNotifications={setNotifications}
           logActivity={logActivity}
+          onNotificationClick={handleNotificationClick}
         />
       ) : (
         <MainContent
@@ -1041,6 +1138,7 @@ const App: React.FC = () => {
           logActivity={logActivity}
           onTasksReorder={handleTasksReorder}
           onBulkUpdateTasks={handleBulkUpdateTasks}
+          onNotificationClick={handleNotificationClick}
         />
       )}
 

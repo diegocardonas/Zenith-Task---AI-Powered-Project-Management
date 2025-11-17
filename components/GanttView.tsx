@@ -1,5 +1,5 @@
 import React, { useMemo, useRef, useState, useEffect, useCallback } from 'react';
-import { Task, User, Priority, Status } from '../types';
+import { Task, User, Priority, Status, Role } from '../types';
 import AvatarWithStatus from './AvatarWithStatus';
 
 const PRIORITY_COLORS: { [key in Priority]: { bg: string; border: string } } = {
@@ -76,16 +76,35 @@ interface GanttViewProps {
     allTasks: Task[];
     onSelectTask: (task: Task) => void;
     users: User[];
+    onUpdateTask: (task: Task) => void;
+    currentUser: User;
+    logActivity: (taskId: string, text: string, user: User) => void;
 }
 
-const GanttView: React.FC<GanttViewProps> = ({ tasks, allTasks, onSelectTask, users }) => {
+const GanttView: React.FC<GanttViewProps> = ({ tasks, allTasks, onSelectTask, users, onUpdateTask, currentUser, logActivity }) => {
     const [tooltip, setTooltip] = useState<{ task: Task; user: User | undefined; x: number; y: number } | null>(null);
     const [sidebarWidth, setSidebarWidth] = useState(300);
-    const isResizing = useRef(false);
+    const isResizingSidebar = useRef(false);
     
     const timelineRef = useRef<HTMLDivElement>(null);
     const taskListRef = useRef<HTMLDivElement>(null);
     const syncTimeout = useRef<number | null>(null);
+
+    const [dragInfo, setDragInfo] = useState<{
+        task: Task;
+        type: 'move' | 'resize-start' | 'resize-end';
+        initialMouseX: number;
+        originalLeft: number;
+        originalWidth: number;
+    } | null>(null);
+
+    const [draggedBarPosition, setDraggedBarPosition] = useState<{
+        top: number;
+        left: number;
+        width: number;
+    } | null>(null);
+
+    const dayWidth = 40;
 
     const sortedTasks = useMemo(() => {
         return [...tasks]
@@ -164,9 +183,9 @@ const GanttView: React.FC<GanttViewProps> = ({ tasks, allTasks, onSelectTask, us
                     const fromPos = taskPositions[depId];
                     if (!fromPos) continue;
 
-                    const fromX = (fromPos.left + fromPos.width) * 40;
+                    const fromX = (fromPos.left + fromPos.width) * dayWidth;
                     const fromY = fromPos.top + fromPos.height / 2;
-                    const toX = toPos.left * 40;
+                    const toX = toPos.left * dayWidth;
                     const toY = toPos.top + toPos.height / 2;
 
                     const path = `M ${fromX - 5} ${fromY} C ${fromX + 20} ${fromY}, ${toX - 25} ${toY}, ${toX - 5} ${toY}`;
@@ -175,7 +194,119 @@ const GanttView: React.FC<GanttViewProps> = ({ tasks, allTasks, onSelectTask, us
             }
         }
         return lines;
-    }, [sortedTasks, taskPositions, allTasks]);
+    }, [sortedTasks, taskPositions, allTasks, dayWidth]);
+
+    const handleMouseDown = useCallback((
+        e: React.MouseEvent,
+        task: Task,
+        type: 'move' | 'resize-start' | 'resize-end'
+    ) => {
+        if (currentUser.role === Role.Guest) return;
+        e.preventDefault();
+        e.stopPropagation();
+        const pos = taskPositions[task.id];
+        if (!pos) return;
+
+        setDragInfo({
+            task,
+            type,
+            initialMouseX: e.clientX,
+            originalLeft: pos.left * dayWidth,
+            originalWidth: pos.width * dayWidth,
+        });
+        setDraggedBarPosition({
+            top: pos.top,
+            left: pos.left * dayWidth,
+            width: pos.width * dayWidth,
+        });
+    }, [currentUser.role, taskPositions, dayWidth]);
+    
+    useEffect(() => {
+        const handleMouseMove = (e: MouseEvent) => {
+            if (!dragInfo) return;
+            
+            const deltaX = e.clientX - dragInfo.initialMouseX;
+            let newLeft = dragInfo.originalLeft;
+            let newWidth = dragInfo.originalWidth;
+
+            if (dragInfo.type === 'move') {
+                newLeft = dragInfo.originalLeft + deltaX;
+            } else if (dragInfo.type === 'resize-end') {
+                newWidth = dragInfo.originalWidth + deltaX;
+            } else { // resize-start
+                newLeft = dragInfo.originalLeft + deltaX;
+                newWidth = dragInfo.originalWidth - deltaX;
+            }
+
+            const snappedLeft = Math.round(newLeft / dayWidth) * dayWidth;
+            const snappedWidth = Math.round(newWidth / dayWidth) * dayWidth;
+            
+            if (snappedWidth < dayWidth) {
+                if (dragInfo.type === 'resize-start') {
+                    setDraggedBarPosition(prev => prev ? { ...prev, left: dragInfo.originalLeft + dragInfo.originalWidth - dayWidth, width: dayWidth } : null);
+                } else {
+                    setDraggedBarPosition(prev => prev ? { ...prev, width: dayWidth } : null);
+                }
+            } else {
+                 setDraggedBarPosition(prev => prev ? { ...prev, left: snappedLeft, width: snappedWidth } : null);
+            }
+        };
+
+        const handleMouseUp = (e: MouseEvent) => {
+            if (!dragInfo) return;
+            
+            const { task, type, initialMouseX } = dragInfo;
+            const deltaX = e.clientX - initialMouseX;
+            const deltaDays = Math.round(deltaX / dayWidth);
+
+            if (deltaDays !== 0) {
+                const originalStartDate = new Date(task.createdAt);
+                const originalEndDate = new Date(task.dueDate);
+
+                let newStartDate = new Date(originalStartDate);
+                let newEndDate = new Date(originalEndDate);
+
+                if (type === 'move') {
+                    newStartDate.setDate(originalStartDate.getDate() + deltaDays);
+                    newEndDate.setDate(originalEndDate.getDate() + deltaDays);
+                    logActivity(task.id, `ajustó las fechas de la tarea`, currentUser);
+                } else if (type === 'resize-end') {
+                    newEndDate.setDate(originalEndDate.getDate() + deltaDays);
+                    if (newEndDate < newStartDate) newEndDate = newStartDate;
+                     logActivity(task.id, `ajustó la fecha de vencimiento de la tarea`, currentUser);
+                } else { // resize-start
+                    newStartDate.setDate(originalStartDate.getDate() + deltaDays);
+                    if (newStartDate > newEndDate) newStartDate = newEndDate;
+                     logActivity(task.id, `ajustó la fecha de inicio de la tarea`, currentUser);
+                }
+
+                const updatedTask = {
+                    ...task,
+                    createdAt: newStartDate.toISOString().split('T')[0],
+                    dueDate: newEndDate.toISOString().split('T')[0],
+                };
+                onUpdateTask(updatedTask);
+            }
+            
+            setDragInfo(null);
+            setDraggedBarPosition(null);
+        };
+        
+        if (dragInfo) {
+            document.addEventListener('mousemove', handleMouseMove);
+            document.addEventListener('mouseup', handleMouseUp, { once: true });
+            document.body.style.cursor = dragInfo.type === 'move' ? 'grabbing' : 'col-resize';
+            document.body.style.userSelect = 'none';
+        }
+
+        return () => {
+            document.removeEventListener('mousemove', handleMouseMove);
+            document.removeEventListener('mouseup', handleMouseUp);
+            document.body.style.cursor = 'default';
+            document.body.style.userSelect = 'auto';
+        };
+    }, [dragInfo, onUpdateTask, dayWidth, startDate, logActivity, currentUser]);
+
 
     const handleMouseMove = (e: React.MouseEvent, task: Task, user: User | undefined) => {
         if (timelineRef.current) {
@@ -212,21 +343,21 @@ const GanttView: React.FC<GanttViewProps> = ({ tasks, allTasks, onSelectTask, us
         }, 50);
     };
     
-    const handleMouseDown = useCallback((e: React.MouseEvent) => {
+    const handleMouseDownOnResizer = useCallback((e: React.MouseEvent) => {
         e.preventDefault();
-        isResizing.current = true;
+        isResizingSidebar.current = true;
         document.addEventListener('mousemove', handleMouseMoveDrag);
         document.addEventListener('mouseup', handleMouseUp, { once: true });
     }, []);
 
     const handleMouseMoveDrag = useCallback((e: MouseEvent) => {
-        if (isResizing.current) {
+        if (isResizingSidebar.current) {
             setSidebarWidth(prev => Math.max(200, Math.min(e.clientX, 600)));
         }
     }, []);
 
     const handleMouseUp = useCallback(() => {
-        isResizing.current = false;
+        isResizingSidebar.current = false;
         document.removeEventListener('mousemove', handleMouseMoveDrag);
     }, []);
 
@@ -236,7 +367,6 @@ const GanttView: React.FC<GanttViewProps> = ({ tasks, allTasks, onSelectTask, us
         return <div className="flex items-center justify-center h-full bg-surface rounded-lg"><p className="text-text-secondary italic">No hay tareas con fechas para mostrar en el diagrama de Gantt.</p></div>;
     }
 
-    const dayWidth = 40;
     const timelineWidth = totalDays * dayWidth;
     const ganttHeight = sortedTasks.length * rowHeight;
 
@@ -264,7 +394,7 @@ const GanttView: React.FC<GanttViewProps> = ({ tasks, allTasks, onSelectTask, us
                     </div>
                 </div>
                 {/* Resizer */}
-                <div className="cursor-col-resize bg-border hover:bg-primary transition-colors w-0.5 h-full" onMouseDown={handleMouseDown}></div>
+                <div className="cursor-col-resize bg-border hover:bg-primary transition-colors w-0.5 h-full" onMouseDown={handleMouseDownOnResizer}></div>
                 {/* Timeline */}
                 <div className="overflow-auto" ref={timelineRef} onScroll={() => handleScroll('timeline')}>
                      <div className="relative" style={{ width: `${timelineWidth}px` }}>
@@ -287,31 +417,60 @@ const GanttView: React.FC<GanttViewProps> = ({ tasks, allTasks, onSelectTask, us
                                 </div>
                             )}
 
+                             {/* Ghost bar */}
+                             {dragInfo && draggedBarPosition && (
+                                <div
+                                    className="absolute rounded bg-primary/30 border-2 border-dashed border-primary"
+                                    style={{
+                                        left: `${draggedBarPosition.left}px`,
+                                        width: `${draggedBarPosition.width}px`,
+                                        top: `${draggedBarPosition.top + (rowHeight - 30) / 2}px`,
+                                        height: `30px`,
+                                    }}
+                                />
+                             )}
+
                             {/* Task bars */}
                              {Object.values(taskPositions).map(({ left, width, top, height, task }) => {
                                  const user = users.find(u => u.id === task.assigneeId);
                                  const progress = task.subtasks.length > 0 ? (task.subtasks.filter(st => st.completed).length / task.subtasks.length) * 100 : (task.status === Status.Done ? 100 : 0);
+                                 const isDragging = dragInfo?.task.id === task.id;
                                  return (
                                      <div 
                                          key={task.id} 
-                                         className="absolute rounded group cursor-pointer flex items-center"
+                                         className={`absolute rounded group flex items-center transition-opacity ${isDragging ? 'opacity-50' : ''}`}
                                          style={{ 
                                              left: `${left * dayWidth}px`, 
                                              width: `${width * dayWidth}px`, 
                                              top: `${top + (rowHeight - height)/2}px`,
                                              height: `${height}px`,
                                          }}
-                                         onClick={() => onSelectTask(task)}
                                          onMouseMove={(e) => handleMouseMove(e, task, user)}
                                          onMouseLeave={handleMouseLeave}
                                      >
-                                         <div className={`h-full w-full rounded-sm flex items-center px-2 relative overflow-hidden border-2 ${PRIORITY_COLORS[task.priority].border} ${PRIORITY_COLORS[task.priority].bg}`}>
+                                         <div 
+                                            className={`h-full w-full rounded-sm flex items-center px-2 relative overflow-hidden border-2 transition-colors ${PRIORITY_COLORS[task.priority].border} ${PRIORITY_COLORS[task.priority].bg} ${currentUser.role !== Role.Guest ? 'cursor-grab' : 'cursor-pointer'}`}
+                                            onMouseDown={(e) => handleMouseDown(e, task, 'move')}
+                                            onClick={() => onSelectTask(task)}
+                                            >
                                              <div className="absolute left-0 top-0 h-full bg-black/20" style={{ width: `${progress}%` }}></div>
                                              <div className="relative flex items-center gap-2 truncate w-full">
                                                 {user && <AvatarWithStatus user={user} className="w-5 h-5 flex-shrink-0" />}
                                                 <span className="text-white text-xs font-semibold truncate flex-grow">{task.title}</span>
                                              </div>
                                          </div>
+                                         {currentUser.role !== Role.Guest && (
+                                            <>
+                                                <div 
+                                                    className="absolute left-0 top-0 h-full w-2 cursor-col-resize z-10 opacity-0 group-hover:opacity-100"
+                                                    onMouseDown={(e) => handleMouseDown(e, task, 'resize-start')}
+                                                />
+                                                <div 
+                                                    className="absolute right-0 top-0 h-full w-2 cursor-col-resize z-10 opacity-0 group-hover:opacity-100"
+                                                     onMouseDown={(e) => handleMouseDown(e, task, 'resize-end')}
+                                                />
+                                            </>
+                                         )}
                                      </div>
                                  );
                              })}

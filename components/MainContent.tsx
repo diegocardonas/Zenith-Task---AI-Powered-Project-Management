@@ -42,6 +42,7 @@ interface MainContentProps {
   logActivity: (taskId: string, text: string, user: User) => void;
   onTasksReorder: (reorderedTasks: Task[]) => void;
   onBulkUpdateTasks: (taskIds: string[], updates: Partial<Task>) => void;
+  onNotificationClick: (notification: Notification) => void;
 }
 
 const MainContent: React.FC<MainContentProps> = ({
@@ -79,6 +80,7 @@ const MainContent: React.FC<MainContentProps> = ({
   logActivity,
   onTasksReorder,
   onBulkUpdateTasks,
+  onNotificationClick,
 }) => {
   const canCreateTasks = currentUser.role === Role.Admin || currentUser.role === Role.Member;
   const [isTemplateDropdownOpen, setTemplateDropdownOpen] = React.useState(false);
@@ -120,7 +122,7 @@ const MainContent: React.FC<MainContentProps> = ({
       case ViewType.Calendar:
         return <CalendarView tasks={tasks} onSelectTask={onSelectTask} onUpdateTask={onUpdateTask} onAddTaskForDate={onAddTaskForDate} currentUser={currentUser} />;
       case ViewType.Gantt:
-        return <GanttView tasks={tasks} allTasks={allTasks} onSelectTask={onSelectTask} users={users} />;
+        return <GanttView tasks={tasks} allTasks={allTasks} onSelectTask={onSelectTask} users={users} onUpdateTask={onUpdateTask} currentUser={currentUser} logActivity={logActivity} />;
       case ViewType.ProjectDashboard:
         return <ProjectDashboard tasks={tasks} users={users} />;
       default:
@@ -148,6 +150,7 @@ const MainContent: React.FC<MainContentProps> = ({
         setEditingUser={setEditingUser}
         notifications={notifications}
         setNotifications={setNotifications}
+        onNotificationClick={onNotificationClick}
       />
       {selectedList ? (
         <>

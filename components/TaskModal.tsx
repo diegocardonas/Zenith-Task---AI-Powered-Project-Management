@@ -148,6 +148,7 @@ const TaskModal: React.FC<TaskModalProps> = ({ task, onClose, onUpdateTask, onDe
   const handleDelete = () => {
     if (window.confirm('¿Estás seguro de que quieres eliminar esta tarea? Esta acción no se puede deshacer.')) {
       onDeleteTask(task.id);
+      onClose();
     }
   };
 

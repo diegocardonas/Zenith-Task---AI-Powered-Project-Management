@@ -5,7 +5,7 @@ interface NotificationsPanelProps {
   notifications: Notification[];
   setNotifications: React.Dispatch<React.SetStateAction<Notification[]>>;
   onClose: () => void;
-  onSelectList: (id: string) => void;
+  onNotificationClick: (notification: Notification) => void;
 }
 
 const timeAgo = (date: string): string => {
@@ -24,16 +24,13 @@ const timeAgo = (date: string): string => {
     return `justo ahora`;
 };
 
-const NotificationsPanel: React.FC<NotificationsPanelProps> = ({ notifications, setNotifications, onClose, onSelectList }) => {
+const NotificationsPanel: React.FC<NotificationsPanelProps> = ({ notifications, setNotifications, onClose, onNotificationClick }) => {
   const handleMarkAllAsRead = () => {
     setNotifications(prev => prev.map(n => ({ ...n, read: true })));
   };
 
-  const handleNotificationClick = (notification: Notification) => {
-    setNotifications(prev => prev.map(n => n.id === notification.id ? { ...n, read: true } : n));
-    if (notification.link?.type === 'task') {
-        onSelectList(notification.link.listId);
-    }
+  const handleItemClick = (notification: Notification) => {
+    onNotificationClick(notification);
     onClose();
   };
 
@@ -50,7 +47,7 @@ const NotificationsPanel: React.FC<NotificationsPanelProps> = ({ notifications, 
       <div className="overflow-y-auto">
         {notifications.length > 0 ? (
           notifications.map(n => (
-            <button key={n.id} onClick={() => handleNotificationClick(n)} className={`w-full text-left p-3 flex items-start gap-3 hover:bg-secondary-focus ${!n.read ? 'bg-primary/10' : ''}`}>
+            <button key={n.id} onClick={() => handleItemClick(n)} className={`w-full text-left p-3 flex items-start gap-3 hover:bg-secondary-focus ${!n.read ? 'bg-primary/10' : ''}`}>
               {!n.read && <div className="w-2 h-2 rounded-full bg-primary mt-1.5 flex-shrink-0"></div>}
               <div className={`flex-grow ${n.read ? 'pl-5' : ''}`}>
                 <p className="text-sm text-text-primary">{n.text}</p>

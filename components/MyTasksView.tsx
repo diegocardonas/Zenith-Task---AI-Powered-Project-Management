@@ -17,6 +17,7 @@ interface MyTasksViewProps {
   notifications: Notification[];
   setNotifications: React.Dispatch<React.SetStateAction<Notification[]>>;
   logActivity: (taskId: string, text: string, user: User) => void;
+  onNotificationClick: (notification: Notification) => void;
 }
 
 const MyTasksView: React.FC<MyTasksViewProps> = ({
@@ -33,6 +34,7 @@ const MyTasksView: React.FC<MyTasksViewProps> = ({
   notifications,
   setNotifications,
   logActivity,
+  onNotificationClick,
 }) => {
   const myTasks = allTasks.filter(task => task.assigneeId === currentUser.id);
 
@@ -65,6 +67,7 @@ const MyTasksView: React.FC<MyTasksViewProps> = ({
         setEditingUser={setEditingUser}
         notifications={notifications}
         setNotifications={setNotifications}
+        onNotificationClick={onNotificationClick}
       />
       <div className="flex-grow p-3 sm:p-6 space-y-6">
         {projectGroups.length > 0 ? (
