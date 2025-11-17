@@ -1,104 +1,23 @@
 import React, { useMemo, useState } from 'react';
-import { Task, User, Role, Workspace, List, Toast, Notification } from '../../types';
+import { User, Role } from '../../types';
 import Header from '../Header';
-import StatCard from './StatCard';
 import AvatarWithStatus from '../AvatarWithStatus';
-import TaskListModal from './TaskListModal';
-import UserListModal from './UserListModal';
 import { useAppContext } from '../../contexts/AppContext';
 import { useTranslation } from '../../i18n';
-
-const WorkspaceListModal: React.FC<{
-  isOpen: boolean;
-  onClose: () => void;
-  workspaces: Workspace[];
-  onSelectWorkspace: (workspaceId: string) => void;
-}> = ({ isOpen, onClose, workspaces, onSelectWorkspace }) => {
-  const { t } = useTranslation();
-  if (!isOpen) return null;
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-70 flex justify-center items-center z-50 backdrop-blur-sm animate-fadeIn" onClick={onClose} role="dialog" aria-modal="true">
-      <div className="bg-surface rounded-xl shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col animate-scaleIn" onClick={(e) => e.stopPropagation()}>
-        <header className="p-6 border-b border-border flex justify-between items-center">
-          <h2 className="text-2xl font-bold text-text-primary">{t('modals.allWorkspaces', { count: workspaces.length })}</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-white" aria-label={t('common.close')}><svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg></button>
-        </header>
-        <main className="p-6 overflow-y-auto flex-grow">
-          <div className="space-y-3">
-            {workspaces.map((workspace) => (
-              <button key={workspace.id} onClick={() => { onSelectWorkspace(workspace.id); onClose(); }} className="w-full text-left bg-secondary p-3 rounded-lg flex items-center hover:bg-secondary-focus transition-colors">
-                <div className="w-8 h-8 rounded-md bg-primary flex-shrink-0 flex items-center justify-center mr-4 font-bold text-white text-lg">{workspace.name.charAt(0).toUpperCase()}</div>
-                <p className="font-semibold text-text-primary">{workspace.name}</p>
-              </button>
-            ))}
-          </div>
-        </main>
-        <footer className="p-4 border-t border-border flex justify-end"><button onClick={onClose} className="px-5 py-2 bg-primary text-white font-semibold rounded-lg hover:bg-primary-focus transition-colors duration-200">{t('common.close')}</button></footer>
-      </div>
-    </div>
-  );
-};
-
-const ProjectListModal: React.FC<{
-  isOpen: boolean;
-  onClose: () => void;
-  lists: List[];
-  onNavigateToList: (listId: string) => void;
-}> = ({ isOpen, onClose, lists, onNavigateToList }) => {
-  const { t } = useTranslation();
-  if (!isOpen) return null;
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-70 flex justify-center items-center z-50 backdrop-blur-sm animate-fadeIn" onClick={onClose} role="dialog" aria-modal="true">
-      <div className="bg-surface rounded-xl shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col animate-scaleIn" onClick={(e) => e.stopPropagation()}>
-        <header className="p-6 border-b border-border flex justify-between items-center"><h2 className="text-2xl font-bold text-text-primary">{t('modals.allProjects', { count: lists.length })}</h2><button onClick={onClose} className="text-gray-400 hover:text-white" aria-label={t('common.close')}><svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg></button></header>
-        <main className="p-6 overflow-y-auto flex-grow">
-          <div className="space-y-3">
-            {lists.map((list) => (
-              <button key={list.id} onClick={() => { onNavigateToList(list.id); onClose(); }} className="w-full text-left bg-secondary p-3 rounded-lg flex items-center hover:bg-secondary-focus transition-colors">
-                <span className={`w-4 h-4 rounded-full mr-4 ${list.color}`}></span>
-                <p className="font-semibold text-text-primary">{list.name}</p>
-              </button>
-            ))}
-          </div>
-        </main>
-        <footer className="p-4 border-t border-border flex justify-end"><button onClick={onClose} className="px-5 py-2 bg-primary text-white font-semibold rounded-lg hover:bg-primary-focus transition-colors duration-200">{t('common.close')}</button></footer>
-      </div>
-    </div>
-  );
-};
 
 const AppAdminPanel: React.FC = () => {
     const { t } = useTranslation();
     const { state, actions } = useAppContext();
-    const { workspaces, lists, tasks, users, currentUser } = state;
+    const { users, currentUser } = state;
     const { 
-        handleDeleteWorkspace, 
         handleUpdateUserRole, 
         handleDeleteUser, 
         handleCreateUser,
-        setIsWorkspaceModalOpen,
-        setWorkspaceToEdit,
         setEditingUserId,
-        setSelectedTaskId,
-        setSelectedWorkspaceId,
-        setSelectedListId,
-        setActiveView,
     } = actions;
 
     const [newUserName, setNewUserName] = useState('');
     const [newUserRole, setNewUserRole] = useState<Role>(Role.Member);
-    const [isWorkspaceListModalOpen, setIsWorkspaceListModalOpen] = useState(false);
-    const [isProjectListModalOpen, setIsProjectListModalOpen] = useState(false);
-    const [isTaskListModalOpen, setIsTaskListModalOpen] = useState(false);
-    const [isUserListModalOpen, setIsUserListModalOpen] = useState(false);
-
-
-    const globalStats = useMemo(() => ({
-        totalWorkspaces: workspaces.length,
-        totalLists: lists.length,
-        totalTasks: tasks.length,
-        totalUsers: users.length,
-    }), [workspaces, lists, tasks, users]);
 
     const adminCount = useMemo(() => users.filter(u => u.role === Role.Admin).length, [users]);
 
@@ -111,82 +30,43 @@ const AppAdminPanel: React.FC = () => {
         setNewUserName('');
         setNewUserRole(Role.Member);
     };
-
-    const onEditWorkspace = (ws: Workspace) => {
-        setWorkspaceToEdit(ws);
-        setIsWorkspaceModalOpen(true);
-    };
     
-    const onNavigateToList = (listId: string) => {
-        const list = lists.find(l => l.id === listId);
-        if(list) {
-            setSelectedWorkspaceId(list.workspaceId);
-            setSelectedListId(list.id);
-            setActiveView('list');
-        }
-    };
-
     return (
         <main className="flex-grow flex flex-col h-full overflow-y-auto">
             <Header title={t('header.appAdmin')} />
             <div className="flex-grow p-3 sm:p-6 space-y-6">
-                {/* Global Stats */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                    <StatCard title={t('admin.manageWorkspaces')} value={globalStats.totalWorkspaces} icon="list" onClick={() => setIsWorkspaceListModalOpen(true)} />
-                    <StatCard title={t('sidebar.projects')} value={globalStats.totalLists} icon="check" onClick={() => setIsProjectListModalOpen(true)} />
-                    <StatCard title={t('admin.totalTasks')} value={globalStats.totalTasks} icon="alert" onClick={() => setIsTaskListModalOpen(true)} />
-                    <StatCard title={t('admin.totalUsers')} value={globalStats.totalUsers} icon="users" onClick={() => setIsUserListModalOpen(true)} />
-                </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    {/* Workspace Management */}
-                    <div className="bg-surface rounded-lg p-6 animate-fadeIn">
-                        <h2 className="text-xl font-semibold mb-4">{t('admin.manageWorkspaces')}</h2>
-                        <div className="space-y-3 max-h-96 overflow-y-auto">
-                            {workspaces.map(ws => (
-                                <div key={ws.id} className="bg-secondary p-3 rounded-lg flex justify-between items-center">
-                                    <span className="font-semibold">{ws.name}</span>
-                                    <div>
-                                        <button onClick={() => onEditWorkspace(ws)} className="p-2 text-text-secondary hover:text-blue-400"><svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M17.414 2.586a2 2 0 00-2.828 0L7 10.172V13h2.828l7.586-7.586a2 2 0 000-2.828z" /><path fillRule="evenodd" d="M2 6a2 2 0 012-2h4a1 1 0 010 2H4v10h10v-4a1 1 0 112 0v4a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" clipRule="evenodd" /></svg></button>
-                                        <button onClick={() => handleDeleteWorkspace(ws.id)} className="p-2 text-text-secondary hover:text-red-400"><svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm4 0a1 1 0 012 0v6a1 1 0 11-2 0V8z" clipRule="evenodd" /></svg></button>
-                                    </div>
-                                </div>
+                {/* Add User Form */}
+                 <div className="bg-surface rounded-lg p-6 animate-fadeIn">
+                    <h2 className="text-xl font-semibold mb-4">{t('modals.addMember')}</h2>
+                     <div className="flex flex-col sm:flex-row gap-2">
+                        <input
+                        type="text"
+                        value={newUserName}
+                        onChange={(e) => setNewUserName(e.target.value)}
+                        placeholder={t('modals.fullName')}
+                        className="flex-grow p-2 bg-secondary rounded-md border border-border focus:ring-primary focus:border-primary"
+                        />
+                        <select
+                            value={newUserRole}
+                            onChange={(e) => setNewUserRole(e.target.value as Role)}
+                            className="bg-secondary border border-border rounded-md px-3 py-2 focus:ring-primary focus:border-primary"
+                        >
+                            {Object.values(Role).filter(r => r !== Role.Admin).map(role => (
+                                <option key={role} value={role}>{t(`common.${role.toLowerCase()}`)}</option>
                             ))}
-                        </div>
-                    </div>
-
-                    {/* Add User Form */}
-                    <div className="bg-surface rounded-lg p-6 animate-fadeIn">
-                        <h2 className="text-xl font-semibold mb-4">{t('modals.addMember')}</h2>
-                         <div className="flex flex-col sm:flex-row gap-2">
-                            <input
-                            type="text"
-                            value={newUserName}
-                            onChange={(e) => setNewUserName(e.target.value)}
-                            placeholder={t('modals.fullName')}
-                            className="flex-grow p-2 bg-secondary rounded-md border border-border focus:ring-primary focus:border-primary"
-                            />
-                            <select
-                                value={newUserRole}
-                                onChange={(e) => setNewUserRole(e.target.value as Role)}
-                                className="bg-secondary border border-border rounded-md px-3 py-2 focus:ring-primary focus:border-primary"
-                            >
-                                {Object.values(Role).filter(r => r !== Role.Admin).map(role => (
-                                    <option key={role} value={role}>{t(`common.${role.toLowerCase()}`)}</option>
-                                ))}
-                            </select>
-                            <button
-                            onClick={handleAddUser}
-                            className="px-4 py-2 bg-primary text-white font-semibold rounded-lg hover:bg-primary-focus transition-colors duration-200"
-                            >
-                            {t('modals.addUser')}
-                            </button>
-                        </div>
+                        </select>
+                        <button
+                        onClick={handleAddUser}
+                        className="px-4 py-2 bg-primary text-white font-semibold rounded-lg hover:bg-primary-focus transition-colors duration-200"
+                        >
+                        {t('modals.addUser')}
+                        </button>
                     </div>
                 </div>
 
                 {/* User Management Table */}
-                <div className="bg-surface rounded-lg p-6 animate-fadeIn lg:col-span-3">
+                <div className="bg-surface rounded-lg p-6 animate-fadeIn">
                     <h2 className="text-xl font-semibold mb-4">{t('admin.manageUsers')}</h2>
                      <div className="overflow-x-auto">
                         <table className="min-w-full text-sm text-left text-text-secondary">
@@ -255,46 +135,6 @@ const AppAdminPanel: React.FC = () => {
                     </div>
                 </div>
             </div>
-            {isWorkspaceListModalOpen && (
-                <WorkspaceListModal 
-                    isOpen={isWorkspaceListModalOpen}
-                    onClose={() => setIsWorkspaceListModalOpen(false)}
-                    workspaces={workspaces}
-                    onSelectWorkspace={setSelectedWorkspaceId}
-                />
-            )}
-            {isProjectListModalOpen && (
-                <ProjectListModal
-                    isOpen={isProjectListModalOpen}
-                    onClose={() => setIsProjectListModalOpen(false)}
-                    lists={lists}
-                    onNavigateToList={onNavigateToList}
-                />
-            )}
-            {isTaskListModalOpen && (
-                <TaskListModal
-                    isOpen={isTaskListModalOpen}
-                    onClose={() => setIsTaskListModalOpen(false)}
-                    title={t('modals.allTasks')}
-                    tasks={tasks}
-                    users={users}
-                    onSelectTask={(taskId) => {
-                        setSelectedTaskId(taskId);
-                        setIsTaskListModalOpen(false);
-                    }}
-                />
-            )}
-            {isUserListModalOpen && (
-                <UserListModal
-                    isOpen={isUserListModalOpen}
-                    onClose={() => setIsUserListModalOpen(false)}
-                    users={users}
-                    onSelectUser={(user) => {
-                        setEditingUserId(user.id);
-                        setIsUserListModalOpen(false);
-                    }}
-                />
-            )}
         </main>
     );
 }

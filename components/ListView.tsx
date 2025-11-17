@@ -69,6 +69,7 @@ const ListView: React.FC = () => {
   }
 
   const isDraggable = currentUser!.role !== Role.Guest;
+  const isReadOnly = currentUser!.role === Role.Guest;
 
   const handleDragStart = (e: React.DragEvent<HTMLDivElement>, taskId: string) => {
     dragItem.current = taskId;
@@ -120,7 +121,7 @@ const ListView: React.FC = () => {
 
   return (
     <div className="bg-surface rounded-lg overflow-hidden h-full flex flex-col">
-        {selectedTaskIds.size > 0 && (
+        {selectedTaskIds.size > 0 && !isReadOnly && (
             <BulkActionBar 
                 selectedCount={selectedTaskIds.size}
                 onClear={() => setSelectedTaskIds(new Set())}
@@ -133,9 +134,10 @@ const ListView: React.FC = () => {
                 <div className="col-span-1 flex items-center">
                     <input 
                         type="checkbox" 
-                        className="w-4 h-4 rounded text-primary bg-surface border-border focus:ring-primary"
+                        className="w-4 h-4 rounded text-primary bg-surface border-border focus:ring-primary disabled:opacity-50"
                         onChange={handleToggleAll}
                         checked={selectedTaskIds.size === tasks.length && tasks.length > 0}
+                        disabled={isReadOnly}
                     />
                 </div>
                 <div className="col-span-6 sm:col-span-3 md:col-span-2">{t('listView.task')}</div>

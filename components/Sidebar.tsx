@@ -164,7 +164,7 @@ const Sidebar: React.FC = () => {
 
     const handleDragOver = (e: React.DragEvent, targetId: string, targetType: 'folder' | 'list') => {
         e.preventDefault();
-        if (!draggedItem || draggedItem.id === targetId) return;
+        if (!isDraggable || !draggedItem || draggedItem.id === targetId) return;
 
         const rect = e.currentTarget.getBoundingClientRect();
         const y = e.clientY - rect.top;

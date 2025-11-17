@@ -755,6 +755,13 @@ const getNested = (obj: any, path: string): string | undefined => {
     return path.split('.').reduce((acc, part) => acc && acc[part], obj);
 };
 
+// Define a more specific type for the options parameter to improve type safety
+type I18nOptions = {
+    defaultValue?: string;
+    count?: number;
+    [key: string]: any;
+};
+
 export const i18n = {
   get language(): Language {
     return currentLanguage;
@@ -774,7 +781,7 @@ export const i18n = {
     };
   },
 
-  t: (key: string, options?: { defaultValue?: string; count?: number; [key: string]: any }): string => {
+  t: (key: string, options?: I18nOptions): string => {
     const langResources = resources[currentLanguage]?.translation;
     let translation: string | undefined;
 
@@ -792,6 +799,7 @@ export const i18n = {
     // If still not found, fallback to defaultValue or key
     if (typeof translation !== 'string') {
         console.warn(`Translation key '${key}' not found for language '${currentLanguage}'.`);
+        // FIX: Use optional chaining to safely access defaultValue
         return options?.defaultValue || key;
     }
 

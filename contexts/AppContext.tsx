@@ -169,8 +169,25 @@ const appReducer = (state: AppState, action: Action): AppState => {
         const unchangedTasks = state.tasks.filter(t => !updatedTaskIds.has(t.id));
         return { ...state, tasks: [...unchangedTasks, ...action.payload] };
     }
-    case 'DELETE_TASK':
-        return { ...state, tasks: state.tasks.filter(t => t.id !== action.payload) };
+    case 'DELETE_TASK': {
+        const taskIdToDelete = action.payload;
+        // First, filter out the task to be deleted.
+        const remainingTasks = state.tasks.filter(t => t.id !== taskIdToDelete);
+        // Then, iterate over the remaining tasks to remove any dependencies on the deleted task.
+        const tasksWithCleanedDependencies = remainingTasks.map(task => {
+            if (task.dependsOn?.includes(taskIdToDelete)) {
+                return {
+                    ...task,
+                    dependsOn: task.dependsOn.filter(depId => depId !== taskIdToDelete),
+                };
+            }
+            return task;
+        });
+        return { 
+            ...state, 
+            tasks: tasksWithCleanedDependencies 
+        };
+    }
     case 'REORDER_TASKS': {
         const otherTasks = state.tasks.filter(t => t.listId !== action.payload.listId);
         return { ...state, tasks: [...otherTasks, ...action.payload.tasks] };
@@ -322,64 +339,64 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         // Complex Actions
         handleUpdateUser: (user: User) => {
             dispatch({ type: 'UPDATE_USER', payload: user });
-            addToast({ message: 'User profile updated.', type: 'success' });
+            addToast({ message: i18n.t('toasts.userProfileUpdated'), type: 'success' });
         },
 
         handleSaveWorkspace: (name: string) => {
             if(state.workspaceToEdit) {
                 dispatch({ type: 'UPDATE_WORKSPACE', payload: { ...state.workspaceToEdit, name } });
-                addToast({ message: 'Workspace updated.', type: 'success' });
+                addToast({ message: i18n.t('toasts.workspaceUpdated'), type: 'success' });
             } else {
                 const newWorkspace: Workspace = { id: `ws-${Date.now()}`, name };
                 dispatch({ type: 'ADD_WORKSPACE', payload: newWorkspace });
-                addToast({ message: 'Workspace created.', type: 'success' });
+                addToast({ message: i18n.t('toasts.workspaceCreated'), type: 'success' });
             }
         },
 
         handleDeleteWorkspace: (workspaceId: string) => {
             const ws = state.workspaces.find(w => w.id === workspaceId);
-            if(window.confirm(`Are you sure you want to delete the workspace "${ws?.name}"? This will delete all associated projects and tasks.`)) {
+            if(window.confirm(i18n.t('confirmations.deleteWorkspace', { name: ws?.name }))) {
                 dispatch({ type: 'DELETE_WORKSPACE', payload: workspaceId });
-                addToast({ message: 'Workspace deleted.', type: 'error' });
+                addToast({ message: i18n.t('toasts.workspaceDeleted'), type: 'success' });
             }
         },
 
         handleSaveList: (name: string, color: string, folderId: string | null) => {
             if(state.listToEdit) {
                 dispatch({ type: 'UPDATE_LIST', payload: { ...state.listToEdit, name, color, folderId } });
-                addToast({ message: 'Project updated.', type: 'success' });
+                addToast({ message: i18n.t('toasts.projectUpdated'), type: 'success' });
             } else {
                 const newList: List = { id: `l-${Date.now()}`, name, color, workspaceId: state.selectedWorkspaceId!, folderId, order: state.lists.length };
                 dispatch({ type: 'ADD_LIST', payload: newList });
-                addToast({ message: 'Project created.', type: 'success' });
+                addToast({ message: i18n.t('toasts.projectCreated'), type: 'success' });
             }
             actions.setIsProjectModalOpen(false);
         },
 
         handleDeleteList: (listId: string) => {
-            if(window.confirm('Are you sure you want to delete this project? All tasks within it will also be deleted.')) {
+            if(window.confirm(i18n.t('confirmations.deleteProject'))) {
                 dispatch({ type: 'DELETE_LIST', payload: listId });
-                addToast({ message: 'Project deleted.', type: 'error' });
+                addToast({ message: i18n.t('toasts.projectDeleted'), type: 'success' });
             }
         },
 
         handleSaveFolder: (name: string) => {
             if(state.folderToEdit) {
                 dispatch({ type: 'UPDATE_FOLDER', payload: { ...state.folderToEdit, name } });
-                addToast({ message: 'Folder updated.', type: 'success' });
+                addToast({ message: i18n.t('toasts.folderUpdated'), type: 'success' });
             } else {
                 const newFolder: Folder = { id: `f-${Date.now()}`, name, workspaceId: state.selectedWorkspaceId!, order: state.folders.length };
                 dispatch({ type: 'ADD_FOLDER', payload: newFolder });
-                addToast({ message: 'Folder created.', type: 'success' });
+                addToast({ message: i18n.t('toasts.folderCreated'), type: 'success' });
             }
             actions.setIsFolderModalOpen(false);
         },
 
         handleUpdateTask: (task: Task) => dispatch({ type: 'UPDATE_TASK', payload: task }),
         handleDeleteTask: (taskId: string) => {
-            if (window.confirm("Are you sure you want to delete this task? This action cannot be undone.")) {
+            if (window.confirm(i18n.t('modals.confirmDeleteTask'))) {
                 dispatch({ type: 'DELETE_TASK', payload: taskId });
-                addToast({ message: 'Task deleted successfully', type: 'error' });
+                addToast({ message: i18n.t('toasts.taskDeleted'), type: 'success' });
                 actions.setSelectedTaskId(null);
             }
         },
@@ -437,20 +454,20 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         
         handleGenerateSummary: async () => {
             if (!selectedList) return;
-            dispatch({ type: 'SET_STATE', payload: { isSummaryModalOpen: true, isSummaryLoading: true, summaryData: { title: `AI Summary for ${selectedList.name}`, content: '' } } });
+            dispatch({ type: 'SET_STATE', payload: { isSummaryModalOpen: true, isSummaryLoading: true, summaryData: { title: i18n.t('modals.aiSummaryFor', { name: selectedList.name }), content: '' } } });
             const summary = await generateProjectSummary(filteredTasks, selectedList.name);
-            dispatch({ type: 'SET_STATE', payload: { isSummaryLoading: false, summaryData: { title: `AI Summary for ${selectedList.name}`, content: summary } } });
+            dispatch({ type: 'SET_STATE', payload: { isSummaryLoading: false, summaryData: { title: i18n.t('modals.aiSummaryFor', { name: selectedList.name }), content: summary } } });
         },
         
         handleSidebarReorder: (folders: Folder[], lists: List[]) => {
             dispatch({ type: 'SET_STATE', payload: { folders, lists } });
-            addToast({ message: 'Sidebar reordered.', type: 'info' });
+            addToast({ message: i18n.t('toasts.sidebarReordered'), type: 'info' });
         },
         
         handleTasksReorder: (reorderedTasks: Task[]) => {
              const allOtherTasks = state.tasks.filter(t => !reorderedTasks.some(rt => rt.id === t.id));
              dispatch({ type: 'SET_STATE', payload: { tasks: [...allOtherTasks, ...reorderedTasks] } });
-             addToast({ message: 'Task order updated.', type: 'info' });
+             addToast({ message: i18n.t('toasts.tasksReordered'), type: 'info' });
         },
         
         handleBulkUpdateTasks: (taskIds: string[], updates: Partial<Task>) => {
@@ -458,7 +475,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
                 taskIds.includes(task.id) ? { ...task, ...updates } : task
             );
             dispatch({ type: 'UPDATE_TASKS', payload: updatedTasks });
-            addToast({ message: `${taskIds.length} tasks updated.`, type: 'success' });
+            addToast({ message: i18n.t('toasts.tasksUpdated', { count: taskIds.length }), type: 'success' });
         },
         
         handleSelectWorkspace: (workspaceId: string) => {
@@ -480,7 +497,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         handleSaveTemplate: (name: string, taskData: Partial<Task>) => {
             const newTemplate: TaskTemplate = { id: `tt-${Date.now()}`, name, taskData };
             dispatch({ type: 'ADD_TEMPLATE', payload: newTemplate });
-            addToast({ message: `Template "${name}" saved.`, type: 'success' });
+            addToast({ message: i18n.t('toasts.templateSaved', { name }), type: 'success' });
         },
 
         handleNotificationClick: (notification: Notification) => {
@@ -512,11 +529,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
                 status: UserStatus.Offline,
             };
             dispatch({ type: 'ADD_USER', payload: newUser });
-            addToast({ message: `User "${name}" created.`, type: 'success' });
+            addToast({ message: i18n.t('toasts.userCreated', { name }), type: 'success' });
         },
         handleDeleteUser: (userId: string) => {
-            dispatch({ type: 'DELETE_USER', payload: userId });
-            addToast({ message: 'User deleted.', type: 'error' });
+            const user = state.users.find(u => u.id === userId);
+            if (user && window.confirm(i18n.t('confirmations.deleteUser', { name: user.name }))) {
+                dispatch({ type: 'DELETE_USER', payload: userId });
+                addToast({ message: i18n.t('toasts.userDeleted'), type: 'success' });
+            }
         },
         handleUpdateUserRole: (userId: string, role: Role) => {
             const user = state.users.find(u => u.id === userId);
