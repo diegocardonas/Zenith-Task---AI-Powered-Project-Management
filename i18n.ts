@@ -155,8 +155,6 @@ const es = {
     "aiSuggestionContent": "Prioridad {{priority}} Asignar a {{assignee}}",
     "apply": "Aplicar",
     "description": "Descripción",
-    "write": "Escribir",
-    "preview": "Previsualizar",
     "addMoreDetail": "Añade una descripción más detallada...",
     "attachments": "Adjuntos",
     "attachFile": "+ Adjuntar Archivo",
@@ -278,7 +276,11 @@ const es = {
     "user": "Usuario",
     "email": "Correo",
     "actions": "Acciones",
-    "noTasksWithFilter": "No hay tareas para mostrar con el filtro actual."
+    "noTasksWithFilter": "No hay tareas para mostrar con el filtro actual.",
+    "roleDescriptions": "Descripciones de Roles",
+    "adminDescription": "Control total. Puede gestionar espacios de trabajo, facturación y todos los miembros.",
+    "memberDescription": "Puede crear y gestionar proyectos, tareas y carpetas. No puede gestionar miembros ni la configuración del espacio de trabajo.",
+    "guestDescription": "Acceso limitado de solo lectura a proyectos o tareas específicas a las que se les invite."
   },
   "tooltips": {
     "deleteSubtask": "Eliminar subtarea",
@@ -525,8 +527,6 @@ const en = {
     "aiSuggestionContent": "Priority {{priority}} Assign to {{assignee}}",
     "apply": "Apply",
     "description": "Description",
-    "write": "Write",
-    "preview": "Preview",
     "addMoreDetail": "Add a more detailed description...",
     "attachments": "Attachments",
     "attachFile": "+ Attach File",
@@ -648,7 +648,11 @@ const en = {
     "user": "User",
     "email": "Email",
     "actions": "Actions",
-    "noTasksWithFilter": "No tasks to show with the current filter."
+    "noTasksWithFilter": "No tasks to show with the current filter.",
+    "roleDescriptions": "Role Descriptions",
+    "adminDescription": "Full control. Can manage workspaces, billing, and all members.",
+    "memberDescription": "Can create and manage projects, tasks, and folders. Cannot manage members or workspace settings.",
+    "guestDescription": "Limited, read-only access to specific projects or tasks they are invited to."
   },
   "tooltips": {
     "deleteSubtask": "Delete subtask",

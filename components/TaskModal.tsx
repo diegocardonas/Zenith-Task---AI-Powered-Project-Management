@@ -18,23 +18,6 @@ const Spinner: React.FC = () => (
     </svg>
 );
 
-const renderMarkdown = (text: string) => {
-  if (!text) return { __html: '' };
-  let html = text
-    .replace(/</g, "&lt;").replace(/>/g, "&gt;")
-    .replace(/^### (.*$)/gim, '<h3 class="text-lg font-semibold mt-2 mb-1">$1</h3>')
-    .replace(/^## (.*$)/gim, '<h2 class="text-xl font-bold mt-3 mb-1">$1</h2>')
-    .replace(/^# (.*$)/gim, '<h1 class="text-2xl font-bold mt-4 mb-2">$1</h1>')
-    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-    .replace(/\*(.*?)\*/g, '<em>$1</em>')
-    .replace(/`([^`]+)`/g, '<code class="bg-secondary px-1 py-0.5 rounded text-sm">$1</code>')
-    .replace(/^- (.*$)/gim, '<li>$1</li>')
-    .replace(/\n/g, '<br />');
-  
-  html = html.replace(/(<li>.*<\/li>)/gs, '<ul class="list-disc ml-5">$1</ul>');
-  return { __html: html };
-};
-
 const CommentComponent: React.FC<{
     comment: CommentWithReplies;
     onReply: (commentId: string) => void;
@@ -87,7 +70,6 @@ const TaskModal: React.FC = () => {
     const [suggestedReplies, setSuggestedReplies] = useState<string[]>([]);
     const [isSuggesting, setIsSuggesting] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
-    const [activeTab, setActiveTab] = useState<'write' | 'preview'>('write');
 
     const isReadOnly = currentUser!.role === Role.Guest;
 
@@ -337,31 +319,23 @@ const TaskModal: React.FC = () => {
 
                 {/* Description */}
                 <div>
-                    <label className="text-sm font-semibold text-text-secondary">{t('modals.description')}</label>
-                     <div className="mt-1 group">
-                         {!isReadOnly && (
-                            <div className="flex items-center gap-2 mb-2 border-b border-border">
-                                <button onClick={handleGenerateDescriptionClick} disabled={isGeneratingDescription} className="flex items-center gap-1.5 px-2 py-1 text-xs bg-secondary rounded-md hover:bg-secondary-focus disabled:opacity-50">
-                                    {isGeneratingDescription ? <Spinner /> : '✨'}
-                                    {t('modals.generateWithAI')}
-                                </button>
-                                <button onClick={() => setActiveTab('write')} className={`px-3 py-1 text-sm ${activeTab === 'write' ? 'border-b-2 border-primary text-text-primary' : 'text-text-secondary'}`}>{t('modals.write')}</button>
-                                <button onClick={() => setActiveTab('preview')} className={`px-3 py-1 text-sm ${activeTab === 'preview' ? 'border-b-2 border-primary text-text-primary' : 'text-text-secondary'}`}>{t('modals.preview')}</button>
-                            </div>
-                         )}
-                        {activeTab === 'write' || isReadOnly ? (
-                          <textarea
-                              value={editedTask.description}
-                              onChange={(e) => handleInputChange('description', e.target.value)}
-                              rows={6}
-                              disabled={isReadOnly}
-                              placeholder={t('modals.addMoreDetail')}
-                              className="w-full p-2 bg-secondary rounded-md border border-border focus:ring-primary focus:border-primary"
-                          />
-                        ) : (
-                          <div className="w-full p-2 bg-secondary rounded-md border border-border min-h-[140px] prose prose-invert max-w-none text-text-primary" dangerouslySetInnerHTML={renderMarkdown(editedTask.description)}></div>
+                    <div className="flex justify-between items-center mb-2">
+                        <label className="text-sm font-semibold text-text-secondary">{t('modals.description')}</label>
+                        {!isReadOnly && (
+                            <button onClick={handleGenerateDescriptionClick} disabled={isGeneratingDescription} className="flex items-center gap-1.5 px-2 py-1 text-xs bg-secondary rounded-md hover:bg-secondary-focus disabled:opacity-50">
+                                {isGeneratingDescription ? <Spinner /> : '✨'}
+                                {t('modals.generateWithAI')}
+                            </button>
                         )}
                     </div>
+                    <textarea
+                        value={editedTask.description}
+                        onChange={(e) => handleInputChange('description', e.target.value)}
+                        rows={6}
+                        disabled={isReadOnly}
+                        placeholder={t('modals.addMoreDetail')}
+                        className="w-full p-2 bg-secondary rounded-md border border-border focus:ring-primary focus:border-primary"
+                    />
                 </div>
                 
                 {/* Subtasks */}

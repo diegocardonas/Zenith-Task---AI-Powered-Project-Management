@@ -5,7 +5,7 @@ import {
 } from '../types';
 import { ThemeName, ColorScheme, themes } from '../themes';
 import { generateProjectSummary } from '../services/geminiService';
-import { i18n } from '../i18n';
+import { useTranslation } from '../i18n';
 
 // --- MOCK DATA ---
 const USERS: User[] = [
@@ -171,9 +171,7 @@ const appReducer = (state: AppState, action: Action): AppState => {
     }
     case 'DELETE_TASK': {
         const taskIdToDelete = action.payload;
-        // First, filter out the task to be deleted.
         const remainingTasks = state.tasks.filter(t => t.id !== taskIdToDelete);
-        // Then, iterate over the remaining tasks to remove any dependencies on the deleted task.
         const tasksWithCleanedDependencies = remainingTasks.map(task => {
             if (task.dependsOn?.includes(taskIdToDelete)) {
                 return {
@@ -183,9 +181,10 @@ const appReducer = (state: AppState, action: Action): AppState => {
             }
             return task;
         });
-        return { 
-            ...state, 
-            tasks: tasksWithCleanedDependencies 
+        return {
+            ...state,
+            tasks: tasksWithCleanedDependencies,
+            selectedTaskId: state.selectedTaskId === taskIdToDelete ? null : state.selectedTaskId,
         };
     }
     case 'REORDER_TASKS': {
@@ -194,13 +193,14 @@ const appReducer = (state: AppState, action: Action): AppState => {
     }
     case 'DELETE_WORKSPACE': {
         const listsInWorkspace = state.lists.filter(l => l.workspaceId === action.payload).map(l => l.id);
+        const remainingWorkspaces = state.workspaces.filter(ws => ws.id !== action.payload);
         return {
             ...state,
-            workspaces: state.workspaces.filter(ws => ws.id !== action.payload),
+            workspaces: remainingWorkspaces,
             folders: state.folders.filter(f => f.workspaceId !== action.payload),
             lists: state.lists.filter(l => l.workspaceId !== action.payload),
             tasks: state.tasks.filter(t => !listsInWorkspace.includes(t.listId)),
-            selectedWorkspaceId: state.selectedWorkspaceId === action.payload ? state.workspaces[0]?.id || null : state.selectedWorkspaceId,
+            selectedWorkspaceId: state.selectedWorkspaceId === action.payload ? remainingWorkspaces[0]?.id || null : state.selectedWorkspaceId,
         };
     }
     case 'DELETE_LIST': {
@@ -227,10 +227,10 @@ const appReducer = (state: AppState, action: Action): AppState => {
     }
     case 'ADD_WORKSPACE': return { ...state, workspaces: [...state.workspaces, action.payload]};
     case 'UPDATE_WORKSPACE': return { ...state, workspaces: state.workspaces.map(w => w.id === action.payload.id ? action.payload : w) };
-    case 'ADD_LIST': return { ...state, lists: [...state.lists, action.payload] };
-    case 'UPDATE_LIST': return { ...state, lists: state.lists.map(l => l.id === action.payload.id ? action.payload : l) };
-    case 'ADD_FOLDER': return { ...state, folders: [...state.folders, action.payload] };
-    case 'UPDATE_FOLDER': return { ...state, folders: state.folders.map(f => f.id === action.payload.id ? action.payload : f) };
+    case 'ADD_LIST': return { ...state, lists: [...state.lists, action.payload], isProjectModalOpen: false };
+    case 'UPDATE_LIST': return { ...state, lists: state.lists.map(l => l.id === action.payload.id ? action.payload : l), isProjectModalOpen: false };
+    case 'ADD_FOLDER': return { ...state, folders: [...state.folders, action.payload], isFolderModalOpen: false };
+    case 'UPDATE_FOLDER': return { ...state, folders: state.folders.map(f => f.id === action.payload.id ? action.payload : f), isFolderModalOpen: false };
     case 'ADD_USER': return { ...state, users: [...state.users, action.payload] };
     case 'UPDATE_USER': return { ...state, users: state.users.map(u => u.id === action.payload.id ? action.payload : u) };
     case 'ADD_NOTIFICATION': {
@@ -257,13 +257,14 @@ interface AppContextType {
         allLists: List[];
         filteredTasks: Task[];
     };
-    actions: any;
+    actions: Record<string, (...args: any[]) => void>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [state, dispatch] = useReducer(appReducer, initialState);
+    const { t, i18n } = useTranslation();
 
     useEffect(() => {
         setTimeout(() => dispatch({ type: 'SET_STATE', payload: { isLoading: false } }), 1500);
@@ -284,10 +285,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         localStorage.setItem('colorScheme', state.colorScheme);
     }, [state.theme, state.colorScheme]);
 
-
-    const addToast = (toast: Omit<Toast, 'id'>) => dispatch({ type: 'ADD_TOAST', payload: { ...toast, id: Date.now() } });
-    
-    // DERIVED STATE
     const selectedTask = useMemo(() => state.tasks.find(t => t.id === state.selectedTaskId) || null, [state.tasks, state.selectedTaskId]);
     const editingUser = useMemo(() => state.users.find(u => u.id === state.editingUserId) || null, [state.users, state.editingUserId]);
     const selectedList = useMemo(() => state.lists.find(l => l.id === state.selectedListId) || null, [state.lists, state.selectedListId]);
@@ -301,10 +298,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             return true;
         });
     }, [state.tasks, selectedList, state.statusFilter, state.priorityFilter]);
+
+    // --- ACTIONS ---
+
+    const addToast = useCallback((toast: Omit<Toast, 'id'>) => {
+        dispatch({ type: 'ADD_TOAST', payload: { ...toast, id: Date.now() } });
+    }, []);
     
-    // ACTIONS
-    const actions = {
-        // Simple setters
+    const simpleSetters = useMemo(() => ({
         setCurrentUser: (user: User | null) => dispatch({ type: 'SET_STATE', payload: { currentUser: user } }),
         setSelectedTaskId: (taskId: string | null) => dispatch({ type: 'SET_STATE', payload: { selectedTaskId: taskId } }),
         setSelectedListId: (listId: string | null) => dispatch({ type: 'SET_STATE', payload: { selectedListId: listId } }),
@@ -328,306 +329,297 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setIsSettingsModalOpen: (isOpen: boolean) => dispatch({ type: 'SET_STATE', payload: { isSettingsModalOpen: isOpen } }),
         setTheme: (theme: ThemeName) => dispatch({ type: 'SET_STATE', payload: { theme } }),
         setColorScheme: (scheme: ColorScheme) => dispatch({ type: 'SET_STATE', payload: { colorScheme: scheme } }),
-        setNotifications: (notifications: React.SetStateAction<Notification[]>) => {
-            const newNotifications = typeof notifications === 'function' ? notifications(state.notifications) : notifications;
-            dispatch({ type: 'SET_STATE', payload: { notifications: newNotifications } });
-        },
-        removeToast: (id: number) => dispatch({ type: 'REMOVE_TOAST', payload: id }),
-        addToast,
-        addNotification: (notification: Omit<Notification, 'id'|'timestamp'|'read'>) => dispatch({ type: 'ADD_NOTIFICATION', payload: notification }),
+    }), []);
 
-        // Complex Actions
-        handleUpdateUser: (user: User) => {
-            dispatch({ type: 'UPDATE_USER', payload: user });
-            addToast({ message: i18n.t('toasts.userProfileUpdated'), type: 'success' });
-        },
+    const setNotifications = useCallback((notifications: React.SetStateAction<Notification[]>) => {
+        const newNotifications = typeof notifications === 'function' ? notifications(state.notifications) : notifications;
+        dispatch({ type: 'SET_STATE', payload: { notifications: newNotifications } });
+    }, [state.notifications]);
+    
+    const removeToast = useCallback((id: number) => dispatch({ type: 'REMOVE_TOAST', payload: id }), []);
+    const addNotification = useCallback((notification: Omit<Notification, 'id'|'timestamp'|'read'>) => dispatch({ type: 'ADD_NOTIFICATION', payload: notification }), []);
+    const handleUpdateUser = useCallback((user: User) => {
+        dispatch({ type: 'UPDATE_USER', payload: user });
+        addToast({ message: t('toasts.userProfileUpdated'), type: 'success' });
+    }, [addToast, t]);
 
-        handleSaveWorkspace: (name: string) => {
-            if(state.workspaceToEdit) {
-                dispatch({ type: 'UPDATE_WORKSPACE', payload: { ...state.workspaceToEdit, name } });
-                addToast({ message: i18n.t('toasts.workspaceUpdated'), type: 'success' });
-            } else {
-                const newWorkspace: Workspace = { id: `ws-${Date.now()}`, name };
-                dispatch({ type: 'ADD_WORKSPACE', payload: newWorkspace });
-                addToast({ message: i18n.t('toasts.workspaceCreated'), type: 'success' });
-            }
-        },
+    const handleSaveWorkspace = useCallback((name: string) => {
+        if(state.workspaceToEdit) {
+            dispatch({ type: 'UPDATE_WORKSPACE', payload: { ...state.workspaceToEdit, name } });
+            addToast({ message: t('toasts.workspaceUpdated'), type: 'success' });
+        } else {
+            const newWorkspace: Workspace = { id: `ws-${Date.now()}`, name };
+            dispatch({ type: 'ADD_WORKSPACE', payload: newWorkspace });
+            addToast({ message: t('toasts.workspaceCreated'), type: 'success' });
+        }
+    }, [state.workspaceToEdit, addToast, t]);
 
-        handleDeleteWorkspace: (workspaceId: string) => {
-            const ws = state.workspaces.find(w => w.id === workspaceId);
-            if(window.confirm(i18n.t('confirmations.deleteWorkspace', { name: ws?.name }))) {
-                dispatch({ type: 'DELETE_WORKSPACE', payload: workspaceId });
-                addToast({ message: i18n.t('toasts.workspaceDeleted'), type: 'success' });
-            }
-        },
+    const handleDeleteWorkspace = useCallback((workspaceId: string) => {
+        const ws = state.workspaces.find(w => w.id === workspaceId);
+        if(window.confirm(t('confirmations.deleteWorkspace', { name: ws?.name }))) {
+            dispatch({ type: 'DELETE_WORKSPACE', payload: workspaceId });
+            addToast({ message: t('toasts.workspaceDeleted'), type: 'success' });
+        }
+    }, [state.workspaces, addToast, t]);
+    
+    const handleSaveList = useCallback((name: string, color: string, folderId: string | null) => {
+        if(state.listToEdit) {
+            dispatch({ type: 'UPDATE_LIST', payload: { ...state.listToEdit, name, color, folderId } });
+            addToast({ message: t('toasts.projectUpdated'), type: 'success' });
+        } else {
+            const newList: List = { id: `l-${Date.now()}`, name, color, workspaceId: state.selectedWorkspaceId!, folderId, order: state.lists.length };
+            dispatch({ type: 'ADD_LIST', payload: newList });
+            addToast({ message: t('toasts.projectCreated'), type: 'success' });
+        }
+    }, [state.listToEdit, state.selectedWorkspaceId, state.lists.length, addToast, t]);
+    
+    const handleDeleteList = useCallback((listId: string) => {
+        if(window.confirm(t('confirmations.deleteProject'))) {
+            dispatch({ type: 'DELETE_LIST', payload: listId });
+            addToast({ message: t('toasts.projectDeleted'), type: 'success' });
+        }
+    }, [addToast, t]);
 
-        handleSaveList: (name: string, color: string, folderId: string | null) => {
-            if(state.listToEdit) {
-                dispatch({ type: 'UPDATE_LIST', payload: { ...state.listToEdit, name, color, folderId } });
-                addToast({ message: i18n.t('toasts.projectUpdated'), type: 'success' });
-            } else {
-                const newList: List = { id: `l-${Date.now()}`, name, color, workspaceId: state.selectedWorkspaceId!, folderId, order: state.lists.length };
-                dispatch({ type: 'ADD_LIST', payload: newList });
-                addToast({ message: i18n.t('toasts.projectCreated'), type: 'success' });
-            }
-            actions.setIsProjectModalOpen(false);
-        },
+    const handleSaveFolder = useCallback((name: string) => {
+        if(state.folderToEdit) {
+            dispatch({ type: 'UPDATE_FOLDER', payload: { ...state.folderToEdit, name } });
+            addToast({ message: t('toasts.folderUpdated'), type: 'success' });
+        } else {
+            const newFolder: Folder = { id: `f-${Date.now()}`, name, workspaceId: state.selectedWorkspaceId!, order: state.folders.length };
+            dispatch({ type: 'ADD_FOLDER', payload: newFolder });
+            addToast({ message: t('toasts.folderCreated'), type: 'success' });
+        }
+    }, [state.folderToEdit, state.selectedWorkspaceId, state.folders.length, addToast, t]);
 
-        handleDeleteList: (listId: string) => {
-            if(window.confirm(i18n.t('confirmations.deleteProject'))) {
-                dispatch({ type: 'DELETE_LIST', payload: listId });
-                addToast({ message: i18n.t('toasts.projectDeleted'), type: 'success' });
-            }
-        },
+    const handleDeleteFolder = useCallback((folderId: string) => {
+        if(window.confirm(t('confirmations.deleteFolder'))) {
+            dispatch({ type: 'DELETE_FOLDER', payload: folderId });
+            addToast({ message: t('toasts.folderDeleted'), type: 'success' });
+        }
+    }, [addToast, t]);
 
-        handleSaveFolder: (name: string) => {
-            if(state.folderToEdit) {
-                dispatch({ type: 'UPDATE_FOLDER', payload: { ...state.folderToEdit, name } });
-                addToast({ message: i18n.t('toasts.folderUpdated'), type: 'success' });
-            } else {
-                const newFolder: Folder = { id: `f-${Date.now()}`, name, workspaceId: state.selectedWorkspaceId!, order: state.folders.length };
-                dispatch({ type: 'ADD_FOLDER', payload: newFolder });
-                addToast({ message: i18n.t('toasts.folderCreated'), type: 'success' });
-            }
-            actions.setIsFolderModalOpen(false);
-        },
+    const handleUpdateTask = useCallback((task: Task) => dispatch({ type: 'UPDATE_TASK', payload: task }), []);
 
-        handleUpdateTask: (task: Task) => dispatch({ type: 'UPDATE_TASK', payload: task }),
-        handleDeleteTask: (taskId: string) => {
-            if (window.confirm(i18n.t('modals.confirmDeleteTask'))) {
-                dispatch({ type: 'DELETE_TASK', payload: taskId });
-                addToast({ message: i18n.t('toasts.taskDeleted'), type: 'success' });
-                actions.setSelectedTaskId(null);
-            }
-        },
+    const handleDeleteTask = useCallback((taskId: string) => {
+        if (window.confirm(t('modals.confirmDeleteTask'))) {
+            dispatch({ type: 'DELETE_TASK', payload: taskId });
+            addToast({ message: t('toasts.taskDeleted'), type: 'success' });
+        }
+    }, [addToast, t]);
 
-        handleAddTask: (listId: string, template?: TaskTemplate) => {
-            const baseTask = {
-                id: `t-${Date.now()}`,
-                title: 'New Task',
-                description: '',
-                status: Status.Todo,
-                priority: Priority.Medium,
-                assigneeId: null,
-                dueDate: new Date(Date.now() + 3 * 86400000).toISOString().split('T')[0],
-                listId,
-                subtasks: [],
-                comments: [],
-                attachments: [],
-                reminder: null,
-                createdAt: new Date().toISOString(),
-                dependsOn: [],
-                activityLog: [],
-            };
-            const newTask = { ...baseTask, ...(template?.taskData || {}) };
-            if (template?.taskData.title) {
-                newTask.title = template.taskData.title;
-            }
-            dispatch({ type: 'ADD_TASK', payload: newTask });
-            dispatch({ type: 'SET_STATE', payload: { selectedTaskId: newTask.id }});
-        },
-        
-        handleAddTaskOnDate: (date: Date) => {
-            const newTask: Task = {
-                id: `t-${Date.now()}`,
-                title: 'New Event',
-                description: '',
-                status: Status.Todo,
-                priority: Priority.Medium,
-                assigneeId: null,
-                dueDate: date.toISOString().split('T')[0],
-                createdAt: new Date().toISOString(),
-                listId: state.selectedListId!,
-                subtasks: [], comments: [], attachments: [], reminder: null, dependsOn: [], activityLog: [],
-            };
-            dispatch({ type: 'ADD_TASK', payload: newTask });
-            dispatch({ type: 'SET_STATE', payload: { selectedTaskId: newTask.id } });
-        },
+    const handleAddTask = useCallback((listId: string, template?: TaskTemplate) => {
+        const baseTask = {
+            id: `t-${Date.now()}`,
+            title: 'New Task',
+            description: '',
+            status: Status.Todo,
+            priority: Priority.Medium,
+            assigneeId: null,
+            dueDate: new Date(Date.now() + 3 * 86400000).toISOString().split('T')[0],
+            listId,
+            subtasks: [], comments: [], attachments: [], reminder: null,
+            createdAt: new Date().toISOString(),
+            dependsOn: [], activityLog: [],
+        };
+        const newTask = { ...baseTask, ...(template?.taskData || {}) };
+        if (template?.taskData.title) newTask.title = template.taskData.title;
+        dispatch({ type: 'ADD_TASK', payload: newTask });
+        dispatch({ type: 'SET_STATE', payload: { selectedTaskId: newTask.id }});
+    }, []);
 
-        logActivity: (taskId: string, text: string, user: User) => {
-            const task = state.tasks.find(t => t.id === taskId);
-            if (!task) return;
-            const newActivity: Activity = { id: `act-${Date.now()}`, user, text, timestamp: new Date().toISOString() };
-            const updatedTask = { ...task, activityLog: [newActivity, ...task.activityLog] };
-            dispatch({ type: 'UPDATE_TASK', payload: updatedTask });
-        },
-        
-        handleGenerateSummary: async () => {
-            if (!selectedList) return;
-            dispatch({ type: 'SET_STATE', payload: { isSummaryModalOpen: true, isSummaryLoading: true, summaryData: { title: i18n.t('modals.aiSummaryFor', { name: selectedList.name }), content: '' } } });
-            const summary = await generateProjectSummary(filteredTasks, selectedList.name);
-            dispatch({ type: 'SET_STATE', payload: { isSummaryLoading: false, summaryData: { title: i18n.t('modals.aiSummaryFor', { name: selectedList.name }), content: summary } } });
-        },
-        
-        handleSidebarReorder: (folders: Folder[], lists: List[]) => {
-            dispatch({ type: 'SET_STATE', payload: { folders, lists } });
-            addToast({ message: i18n.t('toasts.sidebarReordered'), type: 'info' });
-        },
-        
-        handleTasksReorder: (reorderedTasks: Task[]) => {
-             const allOtherTasks = state.tasks.filter(t => !reorderedTasks.some(rt => rt.id === t.id));
-             dispatch({ type: 'SET_STATE', payload: { tasks: [...allOtherTasks, ...reorderedTasks] } });
-             addToast({ message: i18n.t('toasts.tasksReordered'), type: 'info' });
-        },
-        
-        handleBulkUpdateTasks: (taskIds: string[], updates: Partial<Task>) => {
-            const updatedTasks = state.tasks.map(task => 
-                taskIds.includes(task.id) ? { ...task, ...updates } : task
-            );
-            dispatch({ type: 'UPDATE_TASKS', payload: updatedTasks });
-            addToast({ message: i18n.t('toasts.tasksUpdated', { count: taskIds.length }), type: 'success' });
-        },
-        
-        handleSelectWorkspace: (workspaceId: string) => {
-            const firstListInWorkspace = state.lists.find(l => l.workspaceId === workspaceId);
-            dispatch({ type: 'SET_STATE', payload: {
-                selectedWorkspaceId: workspaceId,
-                selectedListId: firstListInWorkspace?.id || null,
-                activeView: firstListInWorkspace ? 'list' : 'dashboard',
-            }});
-        },
-        
-        handleUpdateUserStatus: (userId: string, status: UserStatus) => {
-            const user = state.users.find(u => u.id === userId);
-            if (user) {
-                dispatch({ type: 'UPDATE_USER', payload: { ...user, status } });
-            }
-        },
+    const handleAddTaskOnDate = useCallback((date: Date) => {
+        if(!state.selectedListId) return;
+        const newTask: Task = {
+            id: `t-${Date.now()}`, title: 'New Event', description: '', status: Status.Todo,
+            priority: Priority.Medium, assigneeId: null, dueDate: date.toISOString().split('T')[0],
+            createdAt: new Date().toISOString(), listId: state.selectedListId,
+            subtasks: [], comments: [], attachments: [], reminder: null, dependsOn: [], activityLog: [],
+        };
+        dispatch({ type: 'ADD_TASK', payload: newTask });
+        dispatch({ type: 'SET_STATE', payload: { selectedTaskId: newTask.id } });
+    }, [state.selectedListId]);
+    
+    const logActivity = useCallback((taskId: string, text: string, user: User) => {
+        const task = state.tasks.find(t => t.id === taskId);
+        if (!task) return;
+        const newActivity: Activity = { id: `act-${Date.now()}`, user, text, timestamp: new Date().toISOString() };
+        const updatedTask = { ...task, activityLog: [newActivity, ...task.activityLog] };
+        dispatch({ type: 'UPDATE_TASK', payload: updatedTask });
+    }, [state.tasks]);
 
-        handleSaveTemplate: (name: string, taskData: Partial<Task>) => {
-            const newTemplate: TaskTemplate = { id: `tt-${Date.now()}`, name, taskData };
-            dispatch({ type: 'ADD_TEMPLATE', payload: newTemplate });
-            addToast({ message: i18n.t('toasts.templateSaved', { name }), type: 'success' });
-        },
+    const handleGenerateSummary = useCallback(async () => {
+        if (!selectedList) return;
+        dispatch({ type: 'SET_STATE', payload: { isSummaryModalOpen: true, isSummaryLoading: true, summaryData: { title: t('modals.aiSummaryFor', { name: selectedList.name }), content: '' } } });
+        const summary = await generateProjectSummary(filteredTasks, selectedList.name);
+        dispatch({ type: 'SET_STATE', payload: { isSummaryLoading: false, summaryData: { title: t('modals.aiSummaryFor', { name: selectedList.name }), content: summary } } });
+    }, [selectedList, filteredTasks, t]);
 
-        handleNotificationClick: (notification: Notification) => {
-            dispatch({ type: 'SET_STATE', payload: { notifications: state.notifications.map(n => n.id === notification.id ? { ...n, read: true } : n) }});
-            if (notification.link?.type === 'task') {
-                const task = state.tasks.find(t => t.id === notification.link?.taskId);
-                if (task) {
-                    const list = state.lists.find(l => l.id === task.listId);
-                    if (list) {
-                        actions.setSelectedWorkspaceId(list.workspaceId);
-                        actions.setSelectedListId(list.id);
-                        actions.setActiveView('list');
-                        actions.setSelectedTaskId(task.id);
-                    }
+    const handleSidebarReorder = useCallback((folders: Folder[], lists: List[]) => {
+        dispatch({ type: 'SET_STATE', payload: { folders, lists } });
+        addToast({ message: t('toasts.sidebarReordered'), type: 'info' });
+    }, [addToast, t]);
+
+    const handleTasksReorder = useCallback((reorderedTasks: Task[]) => {
+         const allOtherTasks = state.tasks.filter(t => !reorderedTasks.some(rt => rt.id === t.id));
+         dispatch({ type: 'SET_STATE', payload: { tasks: [...allOtherTasks, ...reorderedTasks] } });
+         addToast({ message: t('toasts.tasksReordered'), type: 'info' });
+    }, [state.tasks, addToast, t]);
+
+    const handleBulkUpdateTasks = useCallback((taskIds: string[], updates: Partial<Task>) => {
+        const updatedTasks = state.tasks.map(task => 
+            taskIds.includes(task.id) ? { ...task, ...updates } : task
+        );
+        dispatch({ type: 'UPDATE_TASKS', payload: updatedTasks });
+        addToast({ message: t('toasts.tasksUpdated', { count: taskIds.length }), type: 'success' });
+    }, [state.tasks, addToast, t]);
+
+    const handleSelectWorkspace = useCallback((workspaceId: string) => {
+        const firstListInWorkspace = state.lists.find(l => l.workspaceId === workspaceId);
+        dispatch({ type: 'SET_STATE', payload: {
+            selectedWorkspaceId: workspaceId,
+            selectedListId: firstListInWorkspace?.id || null,
+            activeView: firstListInWorkspace ? 'list' : 'dashboard',
+        }});
+    }, [state.lists]);
+
+    const handleUpdateUserStatus = useCallback((userId: string, status: UserStatus) => {
+        const user = state.users.find(u => u.id === userId);
+        if (user) dispatch({ type: 'UPDATE_USER', payload: { ...user, status } });
+    }, [state.users]);
+
+    const handleSaveTemplate = useCallback((name: string, taskData: Partial<Task>) => {
+        const newTemplate: TaskTemplate = { id: `tt-${Date.now()}`, name, taskData };
+        dispatch({ type: 'ADD_TEMPLATE', payload: newTemplate });
+        addToast({ message: t('toasts.templateSaved', { name }), type: 'success' });
+    }, [addToast, t]);
+
+    const handleNotificationClick = useCallback((notification: Notification) => {
+        const newNotifications = state.notifications.map(n => n.id === notification.id ? { ...n, read: true } : n);
+        let payload: Partial<AppState> = { notifications: newNotifications };
+        if (notification.link?.type === 'task') {
+            const task = state.tasks.find(t => t.id === notification.link?.taskId);
+            if (task) {
+                const list = state.lists.find(l => l.id === task.listId);
+                if (list) {
+                    payload = { ...payload, selectedWorkspaceId: list.workspaceId, selectedListId: list.id, activeView: 'list', selectedTaskId: task.id };
                 }
-            }
-        },
-
-        handleCreateUser: (name: string, role: Role) => {
-            const newUser: User = {
-                id: `u-${Date.now()}`,
-                name,
-                role,
-                avatar: `https://i.pravatar.cc/150?u=${Date.now()}`,
-                title: 'New Member',
-                email: `${name.toLowerCase().replace(' ', '.')}@zenith.com`,
-                team: 'Unassigned',
-                bio: '',
-                status: UserStatus.Offline,
-            };
-            dispatch({ type: 'ADD_USER', payload: newUser });
-            addToast({ message: i18n.t('toasts.userCreated', { name }), type: 'success' });
-        },
-        handleDeleteUser: (userId: string) => {
-            const user = state.users.find(u => u.id === userId);
-            if (user && window.confirm(i18n.t('confirmations.deleteUser', { name: user.name }))) {
-                dispatch({ type: 'DELETE_USER', payload: userId });
-                addToast({ message: i18n.t('toasts.userDeleted'), type: 'success' });
-            }
-        },
-        handleUpdateUserRole: (userId: string, role: Role) => {
-            const user = state.users.find(u => u.id === userId);
-            if (user) {
-                dispatch({ type: 'UPDATE_USER', payload: { ...user, role } });
-            }
-        },
-        handleAIAction: (name: string, args: any) => {
-            switch (name) {
-                case 'create_task': {
-                    const { title, description, priority, assigneeName, dueDate, projectName } = args;
-
-                    let listIdToUse = state.selectedListId;
-                    if (projectName) {
-                        const foundList = state.lists.find(l => l.name.toLowerCase() === projectName.toLowerCase());
-                        if (foundList) {
-                            listIdToUse = foundList.id;
-                        } else {
-                            addToast({ message: i18n.t('toasts.projectNotFound', { name: projectName }), type: 'info' });
-                        }
-                    }
-                    if (!listIdToUse) {
-                        addToast({ message: i18n.t('toasts.selectProjectFirst'), type: 'info' });
-                        return;
-                    }
-
-                    let assigneeIdToUse = null;
-                    if (assigneeName) {
-                        const foundUser = state.users.find(u => u.name.toLowerCase() === assigneeName.toLowerCase());
-                        if (foundUser) {
-                            assigneeIdToUse = foundUser.id;
-                        } else {
-                            addToast({ message: i18n.t('toasts.userNotFound', { name: assigneeName }), type: 'info' });
-                        }
-                    }
-
-                    const newTask: Task = {
-                        id: `t-${Date.now()}`,
-                        title: title || 'New AI Task',
-                        description: description || '',
-                        status: Status.Todo,
-                        priority: Object.values(Priority).includes(priority) ? priority : Priority.Medium,
-                        assigneeId: assigneeIdToUse,
-                        dueDate: dueDate || new Date(Date.now() + 3 * 86400000).toISOString().split('T')[0],
-                        listId: listIdToUse,
-                        subtasks: [],
-                        comments: [],
-                        attachments: [],
-                        reminder: null,
-                        createdAt: new Date().toISOString(),
-                        dependsOn: [],
-                        activityLog: [],
-                    };
-                    dispatch({ type: 'ADD_TASK', payload: newTask });
-                    addToast({ message: i18n.t('toasts.taskCreatedByAI', { title: newTask.title }), type: 'success' });
-                    break;
-                }
-                case 'update_task_status': {
-                    const { taskTitle, status } = args;
-                    const taskToUpdate = state.tasks.find(t => t.title.toLowerCase() === taskTitle.toLowerCase());
-
-                    if (taskToUpdate && Object.values(Status).includes(status)) {
-                        dispatch({ type: 'UPDATE_TASK', payload: { ...taskToUpdate, status } });
-                        addToast({ message: i18n.t('toasts.taskStatusUpdated', { title: taskToUpdate.title, status: i18n.t(`common.${status.replace(/\s+/g, '').toLowerCase()}`) }), type: 'success' });
-                    } else {
-                        addToast({ message: i18n.t('toasts.taskNotFound', { title: taskTitle }), type: 'error' });
-                    }
-                    break;
-                }
-                case 'assign_task': {
-                    const { taskTitle, assigneeName } = args;
-                    const taskToUpdate = state.tasks.find(t => t.title.toLowerCase() === taskTitle.toLowerCase());
-                    const userToAssign = state.users.find(u => u.name.toLowerCase() === assigneeName.toLowerCase());
-
-                    if (taskToUpdate && userToAssign) {
-                        dispatch({ type: 'UPDATE_TASK', payload: { ...taskToUpdate, assigneeId: userToAssign.id } });
-                        addToast({ message: i18n.t('toasts.taskAssigned', { title: taskToUpdate.title, name: userToAssign.name }), type: 'success' });
-                    } else if (!taskToUpdate) {
-                        addToast({ message: i18n.t('toasts.taskNotFound', { title: taskTitle }), type: 'error' });
-                    } else {
-                        addToast({ message: i18n.t('toasts.userNotFound', { name: assigneeName }), type: 'error' });
-                    }
-                    break;
-                }
-                default:
-                    console.warn(`Unknown AI action: ${name}`);
             }
         }
-    };
-    
-    const value = {
+        dispatch({ type: 'SET_STATE', payload });
+    }, [state.notifications, state.tasks, state.lists]);
+
+    const handleCreateUser = useCallback((name: string, role: Role) => {
+        const newUser: User = {
+            id: `u-${Date.now()}`, name, role, avatar: `https://i.pravatar.cc/150?u=${Date.now()}`, title: 'New Member',
+            email: `${name.toLowerCase().replace(' ', '.')}@zenith.com`, team: 'Unassigned', bio: '', status: UserStatus.Offline,
+        };
+        dispatch({ type: 'ADD_USER', payload: newUser });
+        addToast({ message: t('toasts.userCreated', { name }), type: 'success' });
+    }, [addToast, t]);
+
+    const handleDeleteUser = useCallback((userId: string) => {
+        const user = state.users.find(u => u.id === userId);
+        if (user && window.confirm(t('confirmations.deleteUser', { name: user.name }))) {
+            dispatch({ type: 'DELETE_USER', payload: userId });
+            addToast({ message: t('toasts.userDeleted'), type: 'success' });
+        }
+    }, [state.users, addToast, t]);
+
+    const handleUpdateUserRole = useCallback((userId: string, role: Role) => {
+        const user = state.users.find(u => u.id === userId);
+        if (user) dispatch({ type: 'UPDATE_USER', payload: { ...user, role } });
+    }, [state.users]);
+
+    const handleAIAction = useCallback((name: string, args: any) => {
+        switch (name) {
+            case 'create_task': {
+                const { title, description, priority, assigneeName, dueDate, projectName } = args;
+                let listIdToUse = state.selectedListId;
+                if (projectName) {
+                    const foundList = state.lists.find(l => l.name.toLowerCase() === projectName.toLowerCase());
+                    if (foundList) listIdToUse = foundList.id;
+                    else addToast({ message: t('toasts.projectNotFound', { name: projectName }), type: 'info' });
+                }
+                if (!listIdToUse) { addToast({ message: t('toasts.selectProjectFirst'), type: 'info' }); return; }
+                let assigneeIdToUse = null;
+                if (assigneeName) {
+                    const foundUser = state.users.find(u => u.name.toLowerCase() === assigneeName.toLowerCase());
+                    if (foundUser) assigneeIdToUse = foundUser.id;
+                    else addToast({ message: t('toasts.userNotFound', { name: assigneeName }), type: 'info' });
+                }
+                const newTask: Task = {
+                    id: `t-${Date.now()}`, title: title || 'New AI Task', description: description || '', status: Status.Todo,
+                    priority: Object.values(Priority).includes(priority) ? priority : Priority.Medium, assigneeId: assigneeIdToUse,
+                    dueDate: dueDate || new Date(Date.now() + 3 * 86400000).toISOString().split('T')[0], listId: listIdToUse,
+                    subtasks: [], comments: [], attachments: [], reminder: null, createdAt: new Date().toISOString(), dependsOn: [], activityLog: [],
+                };
+                dispatch({ type: 'ADD_TASK', payload: newTask });
+                addToast({ message: t('toasts.taskCreatedByAI', { title: newTask.title }), type: 'success' });
+                break;
+            }
+            case 'update_task_status': {
+                const { taskTitle, status } = args;
+                const taskToUpdate = state.tasks.find(t => t.title.toLowerCase() === taskTitle.toLowerCase());
+                if (taskToUpdate && Object.values(Status).includes(status)) {
+                    dispatch({ type: 'UPDATE_TASK', payload: { ...taskToUpdate, status } });
+                    addToast({ message: t('toasts.taskStatusUpdated', { title: taskToUpdate.title, status: i18n.t(`common.${status.replace(/\s+/g, '').toLowerCase()}`) }), type: 'success' });
+                } else { addToast({ message: t('toasts.taskNotFound', { title: taskTitle }), type: 'error' }); }
+                break;
+            }
+            case 'assign_task': {
+                const { taskTitle, assigneeName } = args;
+                const taskToUpdate = state.tasks.find(t => t.title.toLowerCase() === taskTitle.toLowerCase());
+                const userToAssign = state.users.find(u => u.name.toLowerCase() === assigneeName.toLowerCase());
+                if (taskToUpdate && userToAssign) {
+                    dispatch({ type: 'UPDATE_TASK', payload: { ...taskToUpdate, assigneeId: userToAssign.id } });
+                    addToast({ message: t('toasts.taskAssigned', { title: taskToUpdate.title, name: userToAssign.name }), type: 'success' });
+                } else if (!taskToUpdate) { addToast({ message: t('toasts.taskNotFound', { title: taskTitle }), type: 'error' });
+                } else { addToast({ message: t('toasts.userNotFound', { name: assigneeName }), type: 'error' }); }
+                break;
+            }
+            default: console.warn(`Unknown AI action: ${name}`);
+        }
+    }, [state.selectedListId, state.lists, state.users, state.tasks, addToast, t, i18n]);
+
+    const actions = useMemo(() => ({
+        ...simpleSetters,
+        setNotifications,
+        addToast,
+        removeToast,
+        addNotification,
+        handleUpdateUser,
+        handleSaveWorkspace,
+        handleDeleteWorkspace,
+        handleSaveList,
+        handleDeleteList,
+        handleSaveFolder,
+        handleDeleteFolder,
+        handleUpdateTask,
+        handleDeleteTask,
+        handleAddTask,
+        handleAddTaskOnDate,
+        logActivity,
+        handleGenerateSummary,
+        handleSidebarReorder,
+        handleTasksReorder,
+        handleBulkUpdateTasks,
+        handleSelectWorkspace,
+        handleUpdateUserStatus,
+        handleSaveTemplate,
+        handleNotificationClick,
+        handleCreateUser,
+        handleDeleteUser,
+        handleUpdateUserRole,
+        handleAIAction,
+    }), [
+        simpleSetters, setNotifications, addToast, removeToast, addNotification, handleUpdateUser, handleSaveWorkspace,
+        handleDeleteWorkspace, handleSaveList, handleDeleteList, handleSaveFolder, handleDeleteFolder, handleUpdateTask,
+        handleDeleteTask, handleAddTask, handleAddTaskOnDate, logActivity, handleGenerateSummary, handleSidebarReorder,
+        handleTasksReorder, handleBulkUpdateTasks, handleSelectWorkspace, handleUpdateUserStatus, handleSaveTemplate,
+        handleNotificationClick, handleCreateUser, handleDeleteUser, handleUpdateUserRole, handleAIAction
+    ]);
+
+    const value = useMemo(() => ({
         state: {
             ...state,
             selectedTask,
@@ -638,7 +630,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             filteredTasks,
         },
         actions
-    };
+    }), [state, selectedTask, editingUser, selectedList, filteredTasks, actions]);
 
     return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
 };
