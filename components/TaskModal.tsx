@@ -19,6 +19,11 @@ interface TaskModalProps {
   logActivity: (taskId: string, text: string, user: User) => void;
 }
 
+// Fix: Defined a recursive type for comments with replies to resolve typing errors in the component.
+interface CommentWithReplies extends Comment {
+  replies: CommentWithReplies[];
+}
+
 const Spinner: React.FC = () => (
     <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
@@ -146,10 +151,8 @@ const TaskModal: React.FC<TaskModalProps> = ({ task, onClose, onUpdateTask, onDe
   };
 
   const handleDelete = () => {
-    if (window.confirm('¿Estás seguro de que quieres eliminar esta tarea? Esta acción no se puede deshacer.')) {
-      onDeleteTask(task.id);
-      onClose();
-    }
+    onDeleteTask(task.id);
+    onClose();
   };
 
   const handleGenerateSubtasks = async () => {
@@ -294,8 +297,8 @@ const TaskModal: React.FC<TaskModalProps> = ({ task, onClose, onUpdateTask, onDe
 
     const { commentTree } = useMemo(() => {
         const comments = editedTask.comments || [];
-        const commentMap = new Map<string, Comment & { replies: Comment[] }>();
-        const tree: (Comment & { replies: Comment[] })[] = [];
+        const commentMap = new Map<string, CommentWithReplies>();
+        const tree: CommentWithReplies[] = [];
 
         comments.forEach(comment => {
             commentMap.set(comment.id, { ...comment, replies: [] });
@@ -389,7 +392,7 @@ const TaskModal: React.FC<TaskModalProps> = ({ task, onClose, onUpdateTask, onDe
     return renderMarkdown(processedText);
   };
   
-  const CommentComponent: React.FC<{comment: Comment & {replies: Comment[]}}> = ({ comment }) => {
+  const CommentComponent: React.FC<{comment: CommentWithReplies}> = ({ comment }) => {
     const isEditing = editingCommentId === comment.id;
     const isReplying = replyingTo === comment.id;
 

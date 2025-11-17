@@ -514,15 +514,19 @@ const App: React.FC = () => {
   };
 
   const handleDeleteTask = (taskId: string) => {
-    setTasks(prevTasks => {
-        const newTasks = prevTasks.filter(task => task.id !== taskId);
-        return newTasks.map(task => ({
-            ...task,
-            dependsOn: (task.dependsOn || []).filter(depId => depId !== taskId)
-        }));
-    });
-    setSelectedTaskId(null);
-    addToast("Tarea eliminada correctamente", "success");
+    if (window.confirm('¿Estás seguro de que quieres eliminar esta tarea? Esta acción no se puede deshacer.')) {
+      setTasks(prevTasks => {
+          const newTasks = prevTasks.filter(task => task.id !== taskId);
+          return newTasks.map(task => ({
+              ...task,
+              dependsOn: (task.dependsOn || []).filter(depId => depId !== taskId)
+          }));
+      });
+      if (selectedTaskId === taskId) {
+        setSelectedTaskId(null);
+      }
+      addToast("Tarea eliminada correctamente", "success");
+    }
   };
 
   const handleUpdateUserRole = (userId: string, role: Role) => {
@@ -555,9 +559,13 @@ const App: React.FC = () => {
   };
   
   const handleDeleteUser = (userId: string) => {
+    const user = users.find(u => u.id === userId);
+    if (!user) return;
+    if (window.confirm(`¿Estás seguro de que quieres eliminar a ${user.name}? Todas sus tareas asignadas quedarán sin asignar.`)) {
       setUsers(prev => prev.filter(u => u.id !== userId));
       setTasks(prev => prev.map(t => t.assigneeId === userId ? {...t, assigneeId: null} : t));
       addToast("Usuario eliminado.", "success");
+    }
   };
   
   const handleUpdateUserStatus = useCallback((userId: string, status: UserStatus) => {
@@ -611,21 +619,28 @@ const App: React.FC = () => {
   };
   
   const handleDeleteWorkspace = (id: string) => {
-    const listsToDelete = lists.filter(l => l.workspaceId === id).map(l => l.id);
-    const tasksToDelete = tasks.filter(t => listsToDelete.includes(t.listId)).map(t => t.id);
-    
-    setTasks(prev => prev.filter(t => !tasksToDelete.includes(t.id)));
-    setLists(prev => prev.filter(l => !listsToDelete.includes(l.id)));
-    setWorkspaces(prev => prev.filter(w => w.id !== id));
-    
-    if (selectedWorkspaceId === id) {
-        const firstWorkspace = workspaces[0];
-        if (firstWorkspace) {
-            setSelectedWorkspaceId(firstWorkspace.id);
-            setSelectedListId(lists.find(l => l.workspaceId === firstWorkspace.id)?.id || null);
+    const workspace = workspaces.find(w => w.id === id);
+    if (!workspace) return;
+    if (window.confirm(`¿Estás seguro de que quieres eliminar el espacio de trabajo "${workspace.name}"? Esto eliminará todos los proyectos y tareas asociados.`)) {
+        const listsToDelete = lists.filter(l => l.workspaceId === id).map(l => l.id);
+        const tasksToDelete = tasks.filter(t => listsToDelete.includes(t.listId)).map(t => t.id);
+        
+        setTasks(prev => prev.filter(t => !tasksToDelete.includes(t.id)));
+        setLists(prev => prev.filter(l => !listsToDelete.includes(l.id)));
+        setWorkspaces(prev => prev.filter(w => w.id !== id));
+        
+        if (selectedWorkspaceId === id) {
+            const nextWorkspace = workspaces.find(w => w.id !== id);
+            if (nextWorkspace) {
+                setSelectedWorkspaceId(nextWorkspace.id);
+                setSelectedListId(lists.find(l => l.workspaceId === nextWorkspace.id)?.id || null);
+            } else {
+                setSelectedWorkspaceId('');
+                setSelectedListId(null);
+            }
         }
+        addToast("Espacio de trabajo eliminado.", "success");
     }
-    addToast("Espacio de trabajo eliminado.", "success");
   };
 
   const handleSaveList = (name: string, color: string, folderId: string | null) => {
@@ -654,7 +669,9 @@ const App: React.FC = () => {
     if (window.confirm('Estás seguro de que quieres eliminar este proyecto? Todas las tareas dentro de él también serán eliminadas.')) {
         setTasks(prev => prev.filter(t => t.listId !== listId));
         setLists(prev => prev.filter(l => l.id !== listId));
-        setSelectedListId(null);
+        if (selectedListId === listId) {
+            setSelectedListId(null);
+        }
         addToast("Proyecto eliminado.", "success");
     }
   };

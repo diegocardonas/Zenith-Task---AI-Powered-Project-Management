@@ -120,9 +120,7 @@ const TaskRow: React.FC<TaskRowProps> = ({ task, users, onSelectTask, onUpdateTa
   };
   
   const handleDeleteClick = () => {
-      if (window.confirm('¿Estás seguro de que quieres eliminar esta tarea? Esta acción no se puede deshacer.')) {
-          onDeleteTask(task.id);
-      }
+    onDeleteTask(task.id);
   };
   
   const handleMoveTask = (newListId: string) => {
