@@ -768,16 +768,16 @@ const App: React.FC = () => {
                     return;
                 }
                 
-                // Fix: The AI can return arguments of any type. This ensures that the properties of `taskData`
-                // are of the correct type before they are used to create a new task, preventing runtime errors.
-                // The TypeScript error was likely pointing to the 'title' property due to cascading type issues
-                // from other properties in the object literal.
+                // Fix: Refactored the priority check to be more robust. The previous implementation caused a TypeScript
+                // error because the type of `args.priority` was not being correctly narrowed within the complex expression.
+                // This version explicitly checks the type and value before assigning it.
+                const priorityArg = args.priority;
+                const isValidPriority = typeof priorityArg === 'string' && (Object.values(Priority) as string[]).includes(priorityArg);
+
                 const taskData: Partial<Task> = {
                     title: args.title,
                     description: typeof args.description === 'string' ? args.description : '',
-                    // Fix: Added a type check to ensure `args.priority` is a valid string and Priority enum member before using it.
-                    // This resolves an error where an `unknown` type could be passed to `Array.prototype.includes`.
-                    priority: typeof args.priority === 'string' && Object.values(Priority).includes(args.priority as Priority) ? args.priority as Priority : Priority.Medium,
+                    priority: isValidPriority ? priorityArg as Priority : Priority.Medium,
                     assigneeId: assigneeId,
                     dueDate: typeof args.dueDate === 'string' ? args.dueDate : new Date(Date.now() + 86400000).toISOString().split('T')[0],
                 };
