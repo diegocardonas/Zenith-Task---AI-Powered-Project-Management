@@ -1,9 +1,10 @@
 import React from 'react';
-import { List, Task, User, ViewType, Role, Status, Priority } from '../types';
+import { List, Task, User, ViewType, Role, Status, Priority, Permission } from '../types';
 import BoardView from './BoardView';
 import ListView from './ListView';
 import Header from './Header';
-import CalendarView from './CalendarView';
+// Fix: Changed to a named import for CalendarView as it does not have a default export.
+import { CalendarView } from './CalendarView';
 import ProjectDashboard from './ProjectDashboard';
 import GanttView from './GanttView';
 import { useAppContext } from '../contexts/AppContext';
@@ -11,7 +12,7 @@ import { useTranslation } from '../i18n';
 
 const MainContent: React.FC = () => {
   const { t } = useTranslation();
-  const { state, actions } = useAppContext();
+  const { state, actions, permissions } = useAppContext();
   const {
     selectedList,
     users,
@@ -35,7 +36,7 @@ const MainContent: React.FC = () => {
     logActivity,
   } = actions;
 
-  const canCreateTasks = currentUser!.role === Role.Admin || currentUser!.role === Role.Member;
+  const canCreateTasks = permissions.has(Permission.CREATE_TASKS);
   const [isTemplateDropdownOpen, setTemplateDropdownOpen] = React.useState(false);
   const templateDropdownRef = React.useRef<HTMLDivElement>(null);
 
@@ -88,7 +89,7 @@ const MainContent: React.FC = () => {
       case ViewType.Gantt:
         return <GanttView tasks={filteredTasks} allTasks={allTasks} onSelectTask={(task) => setSelectedTaskId(task.id)} users={users} onUpdateTask={handleUpdateTask} currentUser={currentUser!} logActivity={logActivity} />;
       case ViewType.ProjectDashboard:
-        return <ProjectDashboard tasks={filteredTasks} users={users} />;
+        return <ProjectDashboard tasks={filteredTasks} />;
       default:
         return <BoardView />;
     }
@@ -136,35 +137,37 @@ const MainContent: React.FC = () => {
                         <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
                     </div>
                 </div>
-                 <div className="relative" ref={templateDropdownRef}>
-                    <button 
-                        onClick={handleNewTaskButtonClick} 
-                        disabled={!canCreateTasks || !selectedList}
-                        className="px-4 py-2 bg-primary text-white font-semibold rounded-lg hover:bg-primary-focus transition-colors duration-200 flex items-center disabled:bg-gray-500 disabled:cursor-not-allowed"
-                        title={!canCreateTasks ? t('mainContent.createTaskGuestTooltip') : !selectedList ? t('mainContent.createTaskNoProjectTooltip') : t('mainContent.createTaskTooltip')}
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
-                        <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
-                      </svg>
-                      <span className="hidden sm:inline">{t('common.new')}</span>
-                    </button>
-                     {isTemplateDropdownOpen && taskTemplates.length > 0 && (
-                        <div className="absolute right-0 mt-2 w-56 bg-surface rounded-lg shadow-lg border border-border z-20 animate-fadeIn">
-                            <div className="p-1">
-                                <button onClick={() => handleCreateTask()} className="w-full text-left px-3 py-2 text-sm rounded-md hover:bg-secondary-focus font-semibold">
-                                    {t('mainContent.newTaskFromTemplate')}
-                                </button>
-                                <div className="my-1 h-px bg-border"></div>
-                                <div className="px-3 py-1 text-xs text-text-secondary uppercase tracking-wider">{t('mainContent.templates')}</div>
-                                {taskTemplates.map(template => (
-                                    <button key={template.id} onClick={() => handleCreateTask(template)} className="w-full text-left px-3 py-2 text-sm rounded-md hover:bg-secondary-focus">
-                                        {template.name}
+                 {canCreateTasks && (
+                    <div className="relative" ref={templateDropdownRef}>
+                        <button 
+                            onClick={handleNewTaskButtonClick} 
+                            disabled={!selectedList}
+                            className="px-4 py-2 bg-primary text-white font-semibold rounded-lg hover:bg-primary-focus transition-colors duration-200 flex items-center disabled:bg-gray-500 disabled:cursor-not-allowed"
+                            title={!selectedList ? t('mainContent.createTaskNoProjectTooltip') : t('mainContent.createTaskTooltip')}
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                            <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
+                          </svg>
+                          <span className="hidden sm:inline">{t('common.new')}</span>
+                        </button>
+                         {isTemplateDropdownOpen && taskTemplates.length > 0 && (
+                            <div className="absolute right-0 mt-2 w-56 bg-surface rounded-lg shadow-lg border border-border z-20 animate-fadeIn">
+                                <div className="p-1">
+                                    <button onClick={() => handleCreateTask()} className="w-full text-left px-3 py-2 text-sm rounded-md hover:bg-secondary-focus font-semibold">
+                                        {t('mainContent.newTaskFromTemplate')}
                                     </button>
-                                ))}
+                                    <div className="my-1 h-px bg-border"></div>
+                                    <div className="px-3 py-1 text-xs text-text-secondary uppercase tracking-wider">{t('mainContent.templates')}</div>
+                                    {taskTemplates.map(template => (
+                                        <button key={template.id} onClick={() => handleCreateTask(template)} className="w-full text-left px-3 py-2 text-sm rounded-md hover:bg-secondary-focus">
+                                            {template.name}
+                                        </button>
+                                    ))}
+                                </div>
                             </div>
-                        </div>
-                    )}
-                </div>
+                        )}
+                    </div>
+                 )}
             </div>
         </div>
         <div className="flex-grow p-3 sm:p-6">

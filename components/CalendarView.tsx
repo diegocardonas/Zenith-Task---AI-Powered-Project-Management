@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useRef } from 'react';
-import { Task, Priority, User, Role } from '../types';
+import { Task, Priority, User, Role, Permission } from '../types';
 import { useTranslation } from '../i18n';
+import { useAppContext } from '../contexts/AppContext';
 
 const PRIORITY_COLORS: { [key in Priority]: string } = {
     [Priority.High]: 'bg-priority-high',
@@ -21,25 +22,28 @@ const DayTasksModal: React.FC<{
                 <header className="p-4 border-b border-border flex justify-between items-center">
                     <h3 className="font-semibold text-text-primary">{t('modals.dayTasksTitle', { day: day.toLocaleDateString(i18n.language, { weekday: 'long', month: 'long', day: 'numeric' }) })}</h3>
                     <button onClick={onClose} className="p-1 rounded-full hover:bg-secondary-focus" aria-label={t('common.close')}>
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" /></svg>
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                            <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                        </svg>
                     </button>
                 </header>
-                <div className="p-4 overflow-y-auto space-y-2">
-                    {tasks.map(task => (
-                        <div
-                            key={task.id}
-                            onClick={() => { onSelectTask(task); onClose(); }}
-                            className={`p-2 text-sm rounded text-white font-semibold cursor-pointer hover:opacity-80 ${PRIORITY_COLORS[task.priority]}`}
-                            title={task.title}
-                        >
-                            {task.title}
-                        </div>
-                    ))}
-                </div>
+                <main className="p-4 overflow-y-auto">
+                    <div className="space-y-2">
+                        {tasks.sort((a,b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime()).map(task => (
+                            <button key={task.id} onClick={() => { onSelectTask(task); onClose(); }} className="w-full text-left p-2 rounded-lg bg-secondary hover:bg-secondary-focus transition-colors flex items-start gap-2">
+                                <div className={`w-2 h-2 rounded-full mt-1.5 flex-shrink-0 ${PRIORITY_COLORS[task.priority]}`}></div>
+                                <div className="flex-grow">
+                                    <p className="font-semibold text-text-primary text-sm">{task.title}</p>
+                                </div>
+                            </button>
+                        ))}
+                    </div>
+                </main>
             </div>
         </div>
     );
 };
+
 
 interface CalendarViewProps {
   tasks: Task[];
@@ -49,172 +53,129 @@ interface CalendarViewProps {
   currentUser: User;
 }
 
-const CalendarView: React.FC<CalendarViewProps> = ({ tasks, onSelectTask, onUpdateTask, onAddTaskForDate, currentUser }) => {
+export const CalendarView: React.FC<CalendarViewProps> = ({ tasks, onSelectTask, onAddTaskForDate, currentUser }) => {
     const { t, i18n } = useTranslation();
+    const { permissions } = useAppContext();
     const [currentDate, setCurrentDate] = useState(new Date());
-    const [draggedTaskId, setDraggedTaskId] = useState<string | null>(null);
-    const [dragOverDate, setDragOverDate] = useState<string | null>(null);
-    const [dayModal, setDayModal] = useState<{date: Date, tasks: Task[]} | null>(null);
+    const [modalData, setModalData] = useState<{ day: Date; tasks: Task[] } | null>(null);
+    const today = new Date();
     
-    const canEdit = currentUser.role !== Role.Guest;
-    const MAX_TASKS_SHOWN = 2;
+    const canCreateTasks = permissions.has(Permission.CREATE_TASKS);
 
-    const calendarGrid = useMemo(() => {
-        const year = currentDate.getFullYear();
-        const month = currentDate.getMonth();
-        const grid: { date: Date, isCurrentMonth: boolean }[] = [];
+    const firstDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+    const lastDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
 
-        const firstDayOfMonth = new Date(year, month, 1);
-        const startDayOfWeek = firstDayOfMonth.getDay(); // 0 = Sunday
+    const daysInMonth = useMemo(() => {
+        const days = [];
+        const startingDay = firstDayOfMonth.getDay(); // 0 for Sunday, 1 for Monday, etc.
+        const numDays = lastDayOfMonth.getDate();
 
-        const startDate = new Date(firstDayOfMonth);
-        startDate.setDate(startDate.getDate() - startDayOfWeek);
-
-        for (let i = 0; i < 42; i++) { // Always render 6 weeks for a consistent layout
-            const date = new Date(startDate);
-            date.setDate(startDate.getDate() + i);
-            grid.push({
-                date,
-                isCurrentMonth: date.getMonth() === month,
-            });
+        for (let i = 0; i < startingDay; i++) {
+            days.push(null);
         }
-
-        return grid;
+        for (let i = 1; i <= numDays; i++) {
+            days.push(new Date(currentDate.getFullYear(), currentDate.getMonth(), i));
+        }
+        return days;
     }, [currentDate]);
 
     const tasksByDate = useMemo(() => {
         const map = new Map<string, Task[]>();
         tasks.forEach(task => {
-            const dateKey = new Date(task.dueDate).toDateString();
-            if (!map.has(dateKey)) {
-                map.set(dateKey, []);
+            if (task.dueDate) {
+                const date = new Date(task.dueDate);
+                const dateKey = `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
+                if (!map.has(dateKey)) {
+                    map.set(dateKey, []);
+                }
+                map.get(dateKey)!.push(task);
             }
-            map.get(dateKey)!.push(task);
         });
         return map;
     }, [tasks]);
 
-    const changeMonth = (offset: number) => {
-        setCurrentDate(prev => {
-            const newDate = new Date(prev);
-            newDate.setMonth(prev.getMonth() + offset);
-            return newDate;
-        });
+    const goToPreviousMonth = () => {
+        setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1));
     };
 
-    const handleDragStart = (e: React.DragEvent, task: Task) => {
-        if (!canEdit) return;
-        e.dataTransfer.setData('taskId', task.id);
-        setDraggedTaskId(task.id);
+    const goToNextMonth = () => {
+        setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1));
     };
 
-    const handleDragOver = (e: React.DragEvent, day: Date | null) => {
-        if (day && canEdit) {
-            e.preventDefault();
-            setDragOverDate(day.toDateString());
-        }
-    };
-
-    const handleDragLeave = () => setDragOverDate(null);
-
-    const handleDrop = (e: React.DragEvent, day: Date | null) => {
-        if (!day || !canEdit) return;
-        e.preventDefault();
-        const taskId = e.dataTransfer.getData('taskId');
-        const taskToMove = tasks.find(t => t.id === taskId);
-        if (taskToMove && new Date(taskToMove.dueDate).toDateString() !== day.toDateString()) {
-            onUpdateTask({ ...taskToMove, dueDate: day.toISOString().split('T')[0] });
-        }
-        setDraggedTaskId(null);
-        setDragOverDate(null);
+    const isSameDay = (d1: Date, d2: Date) => {
+        return d1.getFullYear() === d2.getFullYear() &&
+               d1.getMonth() === d2.getMonth() &&
+               d1.getDate() === d2.getDate();
     };
     
-    const WEEKDAYS = [t('weekdays.sun'), t('weekdays.mon'), t('weekdays.tue'), t('weekdays.wed'), t('weekdays.thu'), t('weekdays.fri'), t('weekdays.sat')];
-    const today = new Date().toDateString();
+    const weekdays = [t('weekdays.sun'), t('weekdays.mon'), t('weekdays.tue'), t('weekdays.wed'), t('weekdays.thu'), t('weekdays.fri'), t('weekdays.sat')];
 
     return (
-        <div className="bg-surface rounded-lg h-full flex flex-col p-4">
-            <header className="flex items-center justify-between mb-4">
+        <div className="bg-surface rounded-lg h-full flex flex-col">
+            <header className="p-4 border-b border-border flex justify-between items-center">
                 <div className="flex items-center gap-2">
-                    <button onClick={() => changeMonth(-1)} className="p-2 rounded-full hover:bg-secondary-focus" aria-label="Previous month">&lt;</button>
-                    <button onClick={() => changeMonth(1)} className="p-2 rounded-full hover:bg-secondary-focus" aria-label="Next month">&gt;</button>
-                    <button onClick={() => setCurrentDate(new Date())} className="px-3 py-1.5 text-sm font-medium bg-secondary rounded-lg hover:bg-secondary-focus transition-colors">{t('common.today')}</button>
+                    <button onClick={() => setCurrentDate(new Date())} className="px-3 py-1 text-sm border border-border rounded-md hover:bg-secondary-focus">{t('common.today')}</button>
+                    <button onClick={goToPreviousMonth} className="p-1 rounded-full hover:bg-secondary-focus" aria-label={t('common.previous')}>
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
+                    </button>
+                     <button onClick={goToNextMonth} className="p-1 rounded-full hover:bg-secondary-focus" aria-label={t('common.next')}>
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" /></svg>
+                    </button>
                 </div>
-                <h2 className="text-xl font-bold text-center">
+                <h2 className="text-xl font-semibold text-text-primary">
                     {currentDate.toLocaleString(i18n.language, { month: 'long', year: 'numeric' })}
                 </h2>
-                <div className="w-28"></div> {/* Spacer to balance header */}
+                <div></div>
             </header>
-            
-            <div className="grid grid-cols-7 gap-1 text-center font-semibold text-text-secondary text-sm">
-                {WEEKDAYS.map(day => <div key={day} className="py-2">{day}</div>)}
+            <div className="grid grid-cols-7 flex-shrink-0">
+                {weekdays.map(day => (
+                    <div key={day} className="text-center p-2 text-xs font-semibold uppercase text-text-secondary border-b border-r border-border">{day}</div>
+                ))}
             </div>
-
-            <div className="grid grid-cols-7 grid-rows-6 gap-1 flex-grow">
-                {calendarGrid.map(({ date, isCurrentMonth }, index) => {
-                    const dayTasks = tasksByDate.get(date.toDateString()) || [];
-                    const isToday = date.toDateString() === today;
-                    const isDragOver = date.toDateString() === dragOverDate;
-                    const isWeekend = date.getDay() === 0 || date.getDay() === 6;
+            <div className="grid grid-cols-7 grid-rows-6 flex-grow overflow-y-auto">
+                {daysInMonth.map((day, index) => {
+                    if (!day) return <div key={`empty-${index}`} className="border-r border-b border-border"></div>;
                     
+                    const dateKey = `${day.getFullYear()}-${day.getMonth()}-${day.getDate()}`;
+                    const dayTasks = tasksByDate.get(dateKey) || [];
+                    const isToday = isSameDay(day, today);
+                    const MAX_TASKS_VISIBLE = 2;
+
                     return (
-                        <div 
-                            key={index} 
-                            className={`group relative border border-border flex flex-col min-h-[120px] transition-colors
-                                ${isDragOver ? 'bg-primary/20 border-primary/50' : isWeekend ? 'bg-secondary/50' : 'bg-secondary'}
-                                ${isCurrentMonth ? '' : 'text-text-secondary/50'} rounded-md p-1 sm:p-2`}
-                            onDragOver={(e) => handleDragOver(e, date)}
-                            onDragLeave={handleDragLeave}
-                            onDrop={(e) => handleDrop(e, date)}
-                        >
-                            <div className="flex justify-between items-start">
-                                <span className={`text-sm font-semibold ${isToday ? 'bg-primary text-white rounded-full flex items-center justify-center w-6 h-6' : 'p-1'}`}>{date.getDate()}</span>
-                                {canEdit && isCurrentMonth && (
-                                    <button
-                                        onClick={() => onAddTaskForDate(date)}
-                                        className="w-6 h-6 flex items-center justify-center rounded-full text-text-secondary bg-surface opacity-0 group-hover:opacity-100 hover:bg-primary hover:text-white transition-all z-10"
-                                        title={t('tooltips.addTaskForDate', { date: date.toLocaleDateString(i18n.language) })}
-                                    >
+                        <div key={index} className="border-r border-b border-border p-2 flex flex-col group relative">
+                            <div className="flex justify-between items-center">
+                                <span className={`text-sm font-semibold ${isToday ? 'bg-primary text-white rounded-full h-6 w-6 flex items-center justify-center' : ''}`}>{day.getDate()}</span>
+                                {canCreateTasks &&
+                                    <button onClick={() => onAddTaskForDate(day)} title={t('tooltips.addTaskForDate', { date: day.toLocaleDateString()})} className="opacity-0 group-hover:opacity-100 p-1 rounded-full hover:bg-secondary-focus transition-opacity">
                                         <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" /></svg>
                                     </button>
-                                )}
+                                }
                             </div>
-                            <div className="space-y-1 overflow-y-auto flex-grow mt-1">
-                                {dayTasks.slice(0, MAX_TASKS_SHOWN).map(task => (
-                                    <div
-                                        key={task.id}
-                                        onClick={() => onSelectTask(task)}
-                                        draggable={canEdit}
-                                        onDragStart={(e) => handleDragStart(e, task)}
-                                        className={`p-1.5 text-xs rounded truncate text-white font-semibold ${PRIORITY_COLORS[task.priority]} transition-opacity ${canEdit ? 'cursor-grab' : 'cursor-pointer'} ${draggedTaskId === task.id ? 'opacity-50' : 'hover:opacity-80'}`}
-                                        title={task.title}
-                                    >
-                                        {task.title}
-                                    </div>
+                            <div className="mt-2 space-y-1 overflow-y-auto">
+                                {dayTasks.slice(0, MAX_TASKS_VISIBLE).map(task => (
+                                    <button key={task.id} onClick={() => onSelectTask(task)} className="w-full text-left p-1 rounded bg-secondary hover:bg-secondary-focus text-xs flex items-center gap-1.5 truncate">
+                                        <div className={`w-1.5 h-1.5 rounded-full ${PRIORITY_COLORS[task.priority]}`}></div>
+                                        <span className="truncate">{task.title}</span>
+                                    </button>
                                 ))}
-                                {dayTasks.length > MAX_TASKS_SHOWN && (
-                                    <button 
-                                        onClick={() => setDayModal({ date, tasks: dayTasks })}
-                                        className="text-xs font-semibold text-primary hover:underline text-left mt-1 px-1.5"
-                                    >
-                                        + {dayTasks.length - MAX_TASKS_SHOWN} {t('common.more')}
+                                {dayTasks.length > MAX_TASKS_VISIBLE && (
+                                    <button onClick={() => setModalData({day, tasks: dayTasks})} className="w-full text-left text-xs text-primary hover:underline">
+                                        {t('common.more', { count: dayTasks.length - MAX_TASKS_VISIBLE })}
                                     </button>
                                 )}
                             </div>
                         </div>
-                    )
+                    );
                 })}
             </div>
-            {dayModal && (
+             {modalData && (
                 <DayTasksModal
-                    day={dayModal.date}
-                    tasks={dayModal.tasks}
-                    onClose={() => setDayModal(null)}
+                    day={modalData.day}
+                    tasks={modalData.tasks}
+                    onClose={() => setModalData(null)}
                     onSelectTask={onSelectTask}
                 />
             )}
         </div>
     );
 };
-
-export default CalendarView;

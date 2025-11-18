@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { List, User } from '../types';
+import { List, User, Permission } from '../types';
 import { useTranslation } from '../i18n';
+import { useAppContext } from '../contexts/AppContext';
 
 interface Command {
     id: string;
@@ -19,6 +20,7 @@ interface CommandPaletteProps {
 
 const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose, lists, currentUser, onCommand }) => {
   const { t } = useTranslation();
+  const { permissions } = useAppContext();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedIndex, setSelectedIndex] = useState(0);
 
@@ -30,14 +32,18 @@ const CommandPalette: React.FC<CommandPaletteProps> = ({ isOpen, onClose, lists,
         action: () => onCommand('navigate_list', list.id)
     })),
     { id: 'my-tasks', name: t('commandPalette.myTasks'), category: t('commandPalette.navigateTo'), action: () => onCommand('navigate_my_tasks') },
-    ...(currentUser.role === 'Admin' ? [
-        { id: 'admin-dashboard', name: t('commandPalette.adminDashboard'), category: t('commandPalette.navigateTo'), action: () => onCommand('navigate_dashboard') },
+    ...(permissions.has(Permission.VIEW_DASHBOARD) ? [
+        { id: 'admin-dashboard', name: t('commandPalette.adminDashboard'), category: t('commandPalette.navigateTo'), action: () => onCommand('navigate_dashboard') }
+    ] : []),
+    ...(permissions.has(Permission.MANAGE_APP) ? [
         { id: 'app-admin', name: t('commandPalette.appAdmin'), category: t('commandPalette.navigateTo'), action: () => onCommand('navigate_admin') }
     ] : []),
-    { id: 'create-task', name: t('commandPalette.createTask'), category: t('commandPalette.create'), action: () => onCommand('create_task') },
+    ...(permissions.has(Permission.CREATE_TASKS) ? [
+        { id: 'create-task', name: t('commandPalette.createTask'), category: t('commandPalette.create'), action: () => onCommand('create_task') }
+    ] : []),
     { id: 'toggle-theme', name: t('commandPalette.toggleTheme'), category: t('commandPalette.general'), action: () => onCommand('toggle_theme') },
     { id: 'logout', name: t('commandPalette.logout'), category: t('commandPalette.general'), action: () => onCommand('logout') },
-  ], [lists, currentUser, onCommand, t]);
+  ], [lists, currentUser, onCommand, t, permissions]);
 
   const filteredCommands = useMemo(() => {
     if (!searchTerm) return commands;

@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useReducer, useEffect, useMemo, useCallback } from 'react';
 import {
   Task, User, List, Workspace, Folder, Status, Priority, Role, UserStatus, ViewType,
-  Toast, Notification, TaskTemplate, Activity
+  Toast, Notification, TaskTemplate, Activity, Permission
 } from '../types';
 import { ThemeName, ColorScheme, themes } from '../themes';
 import { generateProjectSummary } from '../services/geminiService';
@@ -14,6 +14,7 @@ const USERS: User[] = [
   { id: 'u3', name: 'David Chen', avatar: 'https://i.pravatar.cc/150?u=u3', role: Role.Member, title: 'UX/UI Designer', email: 'david@zenith.com', team: 'Design', bio: 'Creating intuitive and beautiful user experiences.', status: UserStatus.Away },
   { id: 'u4', name: 'Priya Patel', avatar: 'https://i.pravatar.cc/150?u=u4', role: Role.Member, title: 'QA Engineer', email: 'priya@zenith.com', team: 'Engineering', bio: 'Detail-oriented QA professional ensuring product quality.', status: UserStatus.Busy },
   { id: 'u5', name: 'Tom Wilson', avatar: 'https://i.pravatar.cc/150?u=u5', role: Role.Guest, title: 'Freelancer', email: 'tom@external.com', team: 'External', bio: 'Consultant providing external feedback.', status: UserStatus.Offline },
+  { id: 'u6', name: 'Charles Bing', avatar: 'https://i.pravatar.cc/150?u=u6', role: Role.Viewer, title: 'Stakeholder', email: 'charles@zenith.com', team: 'Management', bio: 'Executive stakeholder, needs read-only access.', status: UserStatus.Online },
 ];
 
 const WORKSPACES: Workspace[] = [
@@ -51,6 +52,22 @@ const TASK_TEMPLATES: TaskTemplate[] = [
     { id: 'tt1', name: 'New Feature Checklist', taskData: { priority: Priority.Medium, subtasks: [{id:'stt1', text:'Define specs', completed: false}, {id:'stt2', text:'Develop feature', completed: false}, {id:'stt3', text:'Write tests', completed: false}, {id:'stt4', text:'Deploy', completed: false}] } },
     { id: 'tt2', name: 'Bug Report', taskData: { priority: Priority.High, title: 'Bug: ', description: '**Steps to Reproduce:**\n\n**Expected Behavior:**\n\n**Actual Behavior:**' } },
 ];
+
+const rolePermissions: Record<Role, Permission[]> = {
+  [Role.Admin]: Object.values(Permission), // Admin has all permissions
+  [Role.Member]: [
+    Permission.MANAGE_WORKSPACES_AND_PROJECTS,
+    Permission.CREATE_TASKS,
+    Permission.EDIT_TASKS,
+    Permission.DELETE_TASKS,
+    Permission.COMMENT,
+    Permission.DRAG_AND_DROP,
+  ],
+  [Role.Viewer]: [
+    Permission.COMMENT,
+  ],
+  [Role.Guest]: [], // Guests can only view, no special permissions
+};
 
 // --- TYPES ---
 interface AppState {
@@ -289,6 +306,9 @@ interface AppContextType {
         filteredTasks: Task[];
     };
     actions: Record<string, (...args: any[]) => void>;
+    permissions: {
+        has: (permission: Permission) => boolean;
+    };
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -340,6 +360,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             return true;
         });
     }, [state.tasks, selectedList, state.statusFilter, state.priorityFilter]);
+
+    const hasPermission = useCallback((permission: Permission): boolean => {
+      if (!state.currentUser) return false;
+      return rolePermissions[state.currentUser.role].includes(permission);
+    }, [state.currentUser]);
+    
 
     // --- ACTIONS ---
 
@@ -760,8 +786,9 @@ addToast({ message: t('toasts.userNotFound', { name: String(assigneeName) }), ty
             allLists: state.lists,
             filteredTasks,
         },
-        actions
-    }), [state, selectedTask, editingUser, selectedList, filteredTasks, actions]);
+        actions,
+        permissions: { has: hasPermission }
+    }), [state, selectedTask, editingUser, selectedList, filteredTasks, actions, hasPermission]);
 
     return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
 };

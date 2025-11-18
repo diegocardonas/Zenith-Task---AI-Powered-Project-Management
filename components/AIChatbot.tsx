@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Task, List, User } from '../types';
+import { Task, List, User, Permission } from '../types';
 import { getAIChatResponse } from '../services/geminiService';
 import { useAppContext } from '../contexts/AppContext';
 import { useTranslation } from '../i18n';
@@ -12,7 +12,7 @@ interface AIChatbotProps {
 
 const AIChatbot: React.FC<AIChatbotProps> = ({ tasks, lists, users }) => {
     const { t } = useTranslation();
-    const { actions } = useAppContext();
+    const { actions, permissions } = useAppContext();
     const [isOpen, setIsOpen] = useState(false);
     const [messages, setMessages] = useState<{ role: 'user' | 'model', parts: { text: string }[] }[]>([]);
     const [input, setInput] = useState('');
@@ -88,6 +88,10 @@ const AIChatbot: React.FC<AIChatbotProps> = ({ tasks, lists, users }) => {
         html = html.replace(/(<li.*<\/li>)/gs, '<ul>$1</ul>');
         return { __html: html };
     };
+
+    if (!permissions.has(Permission.CREATE_TASKS)) {
+        return null;
+    }
 
     return (
         <>

@@ -18,7 +18,7 @@ import SettingsModal from './components/SettingsModal';
 import FolderModal from './components/FolderModal';
 import ConfirmationModal from './components/ConfirmationModal';
 import { useAppContext } from './contexts/AppContext';
-import { Toast } from './types';
+import { Toast, Permission } from './types';
 import { useTranslation } from './i18n';
 
 const ToastComponent: React.FC<{ toast: Toast, onClose: () => void }> = ({ toast, onClose }) => {
@@ -63,7 +63,7 @@ const ToastComponent: React.FC<{ toast: Toast, onClose: () => void }> = ({ toast
 
 
 const App: React.FC = () => {
-  const { state, actions } = useAppContext();
+  const { state, actions, permissions } = useAppContext();
   const {
     currentUser,
     users,
@@ -109,7 +109,7 @@ const App: React.FC = () => {
 
         switch (event.key.toLowerCase()) {
             case 'n':
-                if (activeView === 'list' && state.selectedListId) {
+                if (activeView === 'list' && state.selectedListId && permissions.has(Permission.CREATE_TASKS)) {
                     event.preventDefault();
                     actions.handleAddTask(state.selectedListId);
                 }
@@ -125,7 +125,7 @@ const App: React.FC = () => {
     return () => {
         window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [activeView, state.selectedListId, selectedTask, editingUser, isWorkspaceModalOpen, isProjectModalOpen, isFolderModalOpen, isCommandPaletteOpen, isSummaryModalOpen, isSettingsModalOpen, isBlockingTasksModalOpen, isConfirmationModalOpen, actions]);
+  }, [activeView, state.selectedListId, selectedTask, editingUser, isWorkspaceModalOpen, isProjectModalOpen, isFolderModalOpen, isCommandPaletteOpen, isSummaryModalOpen, isSettingsModalOpen, isBlockingTasksModalOpen, isConfirmationModalOpen, actions, permissions]);
 
   const handleCommand = (command: string, payload?: any) => {
       switch (command) {
@@ -142,15 +142,19 @@ const App: React.FC = () => {
               actions.setSelectedListId(null);
               break;
           case 'navigate_dashboard':
-              actions.setActiveView('dashboard');
-              actions.setSelectedListId(null);
+              if (permissions.has(Permission.VIEW_DASHBOARD)) {
+                actions.setActiveView('dashboard');
+                actions.setSelectedListId(null);
+              }
               break;
           case 'navigate_admin':
-              actions.setActiveView('app_admin');
-              actions.setSelectedListId(null);
+              if (permissions.has(Permission.MANAGE_APP)) {
+                actions.setActiveView('app_admin');
+                actions.setSelectedListId(null);
+              }
               break;
           case 'create_task':
-              if (state.selectedListId) {
+              if (state.selectedListId && permissions.has(Permission.CREATE_TASKS)) {
                   actions.handleAddTask(state.selectedListId);
               } else {
                   actions.addToast({ id: Date.now(), message: 'Selecciona un proyecto para crear una tarea', type: 'info' });
@@ -182,9 +186,9 @@ const App: React.FC = () => {
     <div className="flex h-screen bg-background text-text-primary">
       <Sidebar />
       
-      {activeView === 'dashboard' ? (
+      {activeView === 'dashboard' && permissions.has(Permission.VIEW_DASHBOARD) ? (
         <AdminDashboard />
-      ) : activeView === 'app_admin' ? (
+      ) : activeView === 'app_admin' && permissions.has(Permission.MANAGE_APP) ? (
         <AppAdminPanel />
       ) : activeView === 'my_tasks' ? (
         <MyTasksView />

@@ -4,6 +4,7 @@ const es = {
   "common": {
     "admin": "Admin",
     "member": "Miembro",
+    "viewer": "Observador",
     "guest": "Invitado",
     "todo": "Por Hacer",
     "inProgress": "En Progreso",
@@ -285,6 +286,7 @@ const es = {
     "roleDescriptions": "Descripciones de Roles",
     "adminDescription": "Control total. Puede gestionar espacios de trabajo, facturación y todos los miembros.",
     "memberDescription": "Puede crear y gestionar proyectos, tareas y carpetas. No puede gestionar miembros ni la configuración del espacio de trabajo.",
+    "viewerDescription": "Puede ver y comentar en proyectos y tareas, pero no puede crear ni editar contenido.",
     "guestDescription": "Acceso limitado de solo lectura a proyectos o tareas específicas a las que se les invite."
   },
   "tooltips": {
@@ -395,6 +397,7 @@ const en = {
   "common": {
     "admin": "Admin",
     "member": "Member",
+    "viewer": "Viewer",
     "guest": "Guest",
     "todo": "Todo",
     "inProgress": "In Progress",
@@ -676,6 +679,7 @@ const en = {
     "roleDescriptions": "Role Descriptions",
     "adminDescription": "Full control. Can manage workspaces, billing, and all members.",
     "memberDescription": "Can create and manage projects, tasks, and folders. Cannot manage members or workspace settings.",
+    "viewerDescription": "Can view and comment on projects and tasks, but cannot create or edit content.",
     "guestDescription": "Limited, read-only access to specific projects or tasks they are invited to."
   },
   "tooltips": {

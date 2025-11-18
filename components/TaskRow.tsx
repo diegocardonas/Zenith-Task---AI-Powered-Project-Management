@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Task, User, Status, Priority, Role, List } from '../types';
+import { Task, User, Status, Priority, Role, List, Permission } from '../types';
 import { useAppContext } from '../contexts/AppContext';
 import { useTranslation } from '../i18n';
 
@@ -7,7 +7,6 @@ interface TaskRowProps {
   task: Task;
   isSelected?: boolean;
   onToggleSelection?: (taskId: string) => void;
-  isDraggable?: boolean;
   onDragStart?: (e: React.DragEvent<HTMLDivElement>, taskId: string) => void;
   onDragEnter?: (e: React.DragEvent<HTMLDivElement>, taskId: string) => void;
   onDragEnd?: () => void;
@@ -81,12 +80,11 @@ const TaskRow: React.FC<TaskRowProps> = ({
     isSelected = false, 
 // Fix: Updated default props to match function signatures, expecting arguments.
     onToggleSelection = (taskId) => {}, 
-    isDraggable = false, 
     onDragStart = (e, taskId) => {}, 
     onDragEnter = (e, taskId) => {}, 
     onDragEnd = () => {} 
 }) => {
-  const { state, actions } = useAppContext();
+  const { state, actions, permissions } = useAppContext();
   const { users, currentUser, allLists } = state;
   const { handleUpdateTask, handleDeleteTask, setSelectedTaskId, logActivity, setTaskForBlockingModal, setIsBlockingTasksModalOpen } = actions;
   const { t, i18n } = useTranslation();
@@ -97,7 +95,10 @@ const TaskRow: React.FC<TaskRowProps> = ({
     [Status.Done]: t('common.done'),
   };
     
-  const isReadOnly = currentUser!.role === Role.Guest;
+  const canEdit = permissions.has(Permission.EDIT_TASKS);
+  const canDelete = permissions.has(Permission.DELETE_TASKS);
+  const isDraggable = permissions.has(Permission.DRAG_AND_DROP);
+
   const isOverdue = new Date(task.dueDate) < new Date() && task.status !== Status.Done;
   const [isMoveMenuOpen, setIsMoveMenuOpen] = useState(false);
   const moveMenuRef = useRef<HTMLDivElement>(null);
@@ -153,7 +154,7 @@ const TaskRow: React.FC<TaskRowProps> = ({
               className="w-4 h-4 rounded text-primary bg-surface border-border focus:ring-primary disabled:opacity-50"
               checked={isSelected}
               onChange={() => onToggleSelection(task.id)}
-              disabled={isReadOnly}
+              disabled={!canEdit}
           />
       </div>
       <div className="col-span-6 sm:col-span-3 md:col-span-2 font-medium text-text-primary truncate flex items-center gap-2">
@@ -170,7 +171,7 @@ const TaskRow: React.FC<TaskRowProps> = ({
         <select
           value={task.assigneeId || ''}
           onChange={handleAssigneeChange}
-          disabled={isReadOnly}
+          disabled={!canEdit}
           className="w-full bg-secondary border border-transparent hover:border-border rounded-md px-2 py-1 text-sm focus:ring-primary focus:border-primary disabled:opacity-70 disabled:cursor-not-allowed"
           onClick={e => e.stopPropagation()}
         >
@@ -183,7 +184,7 @@ const TaskRow: React.FC<TaskRowProps> = ({
          <select
             value={task.status}
             onChange={handleStatusChange}
-            disabled={isReadOnly}
+            disabled={!canEdit}
             className={`w-full appearance-none text-xs font-medium rounded-full px-3 py-1 text-center cursor-pointer focus:ring-2 focus:ring-offset-2 focus:ring-offset-surface focus:ring-primary focus:outline-none disabled:opacity-70 disabled:cursor-not-allowed ${statusConfig[task.status]}`}
             onClick={e => e.stopPropagation()}
         >
@@ -202,51 +203,55 @@ const TaskRow: React.FC<TaskRowProps> = ({
       <div className="col-span-2 hidden md:block text-sm text-text-secondary"><PriorityIcon priority={task.priority} /></div>
 
       <div className="col-span-2 flex items-center justify-end">
-        {!isReadOnly && (
+        {(canEdit || canDelete) && (
             <div className="flex items-center">
-                <div className="relative" ref={moveMenuRef}>
+                {canEdit && (
+                  <div className="relative" ref={moveMenuRef}>
+                      <button
+                          onClick={(e) => { e.stopPropagation(); setIsMoveMenuOpen(p => !p); }}
+                          className="p-2 text-text-secondary hover:text-primary rounded-full hover:bg-primary/10 transition-colors"
+                          aria-label={t('tooltips.moveTask')}
+                          title={t('tooltips.moveTask')}
+                      >
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                              <path fillRule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clipRule="evenodd" />
+                          </svg>
+                      </button>
+                      {isMoveMenuOpen && (
+                          <div className="absolute right-0 bottom-full mb-2 w-56 bg-surface rounded-lg shadow-lg border border-border z-20 animate-fadeIn p-1">
+                              <div className="px-2 py-1 text-xs text-text-secondary">{t('tooltips.moveTask')}</div>
+                              <div className="max-h-48 overflow-y-auto">
+                                  {allLists
+                                      .filter(l => l.id !== task.listId)
+                                      .map(list => (
+                                          <button
+                                              key={list.id}
+                                              onClick={(e) => {
+                                                  e.stopPropagation();
+                                                  handleMoveTask(list.id);
+                                              }}
+                                              className="w-full text-left px-2 py-1.5 text-sm rounded-md hover:bg-secondary-focus"
+                                          >
+                                              {list.name}
+                                          </button>
+                                      ))}
+                              </div>
+                          </div>
+                      )}
+                  </div>
+                )}
+                {canDelete && (
                     <button
-                        onClick={(e) => { e.stopPropagation(); setIsMoveMenuOpen(p => !p); }}
-                        className="p-2 text-text-secondary hover:text-primary rounded-full hover:bg-primary/10 transition-colors"
-                        aria-label={t('tooltips.moveTask')}
-                        title={t('tooltips.moveTask')}
+                        onClick={(e) => { e.stopPropagation(); handleDeleteTask(task.id); }}
+                        className="p-2 text-text-secondary hover:text-red-400 rounded-full hover:bg-red-500/10 transition-colors"
+                        aria-label={t('tooltips.deleteTask')}
+                        title={t('tooltips.deleteTask')}
                     >
-                         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                            <path fillRule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clipRule="evenodd" />
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                            <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm4 0a1 1 0 012 0v6a1 1 0 11-2 0V8z" clipRule="evenodd" />
                         </svg>
                     </button>
-                    {isMoveMenuOpen && (
-                        <div className="absolute right-0 bottom-full mb-2 w-56 bg-surface rounded-lg shadow-lg border border-border z-20 animate-fadeIn p-1">
-                            <div className="px-2 py-1 text-xs text-text-secondary">{t('tooltips.moveTask')}</div>
-                            <div className="max-h-48 overflow-y-auto">
-                                {allLists
-                                    .filter(l => l.id !== task.listId)
-                                    .map(list => (
-                                        <button
-                                            key={list.id}
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                handleMoveTask(list.id);
-                                            }}
-                                            className="w-full text-left px-2 py-1.5 text-sm rounded-md hover:bg-secondary-focus"
-                                        >
-                                            {list.name}
-                                        </button>
-                                    ))}
-                            </div>
-                        </div>
-                    )}
-                </div>
-                <button
-                    onClick={(e) => { e.stopPropagation(); handleDeleteTask(task.id); }}
-                    className="p-2 text-text-secondary hover:text-red-400 rounded-full hover:bg-red-500/10 transition-colors"
-                    aria-label={t('tooltips.deleteTask')}
-                    title={t('tooltips.deleteTask')}
-                >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                        <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm4 0a1 1 0 012 0v6a1 1 0 11-2 0V8z" clipRule="evenodd" />
-                    </svg>
-                </button>
+                )}
             </div>
         )}
       </div>

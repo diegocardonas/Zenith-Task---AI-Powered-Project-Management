@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
-import { Task, User, Status, Priority, Subtask, Role, Comment, Attachment, List } from '../types';
+import { Task, User, Status, Priority, Subtask, Role, Comment, Attachment, List, Permission } from '../types';
 import { generateSubtasks, generateTaskDescription, generateTaskTitleAndDescription, suggestTaskDetails, generateSmartReplies } from '../services/geminiService';
 import { useDebounce } from '../hooks/useDebounce';
 import AvatarWithStatus from './AvatarWithStatus';
@@ -52,7 +52,7 @@ const CommentComponent: React.FC<{
 };
 
 const TaskModal: React.FC = () => {
-    const { state, actions } = useAppContext();
+    const { state, actions, permissions } = useAppContext();
     const { selectedTask, users, lists, currentUser, allTasks, taskTemplates } = state;
     const { setSelectedTaskId, handleUpdateTask, handleDeleteTask, logActivity, addNotification, handleSaveTemplate } = actions;
     const { t, i18n } = useTranslation();
@@ -71,7 +71,9 @@ const TaskModal: React.FC = () => {
     const [isSuggesting, setIsSuggesting] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
 
-    const isReadOnly = currentUser!.role === Role.Guest;
+    const canEdit = permissions.has(Permission.EDIT_TASKS);
+    const canDelete = permissions.has(Permission.DELETE_TASKS);
+    const canComment = permissions.has(Permission.COMMENT);
 
     useEffect(() => {
         setEditedTask(selectedTask);
@@ -129,7 +131,7 @@ const TaskModal: React.FC = () => {
     };
 
     const handleGenerateSubtasksClick = async () => {
-        if (isReadOnly) return;
+        if (!canEdit) return;
         setIsGeneratingSubtasks(true);
         const subtaskTexts = await generateSubtasks(editedTask.title, editedTask.description);
         const newSubtasks: Subtask[] = subtaskTexts.map(text => ({ id: `st-${Date.now()}-${Math.random()}`, text, completed: false }));
@@ -138,7 +140,7 @@ const TaskModal: React.FC = () => {
     };
     
     const handleGenerateDescriptionClick = async () => {
-        if (isReadOnly) return;
+        if (!canEdit) return;
         setIsGeneratingDescription(true);
         const description = await generateTaskDescription(editedTask.title);
         handleInputChange('description', description);
@@ -257,7 +259,7 @@ const TaskModal: React.FC = () => {
         <header className="p-4 border-b border-border flex justify-between items-center flex-shrink-0">
           <div className="text-sm text-text-secondary">{project?.name}</div>
           <div className="flex items-center gap-2">
-            {!isReadOnly && (
+            {canEdit && (
                 <button
                     onClick={() => {
                         const name = prompt(t('modals.templateNamePrompt'));
@@ -276,7 +278,7 @@ const TaskModal: React.FC = () => {
                     </svg>
                 </button>
             )}
-            {!isReadOnly && (
+            {canDelete && (
                 <button onClick={() => handleDeleteTask(editedTask.id)} className="p-2 text-text-secondary hover:text-priority-high rounded-full hover:bg-priority-high/10 transition-colors" title={t('modals.deleteTask')}>
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                         <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm4 0a1 1 0 012 0v6a1 1 0 11-2 0V8z" clipRule="evenodd" />
@@ -297,12 +299,12 @@ const TaskModal: React.FC = () => {
                     value={editedTask.title}
                     onChange={(e) => handleInputChange('title', e.target.value)}
                     placeholder={t('modals.taskTitlePlaceholder')}
-                    disabled={isReadOnly}
+                    disabled={!canEdit}
                     className="w-full bg-transparent text-3xl font-bold focus:outline-none"
                 />
 
                 {/* AI Suggestion */}
-                 {aiSuggestion && (
+                 {canEdit && aiSuggestion && (
                     <div className="bg-secondary/50 p-3 rounded-lg flex items-center justify-between text-sm animate-fadeIn">
                         <div>
                             <span className="font-semibold text-primary">{t('modals.aiSuggestion')}</span>
@@ -322,7 +324,7 @@ const TaskModal: React.FC = () => {
                 <div>
                     <div className="flex justify-between items-center mb-2">
                         <label className="text-sm font-semibold text-text-secondary">{t('modals.description')}</label>
-                        {!isReadOnly && (
+                        {canEdit && (
                             <button onClick={handleGenerateDescriptionClick} disabled={isGeneratingDescription} className="flex items-center gap-1.5 px-2 py-1 text-xs bg-secondary rounded-md hover:bg-secondary-focus disabled:opacity-50">
                                 {isGeneratingDescription ? <Spinner /> : '✨'}
                                 {t('modals.generateWithAI')}
@@ -333,7 +335,7 @@ const TaskModal: React.FC = () => {
                         value={editedTask.description}
                         onChange={(e) => handleInputChange('description', e.target.value)}
                         rows={6}
-                        disabled={isReadOnly}
+                        disabled={!canEdit}
                         placeholder={t('modals.addMoreDetail')}
                         className="w-full p-2 bg-secondary rounded-md border border-border focus:ring-primary focus:border-primary"
                     />
@@ -343,7 +345,7 @@ const TaskModal: React.FC = () => {
                 <div>
                     <div className="flex justify-between items-center mb-2">
                         <label className="text-sm font-semibold text-text-secondary">{t('modals.subtasksCompleted', { completed: editedTask.subtasks.filter(s => s.completed).length, total: editedTask.subtasks.length })}</label>
-                        {!isReadOnly && (
+                        {canEdit && (
                             <button onClick={handleGenerateSubtasksClick} disabled={isGeneratingSubtasks} className="flex items-center gap-1.5 px-2 py-1 text-xs bg-secondary rounded-md hover:bg-secondary-focus disabled:opacity-50">
                                 {isGeneratingSubtasks ? <Spinner /> : '✨'}
                                 {t('modals.generateWithAI')}
@@ -353,19 +355,19 @@ const TaskModal: React.FC = () => {
                     <div className="space-y-2">
                         {editedTask.subtasks.map(st => (
                             <div key={st.id} className="flex items-center gap-2 group">
-                                <input type="checkbox" checked={st.completed} disabled={isReadOnly} onChange={e => handleSubtaskChange(st.id, e.target.checked, st.text)} className="w-4 h-4 rounded text-primary bg-surface border-border focus:ring-primary" />
-                                <input type="text" value={st.text} disabled={isReadOnly} onChange={e => handleSubtaskChange(st.id, st.completed, e.target.value)} className={`flex-grow bg-transparent p-1 rounded ${st.completed ? 'line-through text-text-secondary' : ''}`} />
-                                {!isReadOnly && <button onClick={() => handleDeleteSubtask(st.id)} className="opacity-0 group-hover:opacity-100 text-text-secondary hover:text-priority-high"><svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" /></svg></button>}
+                                <input type="checkbox" checked={st.completed} disabled={!canEdit} onChange={e => handleSubtaskChange(st.id, e.target.checked, st.text)} className="w-4 h-4 rounded text-primary bg-surface border-border focus:ring-primary" />
+                                <input type="text" value={st.text} disabled={!canEdit} onChange={e => handleSubtaskChange(st.id, st.completed, e.target.value)} className={`flex-grow bg-transparent p-1 rounded ${st.completed ? 'line-through text-text-secondary' : ''}`} />
+                                {canEdit && <button onClick={() => handleDeleteSubtask(st.id)} className="opacity-0 group-hover:opacity-100 text-text-secondary hover:text-priority-high"><svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" /></svg></button>}
                             </div>
                         ))}
-                        {!isReadOnly && <input type="text" value={newSubtaskText} onChange={e => setNewSubtaskText(e.target.value)} onKeyDown={handleAddSubtask} placeholder={t('modals.addSubtask')} className="w-full bg-secondary p-1 mt-2 rounded border border-transparent focus:border-border" />}
+                        {canEdit && <input type="text" value={newSubtaskText} onChange={e => setNewSubtaskText(e.target.value)} onKeyDown={handleAddSubtask} placeholder={t('modals.addSubtask')} className="w-full bg-secondary p-1 mt-2 rounded border border-transparent focus:border-border" />}
                     </div>
                 </div>
 
                 {/* Comments */}
                  <div>
                     <h3 className="text-sm font-semibold text-text-secondary mb-2">{t('modals.comments')}</h3>
-                    {!isReadOnly && (
+                    {canComment && (
                         <div className="mb-4">
                              <textarea value={newComment} onChange={e => setNewComment(e.target.value)} rows={3} placeholder={replyingTo ? t('modals.reply') : t('modals.commentPlaceholder')} className="w-full p-2 bg-secondary rounded-md border border-border focus:ring-primary focus:border-primary" />
                              <div className="flex justify-between items-center mt-2">
@@ -388,7 +390,7 @@ const TaskModal: React.FC = () => {
                     )}
                     <div className="space-y-4">
                        {commentTree.map(comment => (
-                           <CommentComponent key={comment.id} comment={comment} onReply={setReplyingTo} isReadOnly={isReadOnly} />
+                           <CommentComponent key={comment.id} comment={comment} onReply={setReplyingTo} isReadOnly={!canComment} />
                        ))}
                     </div>
                  </div>
@@ -398,42 +400,42 @@ const TaskModal: React.FC = () => {
                  <div className="grid grid-cols-2 gap-4 text-sm">
                     <div>
                         <label className="font-semibold text-text-secondary block">{t('modals.status')}</label>
-                        <select value={editedTask.status} disabled={isReadOnly} onChange={e => handleInputChange('status', e.target.value)} className="w-full mt-1 p-2 bg-secondary rounded-md border border-transparent hover:border-border focus:ring-primary focus:border-primary">
+                        <select value={editedTask.status} disabled={!canEdit} onChange={e => handleInputChange('status', e.target.value)} className="w-full mt-1 p-2 bg-secondary rounded-md border border-transparent hover:border-border focus:ring-primary focus:border-primary">
                             {Object.values(Status).map(s => <option key={s} value={s}>{statusText[s]}</option>)}
                         </select>
                     </div>
                     <div>
                         <label className="font-semibold text-text-secondary block">{t('modals.priority')}</label>
-                        <select value={editedTask.priority} disabled={isReadOnly} onChange={e => handleInputChange('priority', e.target.value)} className="w-full mt-1 p-2 bg-secondary rounded-md border border-transparent hover:border-border focus:ring-primary focus:border-primary">
+                        <select value={editedTask.priority} disabled={!canEdit} onChange={e => handleInputChange('priority', e.target.value)} className="w-full mt-1 p-2 bg-secondary rounded-md border border-transparent hover:border-border focus:ring-primary focus:border-primary">
                              {Object.values(Priority).map(p => <option key={p} value={p}>{priorityText[p]}</option>)}
                         </select>
                     </div>
                  </div>
                  <div>
                     <label className="font-semibold text-text-secondary block text-sm">{t('modals.assignee')}</label>
-                    <select value={editedTask.assigneeId || ''} disabled={isReadOnly} onChange={e => handleInputChange('assigneeId', e.target.value || null)} className="w-full mt-1 p-2 bg-secondary rounded-md border border-transparent hover:border-border focus:ring-primary focus:border-primary">
+                    <select value={editedTask.assigneeId || ''} disabled={!canEdit} onChange={e => handleInputChange('assigneeId', e.target.value || null)} className="w-full mt-1 p-2 bg-secondary rounded-md border border-transparent hover:border-border focus:ring-primary focus:border-primary">
                         <option value="">{t('common.unassigned')}</option>
                         {users.map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
                     </select>
                  </div>
                  <div>
                     <label className="font-semibold text-text-secondary block text-sm">{t('modals.dueDate')}</label>
-                    <input type="date" value={editedTask.dueDate} disabled={isReadOnly} onChange={e => handleInputChange('dueDate', e.target.value)} className="w-full mt-1 p-2 bg-secondary rounded-md border border-transparent hover:border-border focus:ring-primary focus:border-primary" />
+                    <input type="date" value={editedTask.dueDate} disabled={!canEdit} onChange={e => handleInputChange('dueDate', e.target.value)} className="w-full mt-1 p-2 bg-secondary rounded-md border border-transparent hover:border-border focus:ring-primary focus:border-primary" />
                  </div>
                  {/* Attachments */}
                  <div>
                     <div className="flex justify-between items-center mb-2">
                         <label className="text-sm font-semibold text-text-secondary">{t('modals.attachments')}</label>
-                         {!isReadOnly && (
+                         {canEdit && (
                             <button onClick={() => attachmentInputRef.current?.click()} className="text-xs text-primary hover:underline">{t('modals.attachFile')}</button>
                          )}
                     </div>
-                    <input type="file" ref={attachmentInputRef} onChange={handleFileAttach} className="hidden" multiple disabled={isReadOnly} />
+                    <input type="file" ref={attachmentInputRef} onChange={handleFileAttach} className="hidden" multiple disabled={!canEdit} />
                     <div className="space-y-2">
                         {editedTask.attachments.map(att => (
                             <div key={att.id} className="bg-secondary p-2 rounded-md flex items-center justify-between text-sm group">
                                 <a href={att.url} download={att.name} className="truncate hover:underline">{att.name}</a>
-                                {!isReadOnly && <button onClick={() => handleDeleteAttachment(att.id)} className="opacity-0 group-hover:opacity-100 text-text-secondary hover:text-priority-high"><svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" /></svg></button>}
+                                {canEdit && <button onClick={() => handleDeleteAttachment(att.id)} className="opacity-0 group-hover:opacity-100 text-text-secondary hover:text-priority-high"><svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" /></svg></button>}
                             </div>
                         ))}
                     </div>

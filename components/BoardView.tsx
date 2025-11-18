@@ -1,11 +1,11 @@
 import React, { useMemo, useState } from 'react';
-import { Task, Status, User, Role } from '../types';
+import { Task, Status, User, Role, Permission } from '../types';
 import TaskCard from './TaskCard';
 import { useAppContext } from '../contexts/AppContext';
 import { useTranslation } from '../i18n';
 
 const BoardView: React.FC = () => {
-  const { state, actions } = useAppContext();
+  const { state, actions, permissions } = useAppContext();
   const { filteredTasks: tasks, users, currentUser, allTasks } = state;
   const { handleUpdateTask, setSelectedTaskId, setTaskForBlockingModal, setIsBlockingTasksModalOpen, setEditingUserId, handleDeleteTask } = actions;
   const { t } = useTranslation();
@@ -13,7 +13,7 @@ const BoardView: React.FC = () => {
   const [draggedTaskId, setDraggedTaskId] = useState<string | null>(null);
   const [dragOverStatus, setDragOverStatus] = useState<Status | null>(null);
   
-  const canDrag = currentUser!.role !== Role.Guest;
+  const canDrag = permissions.has(Permission.DRAG_AND_DROP);
 
   const STATUS_CONFIG = useMemo(() => ({
     [Status.Todo]: { title: t('board.todo'), color: 'bg-status-todo' },
@@ -93,7 +93,6 @@ const BoardView: React.FC = () => {
                             user={users.find(u => u.id === task.assigneeId)}
                             onSelectTask={() => setSelectedTaskId(task.id)}
                             onDragStart={handleDragStart}
-                            isDraggable={canDrag}
                             allTasks={allTasks}
                             onOpenBlockingTasks={() => { setTaskForBlockingModal(task); setIsBlockingTasksModalOpen(true); }}
                             onOpenUserProfile={(user) => setEditingUserId(user.id)}

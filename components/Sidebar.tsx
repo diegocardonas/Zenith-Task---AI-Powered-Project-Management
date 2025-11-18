@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
-import { List, User, Role, Workspace, Folder } from '../types';
+import { List, User, Role, Workspace, Folder, Permission } from '../types';
 import UserPanel from './UserPanel';
 import Logo from './Logo';
 import AvatarWithStatus from './AvatarWithStatus';
@@ -11,10 +11,10 @@ interface WorkspaceSwitcherProps {
     selectedWorkspace: Workspace | undefined;
     onSelectWorkspace: (id: string) => void;
     onAddWorkspace: () => void;
-    currentUser: User;
+    canManage: boolean;
 }
 
-const WorkspaceSwitcher: React.FC<WorkspaceSwitcherProps> = ({ workspaces, selectedWorkspace, onSelectWorkspace, onAddWorkspace, currentUser }) => {
+const WorkspaceSwitcher: React.FC<WorkspaceSwitcherProps> = ({ workspaces, selectedWorkspace, onSelectWorkspace, onAddWorkspace, canManage }) => {
     const { t } = useTranslation();
     const [isOpen, setIsOpen] = useState(false);
     const wrapperRef = useRef<HTMLDivElement>(null);
@@ -70,7 +70,7 @@ const WorkspaceSwitcher: React.FC<WorkspaceSwitcherProps> = ({ workspaces, selec
                         </li>
                     ))}
                 </ul>
-                {(currentUser.role === Role.Admin || currentUser.role === Role.Member) && (
+                {canManage && (
                     <div className="p-2 border-t border-border">
                         <button 
                             onClick={() => {
@@ -95,7 +95,7 @@ const WorkspaceSwitcher: React.FC<WorkspaceSwitcherProps> = ({ workspaces, selec
 
 const Sidebar: React.FC = () => {
     const { t } = useTranslation();
-    const { state, actions } = useAppContext();
+    const { state, actions, permissions } = useAppContext();
     const {
         workspaces,
         selectedWorkspaceId,
@@ -133,7 +133,7 @@ const Sidebar: React.FC = () => {
     const [draggedItem, setDraggedItem] = useState<{ id: string; type: 'folder' | 'list' } | null>(null);
     const [dropTarget, setDropTarget] = useState<{ targetId: string; position: 'top' | 'bottom' | 'middle' } | null>(null);
 
-    const isDraggable = currentUser!.role !== Role.Guest;
+    const isDraggable = permissions.has(Permission.DRAG_AND_DROP);
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -308,7 +308,7 @@ const Sidebar: React.FC = () => {
                         selectedWorkspace={selectedWorkspace}
                         onSelectWorkspace={handleSelectWorkspace}
                         onAddWorkspace={() => { setWorkspaceToEdit(null); setIsWorkspaceModalOpen(true); }}
-                        currentUser={currentUser}
+                        canManage={permissions.has(Permission.MANAGE_WORKSPACES_AND_PROJECTS)}
                     />
                     
                     <div className="mb-4 space-y-1">
@@ -319,34 +319,34 @@ const Sidebar: React.FC = () => {
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-3" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" /></svg>
                             <span className="font-semibold">{t('sidebar.myTasks')}</span>
                         </button>
-                        {currentUser.role === Role.Admin && (
-                            <>
-                                <button 
-                                    onClick={() => { setActiveView('dashboard'); setSelectedListId(null); }}
-                                    className={`w-full flex items-center p-2 rounded-lg transition-colors ${activeView === 'dashboard' ? 'bg-primary/20 text-primary' : 'hover:bg-surface text-text-secondary hover:text-text-primary'}`}
-                                >
-                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-3" viewBox="0 0 20 20" fill="currentColor">
-                                        <path d="M2 10a8 8 0 018-8v8h8a8 8 0 11-16 0z" />
-                                        <path d="M12 2.252A8.014 8.014 0 0117.748 8H12V2.252z" />
-                                    </svg>
-                                    <span className="font-semibold">{t('sidebar.dashboard')}</span>
-                                </button>
-                                <button 
-                                    onClick={() => { setActiveView('app_admin'); setSelectedListId(null); }}
-                                    className={`w-full flex items-center p-2 rounded-lg transition-colors ${activeView === 'app_admin' ? 'bg-primary/20 text-primary' : 'hover:bg-surface text-text-secondary hover:text-text-primary'}`}
-                                >
-                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-3" viewBox="0 0 20 20" fill="currentColor">
-                                      <path fillRule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.96.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01-.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" />
-                                    </svg>
-                                    <span className="font-semibold">{t('sidebar.appAdmin')}</span>
-                                </button>
-                            </>
+                        {permissions.has(Permission.VIEW_DASHBOARD) && (
+                            <button 
+                                onClick={() => { setActiveView('dashboard'); setSelectedListId(null); }}
+                                className={`w-full flex items-center p-2 rounded-lg transition-colors ${activeView === 'dashboard' ? 'bg-primary/20 text-primary' : 'hover:bg-surface text-text-secondary hover:text-text-primary'}`}
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-3" viewBox="0 0 20 20" fill="currentColor">
+                                    <path d="M2 10a8 8 0 018-8v8h8a8 8 0 11-16 0z" />
+                                    <path d="M12 2.252A8.014 8.014 0 0117.748 8H12V2.252z" />
+                                </svg>
+                                <span className="font-semibold">{t('sidebar.dashboard')}</span>
+                            </button>
+                        )}
+                        {permissions.has(Permission.MANAGE_APP) && (
+                            <button 
+                                onClick={() => { setActiveView('app_admin'); setSelectedListId(null); }}
+                                className={`w-full flex items-center p-2 rounded-lg transition-colors ${activeView === 'app_admin' ? 'bg-primary/20 text-primary' : 'hover:bg-surface text-text-secondary hover:text-text-primary'}`}
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-3" viewBox="0 0 20 20" fill="currentColor">
+                                  <path fillRule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.96.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01-.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" />
+                                </svg>
+                                <span className="font-semibold">{t('sidebar.appAdmin')}</span>
+                            </button>
                         )}
                     </div>
                     
                     <div className="flex justify-between items-center mb-2">
                         <h2 className="text-sm font-semibold uppercase text-text-secondary tracking-wider">{t('sidebar.projects')}</h2>
-                        {(currentUser.role === Role.Admin || currentUser.role === Role.Member) && (
+                        {permissions.has(Permission.MANAGE_WORKSPACES_AND_PROJECTS) && (
                            <div className="flex items-center gap-1">
                                 <button onClick={() => { setFolderToEdit(null); setIsFolderModalOpen(true); }} className="text-text-secondary hover:text-text-primary p-1 rounded-md" title={t('sidebar.newFolder')}>
                                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" /><path d="M10 12a2 2 0 100-4 2 2 0 000 4z" /></svg>

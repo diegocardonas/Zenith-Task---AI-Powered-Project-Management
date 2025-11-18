@@ -1,7 +1,8 @@
 import React, { useMemo, useState } from 'react';
-import { Task, User, Status } from '../types';
+import { Task, User, Status, Permission } from '../types';
 import { generateRiskAnalysis } from '../services/geminiService';
 import { useTranslation } from '../i18n';
+import { useAppContext } from '../contexts/AppContext';
 
 const TasksByStatusChart: React.FC<{ tasks: Task[] }> = ({ tasks }) => {
     const { t } = useTranslation();
@@ -91,11 +92,12 @@ const renderMarkdown = (text: string) => {
 
 interface ProjectDashboardProps {
   tasks: Task[];
-  users: User[];
 }
 
-const ProjectDashboard: React.FC<ProjectDashboardProps> = ({ tasks, users }) => {
+const ProjectDashboard: React.FC<ProjectDashboardProps> = ({ tasks }) => {
   const { t } = useTranslation();
+  const { state, permissions } = useAppContext();
+  const { users } = state;
   const [riskAnalysis, setRiskAnalysis] = useState('');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
 
@@ -119,12 +121,14 @@ const ProjectDashboard: React.FC<ProjectDashboardProps> = ({ tasks, users }) => 
       <div className="bg-secondary rounded-lg p-6 animate-fadeIn lg:col-span-3" style={{ animationDelay: '200ms' }}>
         <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-semibold">{t('modals.riskAnalysis')}</h2>
-            <button onClick={handleAnalyzeRisks} disabled={isAnalyzing} className="px-3 py-1.5 text-sm bg-primary/20 text-primary rounded-full hover:bg-primary/30 disabled:opacity-50 disabled:cursor-wait flex items-center gap-1.5">
-                {isAnalyzing ? (
-                    <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                ) : '✨'}
-                {isAnalyzing ? t('modals.analyzing') : t('modals.analyzeRisks')}
-            </button>
+            {permissions.has(Permission.EDIT_TASKS) && (
+              <button onClick={handleAnalyzeRisks} disabled={isAnalyzing} className="px-3 py-1.5 text-sm bg-primary/20 text-primary rounded-full hover:bg-primary/30 disabled:opacity-50 disabled:cursor-wait flex items-center gap-1.5">
+                  {isAnalyzing ? (
+                      <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                  ) : '✨'}
+                  {isAnalyzing ? t('modals.analyzing') : t('modals.analyzeRisks')}
+              </button>
+            )}
         </div>
         {isAnalyzing ? (
             <div className="animate-pulse space-y-3">

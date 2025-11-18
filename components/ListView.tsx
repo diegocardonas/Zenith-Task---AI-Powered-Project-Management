@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Task, User, Role, Priority, Status, List } from '../types';
+import { Task, User, Role, Priority, Status, List, Permission } from '../types';
 import TaskRow from './TaskRow';
 import { useAppContext } from '../contexts/AppContext';
 import { useTranslation } from '../i18n';
@@ -61,7 +61,7 @@ const BulkActionBar: React.FC<BulkActionBarProps> = ({ selectedCount, onClear, o
 };
 
 const ListView: React.FC = () => {
-  const { state, actions } = useAppContext();
+  const { state, actions, permissions } = useAppContext();
   const { filteredTasks: tasks, users, currentUser } = state;
   const { handleBulkUpdateTasks, handleTasksReorder: onTasksReorder, handleBulkDeleteTasks } = actions;
   const { t } = useTranslation();
@@ -78,8 +78,8 @@ const ListView: React.FC = () => {
     );
   }
 
-  const isDraggable = currentUser!.role !== Role.Guest;
-  const isReadOnly = currentUser!.role === Role.Guest;
+  const isDraggable = permissions.has(Permission.DRAG_AND_DROP);
+  const canEdit = permissions.has(Permission.EDIT_TASKS);
 
   const handleDragStart = (e: React.DragEvent<HTMLDivElement>, taskId: string) => {
     dragItem.current = taskId;
@@ -136,7 +136,7 @@ const ListView: React.FC = () => {
 
   return (
     <div className="bg-surface rounded-lg overflow-hidden h-full flex flex-col">
-        {selectedTaskIds.size > 0 && !isReadOnly && (
+        {selectedTaskIds.size > 0 && canEdit && (
             <BulkActionBar 
                 selectedCount={selectedTaskIds.size}
                 onClear={() => setSelectedTaskIds(new Set())}
@@ -153,7 +153,7 @@ const ListView: React.FC = () => {
                         className="w-4 h-4 rounded text-primary bg-surface border-border focus:ring-primary disabled:opacity-50"
                         onChange={handleToggleAll}
                         checked={selectedTaskIds.size === tasks.length && tasks.length > 0}
-                        disabled={isReadOnly}
+                        disabled={!canEdit}
                     />
                 </div>
                 <div className="col-span-6 sm:col-span-3 md:col-span-2">{t('listView.task')}</div>
@@ -171,7 +171,6 @@ const ListView: React.FC = () => {
                     task={task}
                     isSelected={selectedTaskIds.has(task.id)}
                     onToggleSelection={handleToggleSelection}
-                    isDraggable={isDraggable}
                     onDragStart={handleDragStart}
                     onDragEnter={handleDragEnter}
                     onDragEnd={handleDragEnd}

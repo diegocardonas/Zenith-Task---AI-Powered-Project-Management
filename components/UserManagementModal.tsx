@@ -1,7 +1,8 @@
 import React, { useState, useMemo } from 'react';
-import { User, Role } from '../types';
+import { User, Role, Permission } from '../types';
 import AvatarWithStatus from './AvatarWithStatus';
 import { useTranslation } from '../i18n';
+import { useAppContext } from '../contexts/AppContext';
 
 interface UserManagementModalProps {
   isOpen: boolean;
@@ -25,6 +26,7 @@ const UserManagementModal: React.FC<UserManagementModalProps> = ({
   onEditUser,
 }) => {
   const { t } = useTranslation();
+  const { permissions } = useAppContext();
   const [newUserName, setNewUserName] = useState('');
   const [newUserRole, setNewUserRole] = useState<Role>(Role.Member);
 
@@ -32,7 +34,7 @@ const UserManagementModal: React.FC<UserManagementModalProps> = ({
 
   if (!isOpen) return null;
 
-  const canManageRoles = currentUser.role === Role.Admin;
+  const canManageUsers = permissions.has(Permission.MANAGE_APP);
 
   const handleAddUser = () => {
     if (newUserName.trim() === '') {
@@ -81,7 +83,7 @@ const UserManagementModal: React.FC<UserManagementModalProps> = ({
                     <select
                       value={user.role}
                       onChange={(e) => onUpdateUserRole(user.id, e.target.value as Role)}
-                      disabled={!canManageRoles || user.id === currentUser.id || isLastAdmin}
+                      disabled={!canManageUsers || user.id === currentUser.id || isLastAdmin}
                       className="bg-surface border border-border rounded-md px-3 py-1.5 focus:ring-primary focus:border-primary disabled:opacity-50 disabled:cursor-not-allowed"
                       aria-label={`Rol para ${user.name}`}
                       title={isLastAdmin ? t('tooltips.lastAdminRole') : ''}
@@ -92,7 +94,7 @@ const UserManagementModal: React.FC<UserManagementModalProps> = ({
                         </option>
                       ))}
                     </select>
-                     {canManageRoles && user.id !== currentUser.id && (
+                     {canManageUsers && user.id !== currentUser.id && (
                       <>
                       <button
                           onClick={() => onEditUser(user)}
@@ -123,7 +125,7 @@ const UserManagementModal: React.FC<UserManagementModalProps> = ({
             })}
           </div>
 
-          {canManageRoles && (
+          {canManageUsers && (
             <div className="mt-6 pt-6 border-t border-border">
               <h3 className="text-lg font-semibold text-text-primary mb-3">{t('modals.addMember')}</h3>
               <div className="flex flex-col sm:flex-row gap-2">
@@ -156,7 +158,7 @@ const UserManagementModal: React.FC<UserManagementModalProps> = ({
 
         <footer className="p-4 bg-secondary/50 border-t border-border flex flex-col-reverse sm:flex-row sm:justify-between items-center text-sm">
           <p className="text-text-secondary mt-2 sm:mt-0">
-            {canManageRoles ? t('modals.manageRolesAdmin') : t('modals.manageRolesNonAdmin')}
+            {canManageUsers ? t('modals.manageRolesAdmin') : t('modals.manageRolesNonAdmin')}
           </p>
           <button
             onClick={onClose}

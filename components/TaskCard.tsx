@@ -1,14 +1,14 @@
 import React from 'react';
-import { Task, User, Priority, Status } from '../types';
+import { Task, User, Priority, Status, Permission } from '../types';
 import AvatarWithStatus from './AvatarWithStatus';
 import { useTranslation } from '../i18n';
+import { useAppContext } from '../contexts/AppContext';
 
 interface TaskCardProps {
   task: Task;
   user?: User;
   onSelectTask: () => void;
   onDragStart: (e: React.DragEvent<HTMLDivElement>, taskId: string) => void;
-  isDraggable: boolean;
   allTasks: Task[];
   onOpenBlockingTasks: () => void;
   onOpenUserProfile: (user: User) => void;
@@ -61,10 +61,14 @@ const DependencyIndicator: React.FC<{ task: Task; allTasks: Task[]; onBlockingCl
   return null;
 };
 
-const TaskCard: React.FC<TaskCardProps> = ({ task, user, onSelectTask, onDragStart, isDraggable, allTasks, onOpenBlockingTasks, onOpenUserProfile, onDeleteTask }) => {
+const TaskCard: React.FC<TaskCardProps> = ({ task, user, onSelectTask, onDragStart, allTasks, onOpenBlockingTasks, onOpenUserProfile, onDeleteTask }) => {
   const { i18n, t } = useTranslation();
+  const { permissions } = useAppContext();
   const isOverdue = new Date(task.dueDate) < new Date() && task.status !== Status.Done;
   
+  const isDraggable = permissions.has(Permission.DRAG_AND_DROP);
+  const canDelete = permissions.has(Permission.DELETE_TASKS);
+
   return (
     <div
       draggable={isDraggable}
@@ -73,7 +77,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, user, onSelectTask, onDragSta
       className={`bg-secondary rounded-lg p-4 shadow-md border border-border transition-all duration-200 transform hover:scale-[1.02] hover:border-primary hover:bg-secondary-focus relative group ${isDraggable ? 'cursor-grab' : 'cursor-pointer'}`}
       aria-label={t('tooltips.openTask', { title: task.title })}
     >
-        {isDraggable && (
+        {canDelete && (
             <button 
                 onClick={(e) => { 
                     e.stopPropagation();

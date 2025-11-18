@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { User, Role } from '../../types';
+import { User, Role, Permission } from '../../types';
 import Header from '../Header';
 import AvatarWithStatus from '../AvatarWithStatus';
 import { useAppContext } from '../../contexts/AppContext';
@@ -10,6 +10,7 @@ const RoleDescription: React.FC<{ role: Role, description: string }> = ({ role, 
     const roleConfig = {
         [Role.Admin]: { color: 'text-red-400', name: t('common.admin') },
         [Role.Member]: { color: 'text-blue-400', name: t('common.member') },
+        [Role.Viewer]: { color: 'text-yellow-400', name: t('common.viewer') },
         [Role.Guest]: { color: 'text-gray-400', name: t('common.guest') },
     };
 
@@ -23,7 +24,7 @@ const RoleDescription: React.FC<{ role: Role, description: string }> = ({ role, 
 
 const AppAdminPanel: React.FC = () => {
     const { t } = useTranslation();
-    const { state, actions } = useAppContext();
+    const { state, actions, permissions } = useAppContext();
     const { users, currentUser } = state;
     const { 
         handleUpdateUserRole, 
@@ -153,6 +154,7 @@ const AppAdminPanel: React.FC = () => {
                         <div className="space-y-4">
                             <RoleDescription role={Role.Admin} description={t('admin.adminDescription')} />
                             <RoleDescription role={Role.Member} description={t('admin.memberDescription')} />
+                            <RoleDescription role={Role.Viewer} description={t('admin.viewerDescription')} />
                             <RoleDescription role={Role.Guest} description={t('admin.guestDescription')} />
                         </div>
                     </div>

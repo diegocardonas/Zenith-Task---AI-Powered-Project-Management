@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { User, List, Role, Task, Notification } from '../types';
+import { User, List, Role, Task, Notification, Permission } from '../types';
 import GlobalSearch from './GlobalSearch';
 import NotificationsPanel from './NotificationsPanel';
 import AvatarWithStatus from './AvatarWithStatus';
@@ -61,7 +61,7 @@ const ProjectActionsMenu: React.FC<{
 
 const Header: React.FC<HeaderProps> = ({ title }) => {
     const { t } = useTranslation();
-    const { state, actions } = useAppContext();
+    const { state, actions, permissions } = useAppContext();
     const { 
         isSidebarOpen, 
         currentUser, 
@@ -122,7 +122,7 @@ const Header: React.FC<HeaderProps> = ({ title }) => {
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" /></svg>
                 </button>
                 <h1 className="text-2xl font-bold text-text-primary truncate">{title}</h1>
-                {selectedList && currentUser!.role !== Role.Guest && (
+                {selectedList && permissions.has(Permission.MANAGE_WORKSPACES_AND_PROJECTS) && (
                     <ProjectActionsMenu
                         list={selectedList}
                         onEdit={() => { setListToEdit(selectedList); setIsProjectModalOpen(true); }}
