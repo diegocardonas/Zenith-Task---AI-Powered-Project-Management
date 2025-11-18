@@ -122,6 +122,7 @@ const Sidebar: React.FC = () => {
         setIsSettingsModalOpen,
         handleUpdateUserStatus,
         handleSidebarReorder,
+        showConfirmation,
     } = actions;
 
     const [isUserPanelOpen, setIsUserPanelOpen] = useState(false);
@@ -143,6 +144,14 @@ const Sidebar: React.FC = () => {
         document.addEventListener("mousedown", handleClickOutside);
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
+
+    const handleLogout = () => {
+        showConfirmation(
+            t('sidebar.logout'),
+            t('confirmations.logout'),
+            () => setCurrentUser(null)
+        );
+    };
 
     const toggleFolder = (folderId: string) => {
         setOpenFolders(prev => {
@@ -409,7 +418,7 @@ const Sidebar: React.FC = () => {
                             <UserPanel
                                 currentUser={currentUser}
                                 onOpenUserProfile={() => setEditingUserId(currentUser.id)}
-                                onLogout={() => setCurrentUser(null)}
+                                onLogout={handleLogout}
                                 onClose={() => setIsUserPanelOpen(false)}
                                 onUpdateUserStatus={(status) => handleUpdateUserStatus(currentUser.id, status)}
                             />

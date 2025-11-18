@@ -7,7 +7,7 @@ import { useTranslation } from '../i18n';
 const BoardView: React.FC = () => {
   const { state, actions } = useAppContext();
   const { filteredTasks: tasks, users, currentUser, allTasks } = state;
-  const { handleUpdateTask, setSelectedTaskId, setTaskForBlockingModal, setIsBlockingTasksModalOpen, setEditingUserId } = actions;
+  const { handleUpdateTask, setSelectedTaskId, setTaskForBlockingModal, setIsBlockingTasksModalOpen, setEditingUserId, handleDeleteTask } = actions;
   const { t } = useTranslation();
 
   const [draggedTaskId, setDraggedTaskId] = useState<string | null>(null);
@@ -97,6 +97,7 @@ const BoardView: React.FC = () => {
                             allTasks={allTasks}
                             onOpenBlockingTasks={() => { setTaskForBlockingModal(task); setIsBlockingTasksModalOpen(true); }}
                             onOpenUserProfile={(user) => setEditingUserId(user.id)}
+                            onDeleteTask={handleDeleteTask}
                         />
                     </div>
                 ))

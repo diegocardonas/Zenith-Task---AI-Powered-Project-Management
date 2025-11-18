@@ -79,10 +79,11 @@ const DependencyIndicator: React.FC<{ task: Task; onBlockingClick: () => void; }
 const TaskRow: React.FC<TaskRowProps> = ({ 
     task, 
     isSelected = false, 
-    onToggleSelection = () => {}, 
+// Fix: Updated default props to match function signatures, expecting arguments.
+    onToggleSelection = (taskId) => {}, 
     isDraggable = false, 
-    onDragStart = () => {}, 
-    onDragEnter = () => {}, 
+    onDragStart = (e, taskId) => {}, 
+    onDragEnter = (e, taskId) => {}, 
     onDragEnd = () => {} 
 }) => {
   const { state, actions } = useAppContext();
@@ -236,6 +237,16 @@ const TaskRow: React.FC<TaskRowProps> = ({
                         </div>
                     )}
                 </div>
+                <button
+                    onClick={(e) => { e.stopPropagation(); handleDeleteTask(task.id); }}
+                    className="p-2 text-text-secondary hover:text-red-400 rounded-full hover:bg-red-500/10 transition-colors"
+                    aria-label={t('tooltips.deleteTask')}
+                    title={t('tooltips.deleteTask')}
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm4 0a1 1 0 012 0v6a1 1 0 11-2 0V8z" clipRule="evenodd" />
+                    </svg>
+                </button>
             </div>
         )}
       </div>

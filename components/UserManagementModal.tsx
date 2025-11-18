@@ -44,12 +44,6 @@ const UserManagementModal: React.FC<UserManagementModalProps> = ({
     setNewUserRole(Role.Member);
   };
 
-  const handleDeleteUserClick = (user: User) => {
-    if (window.confirm(t('confirmations.deleteUser', { name: user.name }))) {
-        onDeleteUser(user.id);
-    }
-  };
-
   return (
     <div
       className="fixed inset-0 bg-black bg-opacity-70 flex justify-center items-center z-50 backdrop-blur-sm animate-fadeIn"
@@ -111,7 +105,7 @@ const UserManagementModal: React.FC<UserManagementModalProps> = ({
                           </svg>
                       </button>
                        <button
-                          onClick={() => handleDeleteUserClick(user)}
+                          onClick={() => onDeleteUser(user.id)}
                           className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-500/10 rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:text-gray-400 disabled:hover:bg-transparent"
                           disabled={isLastAdmin}
                           aria-label={t('tooltips.deleteUser', { name: user.name })}

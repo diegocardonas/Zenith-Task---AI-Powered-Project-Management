@@ -148,7 +148,8 @@ const TaskModal: React.FC = () => {
     const handleFileAttach = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files) {
             const files = Array.from(e.target.files);
-            files.forEach(file => {
+// Fix: Explicitly type the 'file' parameter in the forEach callback to resolve type inference issues where 'file' was being treated as 'unknown'.
+            files.forEach((file: File) => {
                 const reader = new FileReader();
                 reader.onloadend = () => {
                     const newAttachment: Attachment = {

@@ -16,6 +16,7 @@ import AIChatbot from './components/AIChatbot';
 import WelcomePage from './components/WelcomePage';
 import SettingsModal from './components/SettingsModal';
 import FolderModal from './components/FolderModal';
+import ConfirmationModal from './components/ConfirmationModal';
 import { useAppContext } from './contexts/AppContext';
 import { Toast } from './types';
 import { useTranslation } from './i18n';
@@ -90,16 +91,19 @@ const App: React.FC = () => {
     selectedWorkspaceId,
     theme,
     colorScheme,
+    isConfirmationModalOpen,
+    confirmationModalProps,
   } = state;
 
   const {
     setCurrentUser,
     removeToast,
+    hideConfirmation,
   } = actions;
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-        if (selectedTask || editingUser || isWorkspaceModalOpen || isProjectModalOpen || isFolderModalOpen || isCommandPaletteOpen || isSummaryModalOpen || isSettingsModalOpen || isBlockingTasksModalOpen) return;
+        if (selectedTask || editingUser || isWorkspaceModalOpen || isProjectModalOpen || isFolderModalOpen || isCommandPaletteOpen || isSummaryModalOpen || isSettingsModalOpen || isBlockingTasksModalOpen || isConfirmationModalOpen) return;
         const target = event.target as HTMLElement;
         if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.tagName === 'SELECT') return;
 
@@ -121,7 +125,7 @@ const App: React.FC = () => {
     return () => {
         window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [activeView, state.selectedListId, selectedTask, editingUser, isWorkspaceModalOpen, isProjectModalOpen, isFolderModalOpen, isCommandPaletteOpen, isSummaryModalOpen, isSettingsModalOpen, isBlockingTasksModalOpen, actions]);
+  }, [activeView, state.selectedListId, selectedTask, editingUser, isWorkspaceModalOpen, isProjectModalOpen, isFolderModalOpen, isCommandPaletteOpen, isSummaryModalOpen, isSettingsModalOpen, isBlockingTasksModalOpen, isConfirmationModalOpen, actions]);
 
   const handleCommand = (command: string, payload?: any) => {
       switch (command) {
@@ -156,7 +160,11 @@ const App: React.FC = () => {
               actions.setColorScheme(state.colorScheme === 'dark' ? 'light' : 'dark');
               break;
           case 'logout':
-              actions.setCurrentUser(null);
+              actions.showConfirmation(
+                'Cerrar Sesión', 
+                '¿Estás seguro de que quieres cerrar sesión?', 
+                () => actions.setCurrentUser(null)
+              );
               break;
       }
       actions.setIsCommandPaletteOpen(false);
@@ -204,6 +212,15 @@ const App: React.FC = () => {
         isLoading={isSummaryLoading}
       />
       <SettingsModal isOpen={isSettingsModalOpen} onClose={() => actions.setIsSettingsModalOpen(false)} theme={theme} setTheme={actions.setTheme} colorScheme={colorScheme} setColorScheme={actions.setColorScheme} />
+      {isConfirmationModalOpen && confirmationModalProps && (
+        <ConfirmationModal
+            isOpen={isConfirmationModalOpen}
+            onClose={hideConfirmation}
+            onConfirm={confirmationModalProps.onConfirm}
+            title={confirmationModalProps.title}
+            message={confirmationModalProps.message}
+        />
+      )}
       <AIChatbot tasks={tasks} lists={lists} users={users} />
 
       <div className="fixed top-5 right-5 z-50 space-y-2">

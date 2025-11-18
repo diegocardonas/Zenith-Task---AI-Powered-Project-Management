@@ -12,6 +12,7 @@ interface TaskCardProps {
   allTasks: Task[];
   onOpenBlockingTasks: () => void;
   onOpenUserProfile: (user: User) => void;
+  onDeleteTask: (taskId: string) => void;
 }
 
 const PriorityIndicator: React.FC<{ priority: Priority }> = ({ priority }) => {
@@ -60,7 +61,7 @@ const DependencyIndicator: React.FC<{ task: Task; allTasks: Task[]; onBlockingCl
   return null;
 };
 
-const TaskCard: React.FC<TaskCardProps> = ({ task, user, onSelectTask, onDragStart, isDraggable, allTasks, onOpenBlockingTasks, onOpenUserProfile }) => {
+const TaskCard: React.FC<TaskCardProps> = ({ task, user, onSelectTask, onDragStart, isDraggable, allTasks, onOpenBlockingTasks, onOpenUserProfile, onDeleteTask }) => {
   const { i18n, t } = useTranslation();
   const isOverdue = new Date(task.dueDate) < new Date() && task.status !== Status.Done;
   
@@ -69,9 +70,21 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, user, onSelectTask, onDragSta
       draggable={isDraggable}
       onDragStart={(e) => onDragStart(e, task.id)}
       onClick={() => onSelectTask()}
-      className={`bg-secondary rounded-lg p-4 shadow-md border border-border transition-all duration-200 transform hover:scale-[1.02] hover:border-primary hover:bg-secondary-focus ${isDraggable ? 'cursor-grab' : 'cursor-pointer'}`}
+      className={`bg-secondary rounded-lg p-4 shadow-md border border-border transition-all duration-200 transform hover:scale-[1.02] hover:border-primary hover:bg-secondary-focus relative group ${isDraggable ? 'cursor-grab' : 'cursor-pointer'}`}
       aria-label={t('tooltips.openTask', { title: task.title })}
     >
+        {isDraggable && (
+            <button 
+                onClick={(e) => { 
+                    e.stopPropagation();
+                    onDeleteTask(task.id);
+                }}
+                className="absolute top-2 right-2 p-1 bg-secondary text-text-secondary rounded-full opacity-0 group-hover:opacity-100 hover:text-red-500 hover:bg-red-500/10 transition-opacity"
+                title={t('tooltips.deleteTask')}
+            >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm4 0a1 1 0 012 0v6a1 1 0 11-2 0V8z" clipRule="evenodd" /></svg>
+            </button>
+        )}
       <h4 className="font-semibold text-text-primary mb-2">{task.title}</h4>
       
       <div className="flex flex-wrap items-center text-xs text-text-secondary mt-3 gap-x-4 gap-y-1">

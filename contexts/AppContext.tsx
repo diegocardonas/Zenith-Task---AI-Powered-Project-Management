@@ -88,6 +88,12 @@ interface AppState {
     toasts: Toast[];
     notifications: Notification[];
     taskTemplates: TaskTemplate[];
+    isConfirmationModalOpen: boolean;
+    confirmationModalProps: {
+        title: string;
+        message: string;
+        onConfirm: () => void;
+    } | null;
 }
 
 type Action =
@@ -98,6 +104,7 @@ type Action =
   | { type: 'UPDATE_TASK'; payload: Task }
   | { type: 'UPDATE_TASKS'; payload: Task[] }
   | { type: 'DELETE_TASK'; payload: string }
+  | { type: 'DELETE_TASKS'; payload: string[] }
   | { type: 'REORDER_TASKS'; payload: { listId: string; tasks: Task[] } }
   | { type: 'ADD_WORKSPACE'; payload: Workspace }
   | { type: 'UPDATE_WORKSPACE'; payload: Workspace }
@@ -112,7 +119,9 @@ type Action =
   | { type: 'UPDATE_USER'; payload: User }
   | { type: 'DELETE_USER'; payload: string }
   | { type: 'ADD_NOTIFICATION'; payload: Omit<Notification, 'id' | 'timestamp' | 'read'> }
-  | { type: 'ADD_TEMPLATE'; payload: TaskTemplate };
+  | { type: 'ADD_TEMPLATE'; payload: TaskTemplate }
+  | { type: 'SHOW_CONFIRMATION'; payload: { title: string; message: string; onConfirm: () => void; } }
+  | { type: 'HIDE_CONFIRMATION' };
 
 
 const initialState: AppState = {
@@ -150,6 +159,8 @@ const initialState: AppState = {
     toasts: [],
     notifications: NOTIFICATIONS,
     taskTemplates: TASK_TEMPLATES,
+    isConfirmationModalOpen: false,
+    confirmationModalProps: null,
 };
 
 const appReducer = (state: AppState, action: Action): AppState => {
@@ -185,6 +196,22 @@ const appReducer = (state: AppState, action: Action): AppState => {
             ...state,
             tasks: tasksWithCleanedDependencies,
             selectedTaskId: state.selectedTaskId === taskIdToDelete ? null : state.selectedTaskId,
+        };
+    }
+    case 'DELETE_TASKS': {
+        const taskIdsToDelete = new Set(action.payload);
+        const remainingTasks = state.tasks.filter(t => !taskIdsToDelete.has(t.id));
+        const tasksWithCleanedDependencies = remainingTasks.map(task => {
+            const newDependsOn = task.dependsOn?.filter(depId => !taskIdsToDelete.has(depId));
+            if (newDependsOn && newDependsOn.length !== (task.dependsOn?.length || 0)) {
+                return { ...task, dependsOn: newDependsOn };
+            }
+            return task;
+        });
+        return {
+            ...state,
+            tasks: tasksWithCleanedDependencies,
+            selectedTaskId: state.selectedTaskId && taskIdsToDelete.has(state.selectedTaskId) ? null : state.selectedTaskId,
         };
     }
     case 'REORDER_TASKS': {
@@ -243,6 +270,10 @@ const appReducer = (state: AppState, action: Action): AppState => {
         return { ...state, notifications: [newNotification, ...state.notifications] };
     }
     case 'ADD_TEMPLATE': return { ...state, taskTemplates: [...state.taskTemplates, action.payload] };
+    case 'SHOW_CONFIRMATION':
+        return { ...state, isConfirmationModalOpen: true, confirmationModalProps: action.payload };
+    case 'HIDE_CONFIRMATION':
+        return { ...state, isConfirmationModalOpen: false, confirmationModalProps: null };
     default:
       return state;
   }
@@ -304,6 +335,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const addToast = useCallback((toast: Omit<Toast, 'id'>) => {
         dispatch({ type: 'ADD_TOAST', payload: { ...toast, id: Date.now() } });
     }, []);
+
+    const showConfirmation = useCallback((title: string, message: string, onConfirm: () => void) => {
+        dispatch({ type: 'SHOW_CONFIRMATION', payload: { title, message, onConfirm } });
+    }, []);
+
+    const hideConfirmation = useCallback(() => {
+        dispatch({ type: 'HIDE_CONFIRMATION' });
+    }, []);
     
     const simpleSetters = useMemo(() => ({
         setCurrentUser: (user: User | null) => dispatch({ type: 'SET_STATE', payload: { currentUser: user } }),
@@ -329,7 +368,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setIsSettingsModalOpen: (isOpen: boolean) => dispatch({ type: 'SET_STATE', payload: { isSettingsModalOpen: isOpen } }),
         setTheme: (theme: ThemeName) => dispatch({ type: 'SET_STATE', payload: { theme } }),
         setColorScheme: (scheme: ColorScheme) => dispatch({ type: 'SET_STATE', payload: { colorScheme: scheme } }),
-    }), []);
+        hideConfirmation,
+    }), [hideConfirmation]);
 
     const setNotifications = useCallback((notifications: React.SetStateAction<Notification[]>) => {
         const newNotifications = typeof notifications === 'function' ? notifications(state.notifications) : notifications;
@@ -356,11 +396,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     const handleDeleteWorkspace = useCallback((workspaceId: string) => {
         const ws = state.workspaces.find(w => w.id === workspaceId);
-        if(window.confirm(t('confirmations.deleteWorkspace', { name: ws?.name }))) {
-            dispatch({ type: 'DELETE_WORKSPACE', payload: workspaceId });
-            addToast({ message: t('toasts.workspaceDeleted'), type: 'success' });
-        }
-    }, [state.workspaces, addToast, t]);
+        showConfirmation(
+            t('common.delete') + ` "${ws?.name}"`,
+            t('confirmations.deleteWorkspace', { name: ws?.name }),
+            () => {
+                dispatch({ type: 'DELETE_WORKSPACE', payload: workspaceId });
+                addToast({ message: t('toasts.workspaceDeleted'), type: 'success' });
+            }
+        );
+    }, [state.workspaces, addToast, t, showConfirmation]);
     
     const handleSaveList = useCallback((name: string, color: string, folderId: string | null) => {
         if(state.listToEdit) {
@@ -374,11 +418,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }, [state.listToEdit, state.selectedWorkspaceId, state.lists.length, addToast, t]);
     
     const handleDeleteList = useCallback((listId: string) => {
-        if(window.confirm(t('confirmations.deleteProject'))) {
-            dispatch({ type: 'DELETE_LIST', payload: listId });
-            addToast({ message: t('toasts.projectDeleted'), type: 'success' });
-        }
-    }, [addToast, t]);
+        showConfirmation(
+            t('header.deleteProject'),
+            t('confirmations.deleteProject'),
+            () => {
+                dispatch({ type: 'DELETE_LIST', payload: listId });
+                addToast({ message: t('toasts.projectDeleted'), type: 'success' });
+            }
+        );
+    }, [addToast, t, showConfirmation]);
 
     const handleSaveFolder = useCallback((name: string) => {
         if(state.folderToEdit) {
@@ -392,20 +440,39 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }, [state.folderToEdit, state.selectedWorkspaceId, state.folders.length, addToast, t]);
 
     const handleDeleteFolder = useCallback((folderId: string) => {
-        if(window.confirm(t('confirmations.deleteFolder'))) {
-            dispatch({ type: 'DELETE_FOLDER', payload: folderId });
-            addToast({ message: t('toasts.folderDeleted'), type: 'success' });
-        }
-    }, [addToast, t]);
+        showConfirmation(
+            t('sidebar.newFolder'),
+            t('confirmations.deleteFolder'),
+            () => {
+                dispatch({ type: 'DELETE_FOLDER', payload: folderId });
+                addToast({ message: t('toasts.folderDeleted'), type: 'success' });
+            }
+        );
+    }, [addToast, t, showConfirmation]);
 
     const handleUpdateTask = useCallback((task: Task) => dispatch({ type: 'UPDATE_TASK', payload: task }), []);
 
     const handleDeleteTask = useCallback((taskId: string) => {
-        if (window.confirm(t('modals.confirmDeleteTask'))) {
-            dispatch({ type: 'DELETE_TASK', payload: taskId });
-            addToast({ message: t('toasts.taskDeleted'), type: 'success' });
-        }
-    }, [addToast, t]);
+        showConfirmation(
+            t('modals.deleteTask'),
+            t('modals.confirmDeleteTask'),
+            () => {
+                dispatch({ type: 'DELETE_TASK', payload: taskId });
+                addToast({ message: t('toasts.taskDeleted'), type: 'success' });
+            }
+        );
+    }, [addToast, t, showConfirmation]);
+
+    const handleBulkDeleteTasks = useCallback((taskIds: string[]) => {
+        showConfirmation(
+            t('modals.deleteTask'),
+            t('confirmations.deleteTasks', { count: taskIds.length }),
+            () => {
+                dispatch({ type: 'DELETE_TASKS', payload: taskIds });
+                addToast({ message: t('toasts.taskDeleted_plural', { count: taskIds.length }), type: 'success' });
+            }
+        );
+    }, [addToast, t, showConfirmation]);
 
     const handleAddTask = useCallback((listId: string, template?: TaskTemplate) => {
         const baseTask = {
@@ -519,11 +586,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     const handleDeleteUser = useCallback((userId: string) => {
         const user = state.users.find(u => u.id === userId);
-        if (user && window.confirm(t('confirmations.deleteUser', { name: user.name }))) {
-            dispatch({ type: 'DELETE_USER', payload: userId });
-            addToast({ message: t('toasts.userDeleted'), type: 'success' });
+        if (user) {
+            showConfirmation(
+                t('tooltips.deleteUser', { name: user.name }),
+                t('confirmations.deleteUser', { name: user.name }),
+                () => {
+                    dispatch({ type: 'DELETE_USER', payload: userId });
+                    addToast({ message: t('toasts.userDeleted'), type: 'success' });
+                }
+            );
         }
-    }, [state.users, addToast, t]);
+    }, [state.users, addToast, t, showConfirmation]);
 
     const handleUpdateUserRole = useCallback((userId: string, role: Role) => {
         const user = state.users.find(u => u.id === userId);
@@ -545,7 +618,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
                 if (assigneeName) {
                     const foundUser = state.users.find(u => u.name.toLowerCase() === assigneeName.toLowerCase());
                     if (foundUser) assigneeIdToUse = foundUser.id;
-                    else addToast({ message: t('toasts.userNotFound', { name: assigneeName }), type: 'info' });
+// Fix: Explicitly cast 'assigneeName' to string to match the type expected by the translation function.
+                    else addToast({ message: t('toasts.userNotFound', { name: String(assigneeName) }), type: 'info' });
                 }
                 const newTask: Task = {
                     id: `t-${Date.now()}`, title: title || 'New AI Task', description: description || '', status: Status.Todo,
@@ -587,6 +661,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         addToast,
         removeToast,
         addNotification,
+        showConfirmation,
         handleUpdateUser,
         handleSaveWorkspace,
         handleDeleteWorkspace,
@@ -596,6 +671,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         handleDeleteFolder,
         handleUpdateTask,
         handleDeleteTask,
+        handleBulkDeleteTasks,
         handleAddTask,
         handleAddTaskOnDate,
         logActivity,
@@ -612,9 +688,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         handleUpdateUserRole,
         handleAIAction,
     }), [
-        simpleSetters, setNotifications, addToast, removeToast, addNotification, handleUpdateUser, handleSaveWorkspace,
+        simpleSetters, setNotifications, addToast, removeToast, addNotification, showConfirmation, handleUpdateUser, handleSaveWorkspace,
         handleDeleteWorkspace, handleSaveList, handleDeleteList, handleSaveFolder, handleDeleteFolder, handleUpdateTask,
-        handleDeleteTask, handleAddTask, handleAddTaskOnDate, logActivity, handleGenerateSummary, handleSidebarReorder,
+        handleDeleteTask, handleBulkDeleteTasks, handleAddTask, handleAddTaskOnDate, logActivity, handleGenerateSummary, handleSidebarReorder,
         handleTasksReorder, handleBulkUpdateTasks, handleSelectWorkspace, handleUpdateUserStatus, handleSaveTemplate,
         handleNotificationClick, handleCreateUser, handleDeleteUser, handleUpdateUserRole, handleAIAction
     ]);

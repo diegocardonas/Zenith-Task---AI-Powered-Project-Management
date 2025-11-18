@@ -230,6 +230,7 @@ const es = {
   },
   "toasts": {
     "taskDeleted": "Tarea eliminada correctamente",
+    "taskDeleted_plural": "{{count}} tareas eliminadas correctamente",
     "userProfileUpdated": "Perfil de usuario actualizado.",
     "userCreated": "Usuario \"{{name}}\" creado.",
     "userDeleted": "Usuario eliminado.",
@@ -244,7 +245,8 @@ const es = {
     "folderDeleted": "Carpeta eliminada.",
     "tasksReordered": "Orden de tareas actualizado.",
     "sidebarReordered": "Barra lateral reordenada.",
-    "tasksUpdated": "{{count}} tareas actualizadas.",
+    "tasksUpdated": "{{count}} tarea actualizada.",
+    "tasksUpdated_plural": "{{count}} tareas actualizadas.",
     "templateSaved": "Plantilla \"{{name}}\" guardada.",
     "projectNotFound": "Proyecto \"{{name}}\" no encontrado. Creando tarea en el proyecto actual.",
     "selectProjectFirst": "Por favor, selecciona un proyecto primero para añadir una tarea.",
@@ -305,7 +307,10 @@ const es = {
     "deleteProject": "Estás seguro de que quieres eliminar este proyecto? Todas las tareas dentro de él también serán eliminadas.",
     "deleteWorkspace": "¿Estás seguro de que quieres eliminar el espacio de trabajo \"{{name}}\"? Esto eliminará todos los proyectos y tareas asociados.",
     "deleteUser": "¿Estás seguro de que quieres eliminar a {{name}}? Todas sus tareas asignadas quedarán sin asignar.",
-    "deleteFolder": "¿Estás seguro de que quieres eliminar esta carpeta? Los proyectos dentro de ella no serán eliminados, pero ya no estarán agrupados."
+    "deleteFolder": "¿Estás seguro de que quieres eliminar esta carpeta? Los proyectos dentro de ella no serán eliminados, pero ya no estarán agrupados.",
+    "deleteTasks": "¿Estás seguro de que quieres eliminar {{count}} tarea? Esta acción no se puede deshacer.",
+    "deleteTasks_plural": "¿Estás seguro de que quieres eliminar {{count}} tareas? Esta acción no se puede deshacer.",
+    "logout": "¿Estás seguro de que quieres cerrar sesión?"
   },
   "weekdays": {
     "sun": "Dom",
@@ -602,6 +607,7 @@ const en = {
   },
   "toasts": {
     "taskDeleted": "Task deleted successfully",
+    "taskDeleted_plural": "{{count}} tasks deleted successfully",
     "userProfileUpdated": "User profile updated.",
     "userCreated": "User \"{{name}}\" created.",
     "userDeleted": "User deleted.",
@@ -616,7 +622,8 @@ const en = {
     "folderDeleted": "Folder deleted.",
     "tasksReordered": "Task order updated.",
     "sidebarReordered": "Sidebar reordered.",
-    "tasksUpdated": "{{count}} tasks updated.",
+    "tasksUpdated": "{{count}} task updated.",
+    "tasksUpdated_plural": "{{count}} tasks updated.",
     "templateSaved": "Template \"{{name}}\" saved.",
     "projectNotFound": "Project \"{{name}}\" not found. Creating task in the current project.",
     "selectProjectFirst": "Please select a project first to add a task.",
@@ -677,7 +684,10 @@ const en = {
     "deleteProject": "Are you sure you want to delete this project? All tasks within it will also be deleted.",
     "deleteWorkspace": "Are you sure you want to delete the workspace \"{{name}}\"? This will delete all associated projects and tasks.",
     "deleteUser": "Are you sure you want to delete {{name}}? All of their assigned tasks will become unassigned.",
-    "deleteFolder": "Are you sure you want to delete this folder? Projects within it will not be deleted, but will no longer be grouped."
+    "deleteFolder": "Are you sure you want to delete this folder? Projects within it will not be deleted, but will no longer be grouped.",
+    "deleteTasks": "Are you sure you want to delete {{count}} task? This action cannot be undone.",
+    "deleteTasks_plural": "Are you sure you want to delete {{count}} tasks? This action cannot be undone.",
+    "logout": "Are you sure you want to log out?"
   },
   "weekdays": {
     "sun": "Sun",

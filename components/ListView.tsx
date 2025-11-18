@@ -8,12 +8,13 @@ interface BulkActionBarProps {
     selectedCount: number;
     onClear: () => void;
     onUpdate: (updates: Partial<Task>) => void;
+    onDelete: () => void;
     users: User[];
 }
 
-const BulkActionBar: React.FC<BulkActionBarProps> = ({ selectedCount, onClear, onUpdate, users }) => {
+const BulkActionBar: React.FC<BulkActionBarProps> = ({ selectedCount, onClear, onUpdate, onDelete, users }) => {
     const { t } = useTranslation();
-    const selectionText = selectedCount > 1 ? t('listView.selected_plural', { count: selectedCount }) : t('listView.selected', { count: selectedCount });
+    const selectionText = t('listView.selected', { count: selectedCount });
     
     return (
         <div className="flex items-center justify-between p-2 bg-secondary border-b border-border animate-fadeIn">
@@ -21,25 +22,34 @@ const BulkActionBar: React.FC<BulkActionBarProps> = ({ selectedCount, onClear, o
             <div className="flex items-center gap-2">
                  <select 
                     onChange={(e) => onUpdate({ status: e.target.value as Status })}
+                    defaultValue=""
                     className="bg-surface border border-border rounded-md px-2 py-1 text-xs focus:ring-primary focus:border-primary"
                  >
-                    <option value="">{t('listView.changeStatus')}</option>
+                    <option value="" disabled>{t('listView.changeStatus')}</option>
                     {Object.values(Status).map(s => <option key={s} value={s}>{t(`common.${s.replace(/\s+/g, '').toLowerCase()}`)}</option>)}
                 </select>
                  <select 
                     onChange={(e) => onUpdate({ priority: e.target.value as Priority })}
+                    defaultValue=""
                     className="bg-surface border border-border rounded-md px-2 py-1 text-xs focus:ring-primary focus:border-primary"
                  >
-                    <option value="">{t('listView.changePriority')}</option>
+                    <option value="" disabled>{t('listView.changePriority')}</option>
                     {Object.values(Priority).map(p => <option key={p} value={p}>{t(`common.${p.toLowerCase()}`)}</option>)}
                 </select>
                 <select 
                     onChange={(e) => onUpdate({ assigneeId: e.target.value || null })}
+                    defaultValue=""
                     className="bg-surface border border-border rounded-md px-2 py-1 text-xs focus:ring-primary focus:border-primary"
                  >
-                    <option value="">{t('listView.changeAssignee')}</option>
+                    <option value="" disabled>{t('listView.changeAssignee')}</option>
                     {users.map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
                 </select>
+                <button 
+                    onClick={onDelete} 
+                    className="p-2 text-xs font-semibold text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
+                >
+                    {t('common.delete')}
+                </button>
                 <button onClick={onClear} className="p-1 text-text-secondary hover:text-white">
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                       <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
@@ -53,7 +63,7 @@ const BulkActionBar: React.FC<BulkActionBarProps> = ({ selectedCount, onClear, o
 const ListView: React.FC = () => {
   const { state, actions } = useAppContext();
   const { filteredTasks: tasks, users, currentUser } = state;
-  const { handleBulkUpdateTasks, handleTasksReorder: onTasksReorder } = actions;
+  const { handleBulkUpdateTasks, handleTasksReorder: onTasksReorder, handleBulkDeleteTasks } = actions;
   const { t } = useTranslation();
   
   const [selectedTaskIds, setSelectedTaskIds] = useState<Set<string>>(new Set());
@@ -119,6 +129,11 @@ const ListView: React.FC = () => {
       setSelectedTaskIds(new Set());
   };
 
+  const handleBulkDelete = () => {
+    handleBulkDeleteTasks(Array.from(selectedTaskIds));
+    setSelectedTaskIds(new Set());
+  };
+
   return (
     <div className="bg-surface rounded-lg overflow-hidden h-full flex flex-col">
         {selectedTaskIds.size > 0 && !isReadOnly && (
@@ -126,6 +141,7 @@ const ListView: React.FC = () => {
                 selectedCount={selectedTaskIds.size}
                 onClear={() => setSelectedTaskIds(new Set())}
                 onUpdate={handleBulkUpdate}
+                onDelete={handleBulkDelete}
                 users={users}
             />
         )}
