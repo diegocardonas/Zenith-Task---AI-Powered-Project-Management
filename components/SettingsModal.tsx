@@ -147,7 +147,13 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, theme, s
                                      <p className="font-medium text-red-600 dark:text-red-400">{t('modals.deleteAccount')}</p>
                                      <p className="text-sm text-red-600/70 dark:text-red-400/70">{t('modals.deleteAccountWarning')}</p>
                                  </div>
-                                 <button className="px-4 py-2 bg-red-500 text-white rounded-lg text-sm font-medium hover:bg-red-600 transition-colors shadow-lg shadow-red-500/20">
+                                 <button 
+                                    onClick={() => {
+                                      actions.handleDeleteAccount();
+                                      onClose();
+                                    }}
+                                    className="px-4 py-2 bg-red-500 text-white rounded-lg text-sm font-medium hover:bg-red-600 transition-colors shadow-lg shadow-red-500/20"
+                                >
                                      {t('common.delete')}
                                  </button>
                              </div>

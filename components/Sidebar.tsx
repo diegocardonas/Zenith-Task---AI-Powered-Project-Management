@@ -33,31 +33,31 @@ const WorkspaceSwitcher: React.FC<WorkspaceSwitcherProps> = ({ workspaces, selec
     }, [wrapperRef]);
     
     return (
-      <div ref={wrapperRef} className="relative mb-4 px-2">
+      <div ref={wrapperRef} className="relative mb-6 px-2">
         <button 
             onClick={() => setIsOpen(!isOpen)} 
-            className="w-full flex items-center justify-between p-2 hover:bg-secondary-focus rounded-lg transition-colors group border border-transparent hover:border-border"
+            className="w-full flex items-center justify-between p-2.5 hover:bg-white/5 rounded-xl transition-all duration-200 group border border-transparent hover:border-white/10"
         >
             <div className="flex items-center min-w-0 gap-3">
-                <div className="w-8 h-8 rounded-md bg-gradient-to-br from-primary to-primary-focus flex-shrink-0 flex items-center justify-center shadow-md ring-1 ring-white/10">
+                <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-primary to-purple-600 flex-shrink-0 flex items-center justify-center shadow-lg shadow-primary/20 ring-1 ring-white/10">
                      <span className="font-bold text-white text-lg leading-none">{selectedWorkspace?.name.charAt(0).toUpperCase()}</span>
                 </div>
                 <div className="flex flex-col items-start min-w-0">
-                    <span className="font-bold text-text-primary truncate text-sm w-full text-left">{selectedWorkspace?.name}</span>
-                    <span className="text-[10px] text-text-secondary uppercase tracking-wider">Free Plan</span>
+                    <span className="font-bold text-text-primary truncate text-sm w-full text-left group-hover:text-white transition-colors">{selectedWorkspace?.name}</span>
+                    <span className="text-[10px] text-text-secondary uppercase tracking-wider font-medium">Pro Plan</span>
                 </div>
             </div>
-            <svg className={`w-4 h-4 text-text-secondary transition-transform flex-shrink-0 ${isOpen ? 'rotate-180' : ''}`} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+            <svg className={`w-4 h-4 text-text-secondary transition-transform duration-200 flex-shrink-0 ${isOpen ? 'rotate-180' : ''}`} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                 <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
             </svg>
         </button>
 
         {isOpen && (
-            <div className="absolute top-full mt-1 left-2 right-2 bg-surface rounded-lg shadow-2xl border border-border z-40 animate-scaleIn origin-top">
+            <div className="absolute top-full mt-2 left-1 right-1 bg-[#1e293b] rounded-xl shadow-2xl border border-white/10 z-40 animate-scaleIn origin-top backdrop-blur-xl">
                 <div className="p-2">
-                    <span className="text-xs font-semibold text-text-secondary px-2 uppercase">{t('sidebar.workspace')}</span>
+                    <span className="text-[10px] font-bold text-text-secondary px-3 uppercase tracking-wider opacity-70">{t('sidebar.workspace')}</span>
                 </div>
-                <ul className="py-1">
+                <ul className="py-1 space-y-1 px-1">
                     {workspaces.map(workspace => (
                         <li key={workspace.id}>
                             <button
@@ -65,9 +65,9 @@ const WorkspaceSwitcher: React.FC<WorkspaceSwitcherProps> = ({ workspaces, selec
                                     onSelectWorkspace(workspace.id);
                                     setIsOpen(false);
                                 }}
-                                className="w-full text-left px-3 py-2 hover:bg-secondary-focus flex items-center justify-between text-sm group"
+                                className="w-full text-left px-3 py-2.5 hover:bg-white/5 rounded-lg flex items-center justify-between text-sm group transition-colors"
                             >
-                                {workspace.name}
+                                <span className="font-medium">{workspace.name}</span>
                                 {workspace.id === selectedWorkspace?.id && (
                                     <svg className="w-4 h-4 text-primary" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                                         <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
@@ -78,13 +78,13 @@ const WorkspaceSwitcher: React.FC<WorkspaceSwitcherProps> = ({ workspaces, selec
                     ))}
                 </ul>
                 {canManage && (
-                    <div className="p-2 border-t border-border">
+                    <div className="p-2 border-t border-white/10">
                         <button 
                             onClick={() => {
                                 onAddWorkspace();
                                 setIsOpen(false);
                             }}
-                            className="w-full text-left p-2 rounded-md hover:bg-secondary-focus flex items-center text-text-secondary hover:text-text-primary text-sm transition-colors"
+                            className="w-full text-left p-2 rounded-lg hover:bg-primary/10 hover:text-primary flex items-center text-text-secondary text-sm transition-all duration-200"
                         >
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" viewBox="0 0 20 20" fill="currentColor">
                                 <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
@@ -111,15 +111,21 @@ interface SidebarItemProps {
 const SidebarItem: React.FC<SidebarItemProps> = ({ icon, label, isActive, onClick, badge, className }) => (
     <button 
         onClick={onClick}
-        className={`w-full flex items-center px-3 py-2 rounded-md transition-all duration-200 group text-sm relative overflow-hidden ${isActive ? 'bg-gradient-to-r from-primary/10 to-transparent text-primary font-medium' : 'hover:bg-secondary-focus text-text-secondary hover:text-text-primary'} ${className}`}
+        className={`
+            w-full flex items-center px-3 py-2.5 rounded-lg transition-all duration-200 group text-sm relative overflow-hidden my-0.5
+            ${isActive 
+                ? 'bg-primary/10 text-primary font-semibold shadow-[0_0_15px_rgba(139,92,246,0.1)]' 
+                : 'text-text-secondary hover:text-text-primary hover:bg-white/5'} 
+            ${className}
+        `}
     >
-        {isActive && <div className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 bg-primary rounded-r-full"></div>}
-        <span className={`mr-3 transition-colors flex-shrink-0 ${isActive ? 'text-primary' : 'text-text-secondary group-hover:text-text-primary'}`}>
+        {isActive && <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-5 bg-primary rounded-r-full shadow-[0_0_10px_var(--primary)]"></div>}
+        <span className={`mr-3 transition-colors flex-shrink-0 duration-200 ${isActive ? 'text-primary scale-110' : 'text-text-secondary group-hover:text-text-primary'}`}>
             {icon}
         </span>
         <span className="flex-grow text-left truncate">{label}</span>
         {badge && (
-            <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full min-w-[1.25rem] text-center ${isActive ? 'bg-primary text-white' : 'bg-surface text-text-secondary group-hover:bg-secondary border border-border'}`}>
+            <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md min-w-[1.25rem] text-center transition-colors ${isActive ? 'bg-primary text-white shadow-sm' : 'bg-white/5 text-text-secondary group-hover:bg-white/10'}`}>
                 {badge}
             </span>
         )}
@@ -135,20 +141,20 @@ const SidebarSection: React.FC<{
     const [isOpen, setIsOpen] = useState(defaultOpen);
 
     return (
-        <div className="mb-2">
-            <div className="flex items-center justify-between px-3 py-1 mb-1 group">
+        <div className="mb-6">
+            <div className="flex items-center justify-between px-3 py-2 mb-1 group">
                 <button 
                     onClick={() => setIsOpen(!isOpen)}
-                    className="flex items-center text-xs font-bold text-text-secondary hover:text-text-primary uppercase tracking-wider transition-colors flex-grow text-left"
+                    className="flex items-center text-[11px] font-bold text-text-secondary/70 hover:text-text-secondary uppercase tracking-widest transition-colors flex-grow text-left"
                 >
-                    <svg xmlns="http://www.w3.org/2000/svg" className={`h-3 w-3 mr-1.5 transition-transform duration-200 ${isOpen ? 'rotate-90' : ''}`} viewBox="0 0 20 20" fill="currentColor">
+                    <svg xmlns="http://www.w3.org/2000/svg" className={`h-3 w-3 mr-1.5 transition-transform duration-200 opacity-50 ${isOpen ? 'rotate-90' : ''}`} viewBox="0 0 20 20" fill="currentColor">
                         <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
                     </svg>
                     {title}
                 </button>
-                {action && <div className="opacity-0 group-hover:opacity-100 transition-opacity">{action}</div>}
+                {action && <div className="opacity-0 group-hover:opacity-100 transition-all duration-200 transform translate-x-[-4px] group-hover:translate-x-0">{action}</div>}
             </div>
-            <div className={`space-y-0.5 transition-all duration-300 ease-in-out overflow-hidden ${isOpen ? 'max-h-[5000px] opacity-100' : 'max-h-0 opacity-0'}`}>
+            <div className={`space-y-1 transition-all duration-300 ease-in-out overflow-hidden ${isOpen ? 'max-h-[5000px] opacity-100' : 'max-h-0 opacity-0'}`}>
                 {children}
             </div>
         </div>
@@ -369,23 +375,23 @@ const Sidebar: React.FC = () => {
         <>
             {isSidebarOpen && (
                 <div 
-                    className="fixed inset-0 bg-black/50 z-40 md:hidden animate-fadeIn" 
+                    className="fixed inset-0 bg-black/60 z-40 md:hidden animate-fadeIn backdrop-blur-sm" 
                     onClick={() => setIsSidebarOpen(false)}
                 />
             )}
 
             <aside className={`
                 fixed inset-y-0 left-0 z-50 md:static md:z-auto
-                flex-shrink-0 bg-secondary flex flex-col h-full 
-                transition-all duration-300 ease-in-out overflow-hidden border-r border-border
+                flex-shrink-0 bg-[#141b2d] flex flex-col h-full 
+                transition-all duration-300 ease-in-out overflow-hidden border-r border-white/5
                 ${isSidebarOpen ? 'w-72 translate-x-0 shadow-2xl md:shadow-none' : 'w-0 -translate-x-full md:w-0 md:translate-x-0'}
             `}>
                 <div className="w-72 flex flex-col h-full">
-                    <div className="flex-shrink-0 p-4 flex items-center justify-between">
+                    <div className="flex-shrink-0 p-5 flex items-center justify-between">
                         <Logo />
                         <button 
                             onClick={() => setIsSidebarOpen(false)} 
-                            className="md:hidden p-2 text-text-secondary hover:text-text-primary rounded-full hover:bg-secondary-focus"
+                            className="md:hidden p-2 text-text-secondary hover:text-text-primary rounded-full hover:bg-white/10 transition-colors"
                         >
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -393,7 +399,7 @@ const Sidebar: React.FC = () => {
                         </button>
                     </div>
 
-                    <div className="flex-shrink-0 px-2">
+                    <div className="flex-shrink-0 px-3">
                         <WorkspaceSwitcher 
                             workspaces={workspaces}
                             selectedWorkspace={selectedWorkspace}
@@ -403,17 +409,17 @@ const Sidebar: React.FC = () => {
                         />
                         <button 
                             onClick={() => window.dispatchEvent(new CustomEvent('open-command-palette'))}
-                            className="w-full flex items-center px-3 py-2 mb-4 text-sm text-text-secondary bg-surface border border-border rounded-lg hover:border-primary hover:text-text-primary focus:outline-none transition-colors shadow-sm"
+                            className="w-full flex items-center px-3 py-2.5 mb-6 text-sm text-text-secondary bg-[#1e293b] border border-white/5 rounded-lg hover:border-primary/50 hover:text-white focus:outline-none transition-all shadow-sm group"
                         >
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2 text-text-secondary group-hover:text-primary transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                             </svg>
                             {t('sidebar.search')}
-                            <span className="ml-auto text-[10px] font-mono bg-secondary-focus text-text-secondary/70 border border-border rounded px-1.5 py-0.5">⌘K</span>
+                            <span className="ml-auto text-[10px] font-mono bg-white/5 text-text-secondary/70 border border-white/5 rounded px-1.5 py-0.5 group-hover:bg-white/10 transition-colors">⌘K</span>
                         </button>
                     </div>
 
-                    <div className="flex-grow overflow-y-auto px-2 space-y-4 custom-scrollbar">
+                    <div className="flex-grow overflow-y-auto px-3 pb-4 space-y-6 custom-scrollbar">
                         
                         {/* Home Section */}
                         <SidebarSection title={t('sidebar.home')}>
@@ -446,7 +452,7 @@ const Sidebar: React.FC = () => {
 
                         {/* Favorites (Placeholder for now) */}
                         <SidebarSection title={t('sidebar.favorites')}>
-                            <div className="px-3 text-xs text-text-secondary/60 italic py-1">
+                            <div className="px-3 text-xs text-text-secondary/40 italic py-1.5">
                                 {t('sidebar.noFavorites')}
                             </div>
                         </SidebarSection>
@@ -455,17 +461,17 @@ const Sidebar: React.FC = () => {
                         <SidebarSection 
                             title={t('sidebar.projects')}
                             action={permissions.has(Permission.MANAGE_WORKSPACES_AND_PROJECTS) ? (
-                                <div className="flex items-center gap-0.5">
-                                    <button onClick={(e) => { e.stopPropagation(); setFolderToEdit(null); setIsFolderModalOpen(true); }} className="text-text-secondary hover:text-text-primary p-1 rounded hover:bg-secondary-focus transition-colors" title={t('sidebar.newFolder')}>
+                                <div className="flex items-center gap-1">
+                                    <button onClick={(e) => { e.stopPropagation(); setFolderToEdit(null); setIsFolderModalOpen(true); }} className="text-text-secondary hover:text-white p-1 rounded-md hover:bg-white/10 transition-colors" title={t('sidebar.newFolder')}>
                                         <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor"><path d="M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" /></svg>
                                     </button>
-                                    <button onClick={(e) => { e.stopPropagation(); setListToEdit(null); setIsProjectModalOpen(true); }} className="text-text-secondary hover:text-text-primary p-1 rounded hover:bg-secondary-focus transition-colors" title={t('sidebar.newProject')}>
+                                    <button onClick={(e) => { e.stopPropagation(); setListToEdit(null); setIsProjectModalOpen(true); }} className="text-text-secondary hover:text-white p-1 rounded-md hover:bg-white/10 transition-colors" title={t('sidebar.newProject')}>
                                         <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" /></svg>
                                     </button>
                                 </div>
                             ) : undefined}
                         >
-                            <nav className="space-y-0.5" onDrop={handleDrop} onDragOver={e => e.preventDefault()}>
+                            <nav className="space-y-1" onDrop={handleDrop} onDragOver={e => e.preventDefault()}>
                                 {folderStructure.structured.map(folder => (
                                     <div key={folder.id} className="relative"
                                         draggable={isDraggable}
@@ -478,23 +484,23 @@ const Sidebar: React.FC = () => {
                                         <div className={`rounded-lg transition-colors duration-200 ${draggedItem?.id === folder.id ? 'opacity-50' : ''} ${dropTarget?.targetId === folder.id && dropTarget.position === 'middle' ? 'bg-primary/10 ring-1 ring-primary inset-0' : ''}`}>
                                             <button 
                                                 onClick={() => toggleFolder(folder.id)} 
-                                                className="w-full flex items-center px-3 py-1.5 text-sm text-text-secondary hover:text-text-primary font-medium hover:bg-secondary-focus rounded-lg group"
+                                                className="w-full flex items-center px-3 py-2.5 text-sm text-text-secondary hover:text-white font-medium hover:bg-white/5 rounded-lg group transition-colors"
                                             >
-                                                <svg xmlns="http://www.w3.org/2000/svg" className={`h-3 w-3 mr-2 transition-transform duration-200 text-text-secondary group-hover:text-text-primary ${openFolders.has(folder.id) ? 'rotate-90' : ''}`} viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" /></svg>
+                                                <svg xmlns="http://www.w3.org/2000/svg" className={`h-3 w-3 mr-2 transition-transform duration-200 text-text-secondary group-hover:text-white ${openFolders.has(folder.id) ? 'rotate-90' : ''}`} viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" /></svg>
                                                 <span className="truncate">{folder.name}</span>
                                             </button>
                                             {openFolders.has(folder.id) && (
                                                 <ul className="mt-0.5 space-y-0.5 relative">
-                                                    <div className="absolute left-4 top-0 bottom-0 w-px bg-border/50"></div>
+                                                    <div className="absolute left-[19px] top-0 bottom-0 w-px bg-white/5"></div>
                                                     {folder.lists.map(list => (
                                                          <li key={list.id} className="relative" draggable={isDraggable} onDragStart={(e) => handleDragStart(e, list.id, 'list')} onDragEnd={handleDragEnd} onDragOver={(e) => handleDragOver(e, list.id, 'list')} onDragLeave={handleDragLeave}>
                                                             {dropTarget?.targetId === list.id && dropTarget.position === 'top' && <div className="absolute top-0 left-0 right-0 h-0.5 bg-primary z-10"></div>}
                                                             <a href="#" onClick={(e) => { e.preventDefault(); handleNavigation(() => { setSelectedListId(list.id); setActiveView('list'); }); }} 
-                                                               className={`block pl-8 pr-3 py-1.5 rounded-lg text-sm transition-all duration-200 relative overflow-hidden ${selectedListId === list.id && activeView === 'list' ? 'bg-primary/10 text-primary font-medium' : 'hover:bg-secondary-focus text-text-secondary hover:text-text-primary'} ${draggedItem?.id === list.id ? 'opacity-50' : ''}`}
+                                                               className={`block pl-8 pr-3 py-2.5 rounded-lg text-sm transition-all duration-200 relative overflow-hidden group ${selectedListId === list.id && activeView === 'list' ? 'bg-primary/10 text-primary font-semibold' : 'hover:bg-white/5 text-text-secondary hover:text-white'} ${draggedItem?.id === list.id ? 'opacity-50' : ''}`}
                                                             >
-                                                                {selectedListId === list.id && activeView === 'list' && <div className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-4 bg-primary rounded-r-full"></div>}
+                                                                {selectedListId === list.id && activeView === 'list' && <div className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-4 bg-primary rounded-r-full shadow-[0_0_8px_var(--primary)]"></div>}
                                                                 <div className="flex items-center">
-                                                                     <span className={`w-2 h-2 rounded-full mr-2 flex-shrink-0 ${list.color}`}></span>
+                                                                     <span className={`w-2 h-2 rounded-full mr-2 flex-shrink-0 transition-transform group-hover:scale-110 ${list.color} ${selectedListId === list.id ? 'ring-2 ring-primary/30' : ''}`}></span>
                                                                      <span className="truncate">{list.name}</span>
                                                                 </div>
                                                             </a>
@@ -511,11 +517,11 @@ const Sidebar: React.FC = () => {
                                     <div key={list.id} className="relative" draggable={isDraggable} onDragStart={(e) => handleDragStart(e, list.id, 'list')} onDragEnd={handleDragEnd} onDragOver={(e) => handleDragOver(e, list.id, 'list')} onDragLeave={handleDragLeave}>
                                          {dropTarget?.targetId === list.id && dropTarget.position === 'top' && <div className="absolute top-0 left-0 right-0 h-0.5 bg-primary z-10"></div>}
                                         <a href="#" onClick={(e) => { e.preventDefault(); handleNavigation(() => { setSelectedListId(list.id); setActiveView('list'); }); }} 
-                                           className={`block px-3 py-1.5 rounded-lg text-sm transition-all duration-200 relative overflow-hidden ${selectedListId === list.id && activeView === 'list' ? 'bg-primary/10 text-primary font-medium' : 'hover:bg-secondary-focus text-text-secondary hover:text-text-primary'} ${draggedItem?.id === list.id ? 'opacity-50' : ''}`}
+                                           className={`block px-3 py-2.5 rounded-lg text-sm transition-all duration-200 relative overflow-hidden group ${selectedListId === list.id && activeView === 'list' ? 'bg-primary/10 text-primary font-semibold' : 'hover:bg-white/5 text-text-secondary hover:text-white'} ${draggedItem?.id === list.id ? 'opacity-50' : ''}`}
                                         >
-                                            {selectedListId === list.id && activeView === 'list' && <div className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-4 bg-primary rounded-r-full"></div>}
+                                            {selectedListId === list.id && activeView === 'list' && <div className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-4 bg-primary rounded-r-full shadow-[0_0_8px_var(--primary)]"></div>}
                                              <div className="flex items-center">
-                                                 <span className={`w-2.5 h-2.5 rounded-full mr-3 flex-shrink-0 ${list.color}`}></span>
+                                                 <span className={`w-2.5 h-2.5 rounded-full mr-3 flex-shrink-0 transition-transform group-hover:scale-110 ${list.color} ${selectedListId === list.id ? 'ring-2 ring-primary/30' : ''}`}></span>
                                                  <span className="truncate">{list.name}</span>
                                              </div>
                                         </a>
@@ -527,9 +533,9 @@ const Sidebar: React.FC = () => {
 
                     </div>
 
-                    <div className="p-2 border-t border-border mt-auto space-y-1 bg-secondary">
+                    <div className="p-3 border-t border-white/5 mt-auto space-y-1 bg-[#141b2d]">
                         <SidebarItem 
-                            icon={<svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.96.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01-.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" /></svg>}
+                            icon={<svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.96.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01-.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" /></svg>}
                             label={t('sidebar.settings')}
                             onClick={() => setIsSettingsModalOpen(true)}
                         />
@@ -543,13 +549,13 @@ const Sidebar: React.FC = () => {
                                     onUpdateUserStatus={(status) => handleUpdateUserStatus(currentUser.id, status)}
                                 />
                             )}
-                            <button onClick={() => setIsUserPanelOpen(p => !p)} className="w-full flex items-center text-left p-2 rounded-lg hover:bg-surface transition-colors group border border-transparent hover:border-border">
-                                <AvatarWithStatus user={currentUser} className="w-9 h-9 border border-border bg-surface" />
+                            <button onClick={() => setIsUserPanelOpen(p => !p)} className="w-full flex items-center text-left p-2 rounded-lg hover:bg-white/5 transition-colors group border border-transparent hover:border-white/5 mt-1">
+                                <AvatarWithStatus user={currentUser} className="w-9 h-9 border-2 border-white/10 bg-surface" />
                                 <div className="flex-grow min-w-0 ml-3">
-                                    <p className="font-semibold text-sm text-text-primary truncate group-hover:text-primary transition-colors">{currentUser.name}</p>
-                                    <p className="text-xs text-text-secondary truncate">{currentUser.title}</p>
+                                    <p className="font-semibold text-sm text-text-primary truncate group-hover:text-white transition-colors">{currentUser.name}</p>
+                                    <p className="text-[11px] text-text-secondary truncate">{currentUser.title}</p>
                                 </div>
-                                <svg className="w-4 h-4 text-text-secondary group-hover:text-text-primary" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                <svg className="w-4 h-4 text-text-secondary group-hover:text-white transition-colors" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                                     <path fillRule="evenodd" d="M10 3a1 1 0 01.707.293l3 3a1 1 0 01-1.414 1.414L10 5.414 7.707 7.707a1 1 0 01-1.414-1.414l3-3A1 1 0 0110 3zm-3.707 9.293a1 1 0 011.414 0L10 14.586l2.293-2.293a1 1 0 011.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clipRule="evenodd" />
                                 </svg>
                             </button>

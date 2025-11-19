@@ -17,9 +17,9 @@ const BulkActionBar: React.FC<BulkActionBarProps> = ({ selectedCount, onClear, o
     const { t } = useTranslation();
     
     return (
-        <div className="fixed bottom-4 md:bottom-8 left-4 right-4 md:left-1/2 md:right-auto md:transform md:-translate-x-1/2 z-40 bg-surface border border-border shadow-2xl rounded-xl p-2 md:p-3 flex flex-col sm:flex-row items-center gap-3 sm:gap-4 animate-scaleIn justify-between sm:justify-start overflow-x-auto">
-            <div className="flex items-center gap-3 pl-2 sm:border-r border-border pr-4 whitespace-nowrap">
-                 <div className="bg-primary text-white text-xs font-bold px-2 py-0.5 rounded-full">{selectedCount}</div>
+        <div className="fixed bottom-4 md:bottom-8 left-4 right-4 md:left-1/2 md:right-auto md:transform md:-translate-x-1/2 z-40 bg-surface border border-white/10 shadow-2xl shadow-black/50 rounded-xl p-2 md:p-3 flex flex-col sm:flex-row items-center gap-3 sm:gap-4 animate-scaleIn justify-between sm:justify-start overflow-x-auto backdrop-blur-xl">
+            <div className="flex items-center gap-3 pl-2 sm:border-r border-white/10 pr-4 whitespace-nowrap">
+                 <div className="bg-primary text-white text-xs font-bold px-2 py-0.5 rounded-md shadow-sm">{selectedCount}</div>
                  <span className="text-sm font-semibold text-text-primary">{t('listView.selected_plural', {count: selectedCount})}</span>
             </div>
             
@@ -27,7 +27,7 @@ const BulkActionBar: React.FC<BulkActionBarProps> = ({ selectedCount, onClear, o
                  <select 
                     onChange={(e) => onUpdate({ status: e.target.value as Status })}
                     defaultValue=""
-                    className="bg-secondary border border-border rounded-lg px-3 py-1.5 text-xs focus:ring-primary focus:border-primary flex-grow sm:flex-grow-0"
+                    className="bg-white/5 border border-white/10 text-text-primary rounded-lg px-3 py-1.5 text-xs focus:ring-primary focus:border-primary flex-grow sm:flex-grow-0 hover:bg-white/10 transition-colors cursor-pointer"
                  >
                     <option value="" disabled>{t('listView.changeStatus')}</option>
                     {Object.values(Status).map(s => <option key={s} value={s}>{t(`common.${s.replace(/\s+/g, '').toLowerCase()}`)}</option>)}
@@ -35,7 +35,7 @@ const BulkActionBar: React.FC<BulkActionBarProps> = ({ selectedCount, onClear, o
                  <select 
                     onChange={(e) => onUpdate({ priority: e.target.value as Priority })}
                     defaultValue=""
-                    className="bg-secondary border border-border rounded-lg px-3 py-1.5 text-xs focus:ring-primary focus:border-primary hidden sm:block"
+                    className="bg-white/5 border border-white/10 text-text-primary rounded-lg px-3 py-1.5 text-xs focus:ring-primary focus:border-primary hidden sm:block hover:bg-white/10 transition-colors cursor-pointer"
                  >
                     <option value="" disabled>{t('listView.changePriority')}</option>
                     {Object.values(Priority).map(p => <option key={p} value={p}>{t(`common.${p.toLowerCase()}`)}</option>)}
@@ -43,25 +43,25 @@ const BulkActionBar: React.FC<BulkActionBarProps> = ({ selectedCount, onClear, o
                 <select 
                     onChange={(e) => onUpdate({ assigneeId: e.target.value || null })}
                     defaultValue=""
-                    className="bg-secondary border border-border rounded-lg px-3 py-1.5 text-xs focus:ring-primary focus:border-primary hidden md:block"
+                    className="bg-white/5 border border-white/10 text-text-primary rounded-lg px-3 py-1.5 text-xs focus:ring-primary focus:border-primary hidden md:block hover:bg-white/10 transition-colors cursor-pointer"
                  >
                     <option value="" disabled>{t('listView.changeAssignee')}</option>
                     {users.map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
                 </select>
 
-                <div className="hidden sm:block w-px h-6 bg-border mx-1"></div>
+                <div className="hidden sm:block w-px h-6 bg-white/10 mx-1"></div>
 
                 <div className="flex items-center gap-1">
                     <button 
                         onClick={onDelete} 
-                        className="p-2 text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
+                        className="p-2 text-red-400 hover:text-red-300 hover:bg-red-500/20 rounded-lg transition-colors"
                         title={t('common.delete')}
                     >
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
                             <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm4 0a1 1 0 012 0v6a1 1 0 11-2 0V8z" clipRule="evenodd" />
                         </svg>
                     </button>
-                    <button onClick={onClear} className="p-2 text-text-secondary hover:text-text-primary hover:bg-secondary rounded-lg transition-colors">
+                    <button onClick={onClear} className="p-2 text-text-secondary hover:text-text-primary hover:bg-white/10 rounded-lg transition-colors">
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
                             <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
                         </svg>
@@ -84,8 +84,11 @@ const ListView: React.FC = () => {
 
   if (tasks.length === 0) {
     return (
-      <div className="flex items-center justify-center h-full bg-surface rounded-lg">
-        <p className="text-text-secondary italic">{t('listView.noTasks')}</p>
+      <div className="flex flex-col items-center justify-center h-full bg-transparent rounded-lg border border-dashed border-white/5 p-12">
+         <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center mb-4">
+             <svg className="w-8 h-8 text-text-secondary opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" /></svg>
+         </div>
+        <p className="text-text-secondary font-medium">{t('listView.noTasks')}</p>
       </div>
     );
   }
@@ -147,7 +150,7 @@ const ListView: React.FC = () => {
   };
 
   return (
-    <div className="bg-surface rounded-lg overflow-hidden h-full flex flex-col relative">
+    <div className="w-full h-full flex flex-col relative">
         {selectedTaskIds.size > 0 && canEdit && (
             <BulkActionBar 
                 selectedCount={selectedTaskIds.size}
@@ -157,30 +160,36 @@ const ListView: React.FC = () => {
                 users={users}
             />
         )}
-        <div className="flex-shrink-0">
-            {/* Header Row - CSS Grid */}
-            <div className="hidden md:grid grid-cols-12 gap-4 px-4 py-3 border-b border-border bg-secondary/30 text-xs text-text-secondary uppercase font-bold tracking-wider">
-                <div className="col-span-1 flex items-center justify-center">
-                    <input 
-                        type="checkbox" 
-                        className="w-4 h-4 rounded text-primary bg-surface border-border focus:ring-primary disabled:opacity-50 cursor-pointer"
-                        onChange={handleToggleAll}
-                        checked={selectedTaskIds.size === tasks.length && tasks.length > 0}
-                        disabled={!canEdit}
-                    />
+        <div className="flex-shrink-0 sticky top-0 z-10 bg-[#0f172a] backdrop-blur-md">
+            {/* Header Row - CSS Grid matched to TaskRow */}
+            <div className="hidden md:grid grid-cols-[40px_1fr_150px_120px_100px_150px_80px] gap-4 px-4 py-3 border-b border-white/5 text-[10px] text-text-secondary/70 uppercase font-bold tracking-widest items-center">
+                <div className="flex items-center justify-center">
+                    <div className="group relative">
+                        <input 
+                            type="checkbox" 
+                            className="w-3.5 h-3.5 rounded bg-transparent border-white/20 checked:bg-primary focus:ring-0 focus:ring-offset-0 cursor-pointer transition-all appearance-none border checked:border-primary"
+                            onChange={handleToggleAll}
+                            checked={selectedTaskIds.size === tasks.length && tasks.length > 0}
+                            disabled={!canEdit}
+                        />
+                        <svg className={`pointer-events-none absolute top-0.5 left-0.5 w-2.5 h-2.5 text-white ${selectedTaskIds.size === tasks.length && tasks.length > 0 ? 'opacity-100' : 'opacity-0'}`} viewBox="0 0 20 20" fill="currentColor">
+                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                        </svg>
+                    </div>
                 </div>
-                <div className="col-span-5 pl-2">{t('listView.task')}</div>
-                <div className="col-span-2">{t('listView.assignee')}</div>
-                <div className="col-span-2">{t('listView.dueDate')}</div>
-                <div className="col-span-1">{t('listView.priority')}</div>
-                <div className="col-span-1">{t('listView.status')}</div>
+                <div className="pl-2">{t('listView.task')}</div>
+                <div>{t('listView.assignee')}</div>
+                <div>{t('listView.dueDate')}</div>
+                <div>{t('listView.priority')}</div>
+                <div>{t('listView.status')}</div>
+                <div className="text-right">{t('listView.actions')}</div>
             </div>
              {/* Mobile "Select All" helper */}
-             <div className="md:hidden p-3 border-b border-border flex items-center justify-between bg-secondary/30">
-                <label className="flex items-center gap-2 text-xs font-semibold text-text-secondary uppercase">
+             <div className="md:hidden p-3 border-b border-white/5 flex items-center justify-between bg-white/[0.02]">
+                <label className="flex items-center gap-3 text-xs font-semibold text-text-secondary uppercase tracking-wide">
                      <input 
                         type="checkbox" 
-                        className="w-5 h-5 rounded text-primary bg-surface border-border focus:ring-primary disabled:opacity-50"
+                        className="w-4 h-4 rounded bg-transparent border-white/30 checked:bg-primary focus:ring-0 cursor-pointer"
                         onChange={handleToggleAll}
                         checked={selectedTaskIds.size === tasks.length && tasks.length > 0}
                         disabled={!canEdit}
@@ -190,18 +199,20 @@ const ListView: React.FC = () => {
                 <span className="text-xs text-text-secondary">{tasks.length} tasks</span>
              </div>
         </div>
-        <div className="overflow-y-auto pb-20 md:pb-0">
-            {tasks.map(task => (
-                <TaskRow
-                    key={task.id}
-                    task={task}
-                    isSelected={selectedTaskIds.has(task.id)}
-                    onToggleSelection={handleToggleSelection}
-                    onDragStart={handleDragStart}
-                    onDragEnter={handleDragEnter}
-                    onDragEnd={handleDragEnd}
-                />
-            ))}
+        <div className="overflow-y-auto pb-20 md:pb-0 no-scrollbar">
+            <div className="flex flex-col">
+                {tasks.map(task => (
+                    <TaskRow
+                        key={task.id}
+                        task={task}
+                        isSelected={selectedTaskIds.has(task.id)}
+                        onToggleSelection={handleToggleSelection}
+                        onDragStart={handleDragStart}
+                        onDragEnter={handleDragEnter}
+                        onDragEnd={handleDragEnd}
+                    />
+                ))}
+            </div>
         </div>
     </div>
   );

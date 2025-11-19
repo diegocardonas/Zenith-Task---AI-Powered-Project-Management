@@ -117,8 +117,6 @@ const appReducer = (state: AppState, action: Action): AppState => {
 const getPermissions = (role: Role): Set<Permission> => {
     const permissions = new Set<Permission>();
     
-    // Base permissions for everyone (if any)
-    
     if (role === Role.Guest) {
         // Minimal access
     }
@@ -178,7 +176,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const [activeView, setActiveView] = useState('board'); 
     const [currentView, setCurrentView] = useState<ViewType>(ViewType.Board);
     const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-    const [isAdminPanelOpen, setIsAdminPanelOpen] = useState(false); // NEW STATE for Admin Modal
+    const [isAdminPanelOpen, setIsAdminPanelOpen] = useState(false); 
     const [isWorkspaceModalOpen, setIsWorkspaceModalOpen] = useState(false);
     const [workspaceToEdit, setWorkspaceToEdit] = useState<Workspace | null>(null);
     const [isProjectModalOpen, setIsProjectModalOpen] = useState(false);
@@ -291,6 +289,24 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const handleLogout = () => {
         dispatch({ type: 'SET_USER', payload: null });
         setIsSidebarOpen(false); // Reset some UI state
+    };
+
+    const handleDeleteAccount = () => {
+        if (!state.currentUser) return;
+        const userId = state.currentUser.id;
+
+        showConfirmation(t('modals.deleteAccount'), t('modals.deleteAccountWarning'), () => {
+            // Unassign tasks
+            const userTasks = state.tasks.filter(t => t.assigneeId === userId);
+            userTasks.forEach(t => {
+                dispatch({ type: 'UPDATE_TASK', payload: { ...t, assigneeId: null } });
+            });
+            
+            dispatch({ type: 'DELETE_USER', payload: userId });
+            dispatch({ type: 'SET_USER', payload: null });
+            setIsSidebarOpen(false);
+            addToast({ message: t('toasts.userDeleted'), type: 'success' });
+        });
     };
 
     const handleAddTask = (listId: string, template?: TaskTemplate) => {
@@ -489,7 +505,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
                 if (projectName) {
                     const foundList = state.lists.find(l => l.name.toLowerCase() === (projectName as string).toLowerCase());
                     if (foundList) listIdToUse = foundList.id;
-                    // FIX: Explicitly cast 'projectName' from 'args' to string for type safety in translation.
                     else addToast({ message: t('toasts.projectNotFound', { name: String(projectName) }), type: 'info' });
                 }
                 if (!listIdToUse) { addToast({ message: t('toasts.selectProjectFirst'), type: 'info' }); return; }
@@ -497,7 +512,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
                 if (assigneeName) {
                     const foundUser = state.users.find(u => u.name.toLowerCase() === (assigneeName as string).toLowerCase());
                     if (foundUser) assigneeIdToUse = foundUser.id;
-                    // FIX: Explicitly cast 'assigneeName' from 'args' to string for type safety in translation.
                     else addToast({ message: t('toasts.userNotFound', { name: String(assigneeName) }), type: 'info' });
                 }
                 const newTask: Task = {
@@ -517,7 +531,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
                     dispatch({ type: 'UPDATE_TASK', payload: { ...taskToUpdate, status } });
                     addToast({ message: t('toasts.taskStatusUpdated', { title: taskToUpdate.title, status: i18n.t(`common.${(status as string).replace(/\s+/g, '').toLowerCase()}`) }), type: 'success' });
                 } else {
-                    // FIX: Explicitly cast 'taskTitle' from 'args' to string for type safety in translation.
                     addToast({ message: t('toasts.taskNotFound', { title: String(taskTitle) }), type: 'error' });
                 }
                 break;
@@ -530,10 +543,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
                     dispatch({ type: 'UPDATE_TASK', payload: { ...taskToUpdate, assigneeId: userToAssign.id } });
                     addToast({ message: t('toasts.taskAssigned', { title: taskToUpdate.title, name: userToAssign.name }), type: 'success' });
                 } else if (!taskToUpdate) {
-                     // FIX: Explicitly cast 'taskTitle' from 'args' to string for type safety in translation.
                      addToast({ message: t('toasts.taskNotFound', { title: String(taskTitle) }), type: 'error' });
                 } else {
-                     // FIX: Explicitly cast 'assigneeName' from 'args' to string for type safety in translation.
                      addToast({ message: t('toasts.userNotFound', { name: String(assigneeName) }), type: 'error' });
                 }
                 break;
@@ -585,6 +596,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         handleLogin,
         handleSignup,
         handleLogout,
+        handleDeleteAccount,
         handleAddTask,
         handleAddTaskOnDate,
         handleUpdateTask,
@@ -608,7 +620,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setActiveView,
         setCurrentView,
         setIsSidebarOpen,
-        setIsAdminPanelOpen, // Expose action
+        setIsAdminPanelOpen,
         setIsWorkspaceModalOpen,
         setWorkspaceToEdit,
         setIsProjectModalOpen,
@@ -648,14 +660,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         const themeConfig = { 
             light: { primary: '#6a1b9a', background: '#ffffff', surface: '#f8fafc', textPrimary: '#1e293b', textSecondary: '#475569' },
             dark: { primary: '#8e24aa', background: '#111827', surface: '#1f2937', textPrimary: '#f9fafb', textSecondary: '#d1d5db' }
-        }; // Simplified for reconstruction, ideally use themes.ts logic or apply class
+        }; 
         
         if (state.colorScheme === 'dark') {
             root.classList.add('dark');
         } else {
             root.classList.remove('dark');
         }
-        // For real theme application, we'd map state.theme to CSS variables here
     }, [state.theme, state.colorScheme]);
 
     return (

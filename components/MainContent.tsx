@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { List, Task, User, ViewType, Role, Status, Priority, Permission } from '../types';
 import BoardView from './BoardView';
@@ -96,104 +97,121 @@ const MainContent: React.FC = () => {
   }
 
   return (
-    <main className="flex-grow flex flex-col h-full overflow-y-auto bg-background">
-      <Header title={selectedList?.name || t('sidebar.projects')} />
-      {selectedList ? (
-        <>
-        <div className="flex-shrink-0 p-3 sm:p-4 border-b border-border flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
-            {/* Scrollable View Switcher for Mobile */}
-            <div className="w-full md:w-auto overflow-x-auto pb-1 md:pb-0 -mx-3 md:mx-0 px-3 md:px-0 no-scrollbar">
-                <div className="bg-secondary p-1 rounded-lg flex items-center whitespace-nowrap w-max">
-                    <button onClick={() => setCurrentView(ViewType.Board)} className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${currentView === ViewType.Board ? 'bg-primary text-white' : 'text-text-secondary hover:bg-secondary-focus'}`}>{t('mainContent.board')}</button>
-                    <button onClick={() => setCurrentView(ViewType.List)} className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${currentView === ViewType.List ? 'bg-primary text-white' : 'text-text-secondary hover:bg-secondary-focus'}`}>{t('mainContent.list')}</button>
-                    <button onClick={() => setCurrentView(ViewType.Calendar)} className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${currentView === ViewType.Calendar ? 'bg-primary text-white' : 'text-text-secondary hover:bg-secondary-focus'}`}>{t('mainContent.calendar')}</button>
-                    <button onClick={() => setCurrentView(ViewType.Gantt)} className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${currentView === ViewType.Gantt ? 'bg-primary text-white' : 'text-text-secondary hover:bg-secondary-focus'}`}>{t('mainContent.gantt')}</button>
-                    <button onClick={() => setCurrentView(ViewType.ProjectDashboard)} className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${currentView === ViewType.ProjectDashboard ? 'bg-primary text-white' : 'text-text-secondary hover:bg-secondary-focus'}`}>{t('mainContent.dashboard')}</button>
+    <main className="flex-grow flex flex-col h-full overflow-y-auto bg-[#0f172a] relative">
+       {/* Subtle Background Gradient */}
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-800/30 via-[#0f172a] to-[#0f172a] pointer-events-none"></div>
+      
+      <div className="relative z-10 flex flex-col h-full">
+          <Header title={selectedList?.name || t('sidebar.projects')} />
+          {selectedList ? (
+            <>
+            <div className="flex-shrink-0 p-4 border-b border-white/5 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-[#0f172a]/50 backdrop-blur-sm sticky top-[64px] z-20">
+                {/* Scrollable View Switcher for Mobile */}
+                <div className="w-full md:w-auto overflow-x-auto pb-1 md:pb-0 -mx-4 md:mx-0 px-4 md:px-0 no-scrollbar">
+                    <div className="bg-surface p-1 rounded-lg flex items-center whitespace-nowrap w-max border border-white/5">
+                        {[
+                            { id: ViewType.Board, label: t('mainContent.board') },
+                            { id: ViewType.List, label: t('mainContent.list') },
+                            { id: ViewType.Calendar, label: t('mainContent.calendar') },
+                            { id: ViewType.Gantt, label: t('mainContent.gantt') },
+                            { id: ViewType.ProjectDashboard, label: t('mainContent.dashboard') },
+                        ].map(view => (
+                             <button 
+                                key={view.id}
+                                onClick={() => setCurrentView(view.id)} 
+                                className={`px-4 py-1.5 text-sm font-medium rounded-md transition-all duration-200 ${currentView === view.id ? 'bg-primary text-white shadow-md' : 'text-text-secondary hover:text-white hover:bg-white/5'}`}
+                             >
+                                 {view.label}
+                             </button>
+                        ))}
+                    </div>
                 </div>
-            </div>
 
-            <div className="flex items-center gap-2 flex-wrap w-full md:w-auto justify-between md:justify-end">
-                <div className="flex gap-2">
-                    <div className="relative">
-                        <select
-                            value={statusFilter}
-                            onChange={(e) => setStatusFilter(e.target.value as Status | 'all')}
-                            className="bg-secondary pl-3 pr-8 py-2 rounded-lg text-sm font-medium text-text-secondary appearance-none focus:outline-none focus:ring-2 focus:ring-primary w-full sm:w-auto"
-                            aria-label={t('modals.status')}
-                        >
-                            <option value="all">{t('common.allStatuses')}</option>
-                            {Object.values(Status).map(s => <option key={s} value={s}>{translateStatus(s)}</option>)}
-                        </select>
-                        <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-text-secondary">
-                            <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
-                        </div>
-                    </div>
-                    <div className="relative">
-                        <select
-                            value={priorityFilter}
-                            onChange={(e) => setPriorityFilter(e.target.value as Priority | 'all')}
-                            className="bg-secondary pl-3 pr-8 py-2 rounded-lg text-sm font-medium text-text-secondary appearance-none focus:outline-none focus:ring-2 focus:ring-primary w-full sm:w-auto"
-                            aria-label={t('modals.priority')}
-                        >
-                            <option value="all">{t('common.allPriorities')}</option>
-                            {Object.values(Priority).map(p => <option key={p} value={p}>{translatePriority(p)}</option>)}
-                        </select>
-                        <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-text-secondary">
-                            <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
-                        </div>
-                    </div>
-                </div>
-                 {canCreateTasks && (
-                    <div className="relative" ref={templateDropdownRef}>
-                        <button 
-                            onClick={handleNewTaskButtonClick} 
-                            disabled={!selectedList}
-                            className="px-4 py-2 bg-primary text-white font-semibold rounded-lg hover:bg-primary-focus transition-colors duration-200 flex items-center disabled:bg-gray-500 disabled:cursor-not-allowed"
-                            title={!selectedList ? t('mainContent.createTaskNoProjectTooltip') : t('mainContent.createTaskTooltip')}
-                        >
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1.5" viewBox="0 0 20 20" fill="currentColor">
-                            <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
-                          </svg>
-                          <span className="hidden sm:inline">{t('common.new')}</span>
-                        </button>
-                         {isTemplateDropdownOpen && taskTemplates.length > 0 && (
-                            <div className="absolute right-0 mt-2 w-56 bg-surface rounded-lg shadow-lg border border-border z-20 animate-fadeIn">
-                                <div className="p-1">
-                                    <button onClick={() => handleCreateTask()} className="w-full text-left px-3 py-2 text-sm rounded-md hover:bg-secondary-focus font-semibold">
-                                        {t('mainContent.newTaskFromTemplate')}
-                                    </button>
-                                    <div className="my-1 h-px bg-border"></div>
-                                    <div className="px-3 py-1 text-xs text-text-secondary uppercase tracking-wider">{t('mainContent.templates')}</div>
-                                    {taskTemplates.map(template => (
-                                        <button key={template.id} onClick={() => handleCreateTask(template)} className="w-full text-left px-3 py-2 text-sm rounded-md hover:bg-secondary-focus">
-                                            {template.name}
-                                        </button>
-                                    ))}
-                                </div>
+                <div className="flex items-center gap-3 flex-wrap w-full md:w-auto justify-between md:justify-end">
+                    <div className="flex gap-2">
+                        <div className="relative group">
+                            <select
+                                value={statusFilter}
+                                onChange={(e) => setStatusFilter(e.target.value as Status | 'all')}
+                                className="bg-surface pl-3 pr-8 py-2 rounded-lg text-sm font-medium text-text-secondary appearance-none focus:outline-none focus:ring-2 focus:ring-primary/50 border border-white/5 hover:border-white/10 transition-colors w-full sm:w-auto cursor-pointer"
+                                aria-label={t('modals.status')}
+                            >
+                                <option value="all">{t('common.allStatuses')}</option>
+                                {Object.values(Status).map(s => <option key={s} value={s}>{translateStatus(s)}</option>)}
+                            </select>
+                            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-text-secondary">
+                                <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
                             </div>
-                        )}
+                        </div>
+                        <div className="relative group">
+                            <select
+                                value={priorityFilter}
+                                onChange={(e) => setPriorityFilter(e.target.value as Priority | 'all')}
+                                className="bg-surface pl-3 pr-8 py-2 rounded-lg text-sm font-medium text-text-secondary appearance-none focus:outline-none focus:ring-2 focus:ring-primary/50 border border-white/5 hover:border-white/10 transition-colors w-full sm:w-auto cursor-pointer"
+                                aria-label={t('modals.priority')}
+                            >
+                                <option value="all">{t('common.allPriorities')}</option>
+                                {Object.values(Priority).map(p => <option key={p} value={p}>{translatePriority(p)}</option>)}
+                            </select>
+                            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-text-secondary">
+                                <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
+                            </div>
+                        </div>
                     </div>
-                 )}
+                     {canCreateTasks && (
+                        <div className="relative" ref={templateDropdownRef}>
+                            <button 
+                                onClick={handleNewTaskButtonClick} 
+                                disabled={!selectedList}
+                                className="px-4 py-2 bg-primary hover:bg-primary-focus text-white font-semibold rounded-lg transition-all duration-200 flex items-center shadow-lg shadow-primary/20 disabled:bg-gray-600 disabled:cursor-not-allowed disabled:shadow-none hover:scale-[1.02]"
+                                title={!selectedList ? t('mainContent.createTaskNoProjectTooltip') : t('mainContent.createTaskTooltip')}
+                            >
+                              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1.5" viewBox="0 0 20 20" fill="currentColor">
+                                <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
+                              </svg>
+                              <span className="hidden sm:inline">{t('common.new')}</span>
+                            </button>
+                             {isTemplateDropdownOpen && taskTemplates.length > 0 && (
+                                <div className="absolute right-0 mt-2 w-56 bg-surface rounded-xl shadow-2xl border border-white/10 z-50 animate-fadeIn backdrop-blur-xl">
+                                    <div className="p-1">
+                                        <button onClick={() => handleCreateTask()} className="w-full text-left px-3 py-2 text-sm rounded-lg hover:bg-white/5 font-semibold transition-colors">
+                                            {t('mainContent.newTaskFromTemplate')}
+                                        </button>
+                                        <div className="my-1 h-px bg-white/10"></div>
+                                        <div className="px-3 py-1 text-[10px] text-text-secondary uppercase tracking-wider font-bold">{t('mainContent.templates')}</div>
+                                        {taskTemplates.map(template => (
+                                            <button key={template.id} onClick={() => handleCreateTask(template)} className="w-full text-left px-3 py-2 text-sm rounded-lg hover:bg-white/5 transition-colors">
+                                                {template.name}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                     )}
+                </div>
             </div>
-        </div>
-        <div className="flex-grow p-3 sm:p-6 overflow-x-hidden">
-            {renderCurrentView()}
-        </div>
-        </>
-        ) : (
-        <div className="flex-grow p-8 flex items-center justify-center">
-            <div className="text-center">
-                <svg xmlns="http://www.w3.org/2000/svg" className="mx-auto h-12 w-12 text-text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                </svg>
-                <h2 className="mt-4 text-2xl font-semibold">{t('mainContent.noProjectSelected')}</h2>
-                <p className="mt-1 text-text-secondary">{t('mainContent.noProjectSelectedMessage')}</p>
+            <div className="flex-grow p-4 sm:p-6 overflow-x-hidden">
+                {renderCurrentView()}
             </div>
-        </div>
-      )}
-      <footer className="p-4 text-center text-xs text-text-secondary border-t border-border mt-auto flex-shrink-0">
-          {t('footer.copyright', { year: new Date().getFullYear() })}
-      </footer>
+            </>
+            ) : (
+            <div className="flex-grow p-8 flex items-center justify-center">
+                <div className="text-center p-10 rounded-2xl border border-white/5 bg-surface/30 backdrop-blur-sm">
+                    <div className="w-20 h-20 bg-surface rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-text-secondary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                        </svg>
+                    </div>
+                    <h2 className="text-2xl font-bold text-white">{t('mainContent.noProjectSelected')}</h2>
+                    <p className="mt-2 text-text-secondary max-w-sm mx-auto">{t('mainContent.noProjectSelectedMessage')}</p>
+                </div>
+            </div>
+          )}
+          <footer className="p-4 text-center text-xs text-text-secondary/50 border-t border-white/5 mt-auto flex-shrink-0">
+              {t('footer.copyright', { year: new Date().getFullYear() })}
+          </footer>
+      </div>
     </main>
   );
 };
