@@ -119,6 +119,7 @@ const es = {
     "calendar": "Calendario",
     "gantt": "Gantt",
     "dashboard": "Dashboard",
+    "eisenhower": "Matriz",
     "noProjectSelected": "Ningún Proyecto Seleccionado",
     "noProjectSelectedMessage": "Por favor, crea un nuevo proyecto en este espacio de trabajo o selecciona uno de la barra lateral.",
     "newTask": "Nuevo",
@@ -129,6 +130,13 @@ const es = {
     "createTaskTooltip": "Crear una nueva tarea (N)",
     "createTaskGuestTooltip": "Los invitados no pueden crear tareas",
     "createTaskNoProjectTooltip": "Selecciona un proyecto para crear una tarea"
+  },
+  "eisenhower": {
+    "urgentImportant": "Hacer (Urgente & Importante)",
+    "notUrgentImportant": "Planificar (No Urgente & Importante)",
+    "urgentNotImportant": "Delegar (Urgente & No Importante)",
+    "notUrgentNotImportant": "Eliminar (No Urgente & No Importante)",
+    "noTasks": "Sin tareas en este cuadrante"
   },
   "modals": {
     "editWorkspace": "Editar Espacio de Trabajo",
@@ -642,6 +650,7 @@ const en = {
     "calendar": "Calendar",
     "gantt": "Gantt",
     "dashboard": "Dashboard",
+    "eisenhower": "Matrix",
     "noProjectSelected": "No Project Selected",
     "noProjectSelectedMessage": "Please create a new project in this workspace or select one from the sidebar.",
     "newTask": "New",
@@ -652,6 +661,13 @@ const en = {
     "createTaskTooltip": "Create a new task (N)",
     "createTaskGuestTooltip": "Guests cannot create tasks",
     "createTaskNoProjectTooltip": "Select a project to create a task"
+  },
+  "eisenhower": {
+    "urgentImportant": "Do (Urgent & Important)",
+    "notUrgentImportant": "Schedule (Not Urgent & Important)",
+    "urgentNotImportant": "Delegate (Urgent & Not Important)",
+    "notUrgentNotImportant": "Delete (Not Urgent & Not Important)",
+    "noTasks": "No tasks in this quadrant"
   },
   "modals": {
     "editWorkspace": "Edit Workspace",

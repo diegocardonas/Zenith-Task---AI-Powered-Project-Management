@@ -8,6 +8,7 @@ import Header from './Header';
 import { CalendarView } from './CalendarView';
 import ProjectDashboard from './ProjectDashboard';
 import GanttView from './GanttView';
+import EisenhowerView from './EisenhowerView';
 import { useAppContext } from '../contexts/AppContext';
 import { useTranslation } from '../i18n';
 
@@ -91,6 +92,8 @@ const MainContent: React.FC = () => {
         return <GanttView tasks={filteredTasks} allTasks={allTasks} onSelectTask={(task) => setSelectedTaskId(task.id)} users={users} onUpdateTask={handleUpdateTask} currentUser={currentUser!} logActivity={logActivity} />;
       case ViewType.ProjectDashboard:
         return <ProjectDashboard tasks={filteredTasks} />;
+      case ViewType.Eisenhower:
+        return <EisenhowerView tasks={filteredTasks} onSelectTask={(task) => setSelectedTaskId(task.id)} users={users} />;
       default:
         return <BoardView />;
     }
@@ -114,11 +117,12 @@ const MainContent: React.FC = () => {
                             { id: ViewType.List, label: t('mainContent.list') },
                             { id: ViewType.Calendar, label: t('mainContent.calendar') },
                             { id: ViewType.Gantt, label: t('mainContent.gantt') },
+                            { id: ViewType.Eisenhower, label: t('mainContent.eisenhower') },
                             { id: ViewType.ProjectDashboard, label: t('mainContent.dashboard') },
                         ].map(view => (
                              <button 
                                 key={view.id}
-                                onClick={() => setCurrentView(view.id)} 
+                                onClick={() => setCurrentView(view.id as ViewType)} 
                                 className={`px-4 py-1.5 text-sm font-medium rounded-md transition-all duration-200 ${currentView === view.id ? 'bg-primary text-white shadow-md' : 'text-text-secondary hover:text-white hover:bg-white/5'}`}
                              >
                                  {view.label}

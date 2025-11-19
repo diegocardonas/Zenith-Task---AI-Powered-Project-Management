@@ -286,6 +286,8 @@ const UsersTabContent: React.FC<{
     const [filterRole, setFilterRole] = useState<Role | 'all'>('all');
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedUserIds, setSelectedUserIds] = useState<Set<string>>(new Set());
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 10;
 
     const filteredUsers = useMemo(() => {
         return users.filter(u => {
@@ -295,6 +297,17 @@ const UsersTabContent: React.FC<{
             return matchesSearch && matchesRole;
         });
     }, [users, searchTerm, filterRole]);
+
+    const totalPages = Math.ceil(filteredUsers.length / itemsPerPage);
+    
+    const paginatedUsers = useMemo(() => {
+        const start = (currentPage - 1) * itemsPerPage;
+        return filteredUsers.slice(start, start + itemsPerPage);
+    }, [filteredUsers, currentPage]);
+
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [searchTerm, filterRole]);
 
     const toggleSelection = (userId: string) => {
         setSelectedUserIds(prev => {
@@ -360,9 +373,9 @@ const UsersTabContent: React.FC<{
                 </div>
             </div>
 
-            <div className="flex-grow">
+            <div className="flex-grow flex flex-col">
                 <UserTable 
-                    users={filteredUsers} 
+                    users={paginatedUsers} 
                     currentUser={currentUser} 
                     onEdit={onEdit}
                     onDelete={onDelete}
@@ -371,6 +384,30 @@ const UsersTabContent: React.FC<{
                     selectedUserIds={selectedUserIds}
                     toggleSelection={toggleSelection}
                 />
+                
+                {totalPages > 1 && (
+                    <div className="flex justify-between items-center mt-4 px-2">
+                        <span className="text-sm text-slate-400">
+                            {t('common.page')} <span className="font-semibold text-white">{currentPage}</span> {t('common.of')} <span className="font-semibold text-white">{totalPages}</span>
+                        </span>
+                        <div className="inline-flex items-center gap-2">
+                            <button
+                                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                                disabled={currentPage === 1}
+                                className="px-3 py-1.5 text-sm font-medium bg-slate-800 border border-white/10 rounded-md hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-white"
+                            >
+                                {t('common.previous')}
+                            </button>
+                            <button
+                                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                                disabled={currentPage === totalPages}
+                                className="px-3 py-1.5 text-sm font-medium bg-slate-800 border border-white/10 rounded-md hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-white"
+                            >
+                                {t('common.next')}
+                            </button>
+                        </div>
+                    </div>
+                )}
             </div>
         </div>
     );

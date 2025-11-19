@@ -241,7 +241,7 @@ const App: React.FC = () => {
   return (
     <>
       {renderContent()}
-      <div className="fixed top-5 right-5 z-[60] space-y-2 pointer-events-none">
+      <div className="fixed top-5 right-5 z-[300] space-y-2 pointer-events-none">
         {toasts.map(toast => (
           <div key={toast.id} className="pointer-events-auto">
              <ToastComponent toast={toast} onClose={() => removeToast(toast.id)} />

@@ -1,3 +1,4 @@
+
 export enum Status {
   Todo = 'Todo',
   InProgress = 'In Progress',
@@ -15,7 +16,8 @@ export enum ViewType {
   List = 'list',
   Calendar = 'calendar',
   Gantt = 'gantt',
-  ProjectDashboard = 'project_dashboard'
+  ProjectDashboard = 'project_dashboard',
+  Eisenhower = 'eisenhower'
 }
 
 export enum Role {

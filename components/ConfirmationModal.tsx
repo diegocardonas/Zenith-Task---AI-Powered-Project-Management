@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useTranslation } from '../i18n';
 
@@ -16,7 +17,7 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({ isOpen, onClose, 
 
   return (
     <div
-      className="fixed inset-0 bg-black bg-opacity-70 flex justify-center items-center z-50 backdrop-blur-sm animate-fadeIn"
+      className="fixed inset-0 bg-black bg-opacity-70 flex justify-center items-center z-[200] backdrop-blur-sm animate-fadeIn"
       onClick={onClose}
       role="dialog"
       aria-modal="true"

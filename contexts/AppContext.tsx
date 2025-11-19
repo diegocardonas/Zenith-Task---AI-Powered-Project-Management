@@ -328,12 +328,19 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         if (!state.currentUser) return;
         const userId = state.currentUser.id;
 
+        // Validation: Cannot delete account if last admin
+        const admins = state.users.filter(u => u.role === Role.Admin);
+        if (state.currentUser.role === Role.Admin && admins.length <= 1) {
+            addToast({ message: t('tooltips.lastAdminDelete'), type: 'error' });
+            return;
+        }
+
         showConfirmation(t('modals.deleteAccount'), t('modals.deleteAccountWarning'), () => {
-            // Unassign tasks
-            const userTasks = state.tasks.filter(t => t.assigneeId === userId);
-            userTasks.forEach(t => {
-                dispatch({ type: 'UPDATE_TASK', payload: { ...t, assigneeId: null } });
-            });
+            // Optimized: Bulk update tasks to remove assignee instead of iterating one by one
+            const userTaskIds = state.tasks.filter(t => t.assigneeId === userId).map(t => t.id);
+            if (userTaskIds.length > 0) {
+                dispatch({ type: 'BULK_UPDATE_TASKS', payload: { ids: userTaskIds, updates: { assigneeId: null } } });
+            }
             
             dispatch({ type: 'DELETE_USER', payload: userId });
             dispatch({ type: 'SET_USER', payload: null });
@@ -491,6 +498,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const handleUpdateUserRole = (userId: string, role: Role) => {
         const user = state.users.find(u => u.id === userId);
         if (user) {
+             // VALIDATION: Cannot demote last admin
+             if (user.role === Role.Admin && role !== Role.Admin) {
+                 const admins = state.users.filter(u => u.role === Role.Admin);
+                 if (admins.length <= 1) {
+                     addToast({ message: t('tooltips.lastAdminRole'), type: 'error' });
+                     return;
+                 }
+             }
             dispatch({ type: 'UPDATE_USER', payload: { ...user, role } });
         }
     };
@@ -498,13 +513,23 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const handleDeleteUser = (userId: string) => {
          const user = state.users.find(u => u.id === userId);
          if(!user) return;
+
+         // VALIDATION: Cannot delete last admin
+         if (user.role === Role.Admin) {
+             const admins = state.users.filter(u => u.role === Role.Admin);
+             if (admins.length <= 1) {
+                 addToast({ message: t('tooltips.lastAdminDelete'), type: 'error' });
+                 return;
+             }
+         }
+
          showConfirmation(t('common.delete'), t('confirmations.deleteUser', { name: user.name }), () => {
+            // Optimized: Bulk update tasks to remove assignee instead of iterating one by one
+            const userTaskIds = state.tasks.filter(t => t.assigneeId === userId).map(t => t.id);
+            if (userTaskIds.length > 0) {
+                dispatch({ type: 'BULK_UPDATE_TASKS', payload: { ids: userTaskIds, updates: { assigneeId: null } } });
+            }
             dispatch({ type: 'DELETE_USER', payload: userId });
-            // Unassign tasks
-            const userTasks = state.tasks.filter(t => t.assigneeId === userId);
-            userTasks.forEach(t => {
-                dispatch({ type: 'UPDATE_TASK', payload: { ...t, assigneeId: null } });
-            });
             addToast({ message: t('toasts.userDeleted'), type: 'success' });
          });
     };
