@@ -33,16 +33,19 @@ const WorkspaceSwitcher: React.FC<WorkspaceSwitcherProps> = ({ workspaces, selec
     }, [wrapperRef]);
     
     return (
-      <div ref={wrapperRef} className="relative mb-2">
+      <div ref={wrapperRef} className="relative mb-4 px-2">
         <button 
             onClick={() => setIsOpen(!isOpen)} 
-            className="w-full flex items-center justify-between p-2 hover:bg-secondary-focus rounded-lg transition-colors group"
+            className="w-full flex items-center justify-between p-2 hover:bg-secondary-focus rounded-lg transition-colors group border border-transparent hover:border-border"
         >
             <div className="flex items-center min-w-0 gap-3">
-                <div className="w-8 h-8 rounded-md bg-gradient-to-br from-primary to-primary-focus flex-shrink-0 flex items-center justify-center shadow-md group-hover:shadow-lg transition-all">
-                     <span className="font-bold text-white text-lg">{selectedWorkspace?.name.charAt(0).toUpperCase()}</span>
+                <div className="w-8 h-8 rounded-md bg-gradient-to-br from-primary to-primary-focus flex-shrink-0 flex items-center justify-center shadow-md ring-1 ring-white/10">
+                     <span className="font-bold text-white text-lg leading-none">{selectedWorkspace?.name.charAt(0).toUpperCase()}</span>
                 </div>
-                <span className="font-bold text-text-primary truncate text-sm">{selectedWorkspace?.name}</span>
+                <div className="flex flex-col items-start min-w-0">
+                    <span className="font-bold text-text-primary truncate text-sm w-full text-left">{selectedWorkspace?.name}</span>
+                    <span className="text-[10px] text-text-secondary uppercase tracking-wider">Free Plan</span>
+                </div>
             </div>
             <svg className={`w-4 h-4 text-text-secondary transition-transform flex-shrink-0 ${isOpen ? 'rotate-180' : ''}`} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                 <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
@@ -50,7 +53,10 @@ const WorkspaceSwitcher: React.FC<WorkspaceSwitcherProps> = ({ workspaces, selec
         </button>
 
         {isOpen && (
-            <div className="absolute top-full mt-1 left-0 w-full bg-surface rounded-lg shadow-xl border border-border z-40 animate-scaleIn origin-top">
+            <div className="absolute top-full mt-1 left-2 right-2 bg-surface rounded-lg shadow-2xl border border-border z-40 animate-scaleIn origin-top">
+                <div className="p-2">
+                    <span className="text-xs font-semibold text-text-secondary px-2 uppercase">{t('sidebar.workspace')}</span>
+                </div>
                 <ul className="py-1">
                     {workspaces.map(workspace => (
                         <li key={workspace.id}>
@@ -59,7 +65,7 @@ const WorkspaceSwitcher: React.FC<WorkspaceSwitcherProps> = ({ workspaces, selec
                                     onSelectWorkspace(workspace.id);
                                     setIsOpen(false);
                                 }}
-                                className="w-full text-left px-3 py-2 hover:bg-secondary-focus flex items-center justify-between text-sm"
+                                className="w-full text-left px-3 py-2 hover:bg-secondary-focus flex items-center justify-between text-sm group"
                             >
                                 {workspace.name}
                                 {workspace.id === selectedWorkspace?.id && (
@@ -99,24 +105,55 @@ interface SidebarItemProps {
     isActive?: boolean;
     onClick: () => void;
     badge?: number | string;
+    className?: string;
 }
 
-const SidebarItem: React.FC<SidebarItemProps> = ({ icon, label, isActive, onClick, badge }) => (
+const SidebarItem: React.FC<SidebarItemProps> = ({ icon, label, isActive, onClick, badge, className }) => (
     <button 
         onClick={onClick}
-        className={`w-full flex items-center px-3 py-2 rounded-lg transition-all duration-200 group ${isActive ? 'bg-primary/10 text-primary' : 'hover:bg-secondary-focus text-text-secondary hover:text-text-primary'}`}
+        className={`w-full flex items-center px-3 py-2 rounded-md transition-all duration-200 group text-sm relative overflow-hidden ${isActive ? 'bg-gradient-to-r from-primary/10 to-transparent text-primary font-medium' : 'hover:bg-secondary-focus text-text-secondary hover:text-text-primary'} ${className}`}
     >
-        <span className={`mr-3 transition-colors ${isActive ? 'text-primary' : 'text-text-secondary group-hover:text-text-primary'}`}>
+        {isActive && <div className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-5 bg-primary rounded-r-full"></div>}
+        <span className={`mr-3 transition-colors flex-shrink-0 ${isActive ? 'text-primary' : 'text-text-secondary group-hover:text-text-primary'}`}>
             {icon}
         </span>
-        <span className={`font-medium text-sm flex-grow text-left ${isActive ? 'font-semibold' : ''}`}>{label}</span>
+        <span className="flex-grow text-left truncate">{label}</span>
         {badge && (
-            <span className={`text-xs px-2 py-0.5 rounded-full ${isActive ? 'bg-primary text-white' : 'bg-surface text-text-secondary group-hover:bg-secondary'}`}>
+            <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full min-w-[1.25rem] text-center ${isActive ? 'bg-primary text-white' : 'bg-surface text-text-secondary group-hover:bg-secondary border border-border'}`}>
                 {badge}
             </span>
         )}
     </button>
 );
+
+const SidebarSection: React.FC<{ 
+    title: string; 
+    children: React.ReactNode; 
+    action?: React.ReactNode; 
+    defaultOpen?: boolean 
+}> = ({ title, children, action, defaultOpen = true }) => {
+    const [isOpen, setIsOpen] = useState(defaultOpen);
+
+    return (
+        <div className="mb-2">
+            <div className="flex items-center justify-between px-3 py-1 mb-1 group">
+                <button 
+                    onClick={() => setIsOpen(!isOpen)}
+                    className="flex items-center text-xs font-bold text-text-secondary hover:text-text-primary uppercase tracking-wider transition-colors flex-grow text-left"
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" className={`h-3 w-3 mr-1.5 transition-transform duration-200 ${isOpen ? 'rotate-90' : ''}`} viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+                    </svg>
+                    {title}
+                </button>
+                {action && <div className="opacity-0 group-hover:opacity-100 transition-opacity">{action}</div>}
+            </div>
+            <div className={`space-y-0.5 transition-all duration-300 ease-in-out overflow-hidden ${isOpen ? 'max-h-[5000px] opacity-100' : 'max-h-0 opacity-0'}`}>
+                {children}
+            </div>
+        </div>
+    );
+};
 
 const Sidebar: React.FC = () => {
     const { t } = useTranslation();
@@ -130,6 +167,7 @@ const Sidebar: React.FC = () => {
         currentUser,
         activeView,
         isSidebarOpen,
+        isAdminPanelOpen,
     } = state;
     const {
         handleSelectWorkspace,
@@ -148,6 +186,7 @@ const Sidebar: React.FC = () => {
         handleUpdateUserStatus,
         handleSidebarReorder,
         showConfirmation,
+        setIsAdminPanelOpen,
     } = actions;
 
     const [isUserPanelOpen, setIsUserPanelOpen] = useState(false);
@@ -354,7 +393,7 @@ const Sidebar: React.FC = () => {
                         </button>
                     </div>
 
-                    <div className="px-4 pb-2">
+                    <div className="flex-shrink-0 px-2">
                         <WorkspaceSwitcher 
                             workspaces={workspaces}
                             selectedWorkspace={selectedWorkspace}
@@ -364,63 +403,69 @@ const Sidebar: React.FC = () => {
                         />
                         <button 
                             onClick={() => window.dispatchEvent(new CustomEvent('open-command-palette'))}
-                            className="w-full flex items-center px-3 py-2 mb-4 text-sm text-text-secondary bg-surface border border-border rounded-lg hover:border-primary focus:outline-none transition-colors"
+                            className="w-full flex items-center px-3 py-2 mb-4 text-sm text-text-secondary bg-surface border border-border rounded-lg hover:border-primary hover:text-text-primary focus:outline-none transition-colors shadow-sm"
                         >
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                             </svg>
                             {t('sidebar.search')}
-                            <span className="ml-auto text-xs text-text-secondary/50 border border-border rounded px-1">⌘K</span>
+                            <span className="ml-auto text-[10px] font-mono bg-secondary-focus text-text-secondary/70 border border-border rounded px-1.5 py-0.5">⌘K</span>
                         </button>
                     </div>
 
-                    <div className="flex-grow overflow-y-auto px-4 space-y-6">
-                        {/* Main Menu Section */}
-                        <section>
-                            <h3 className="text-xs font-bold text-text-secondary uppercase tracking-wider mb-2 pl-3">{t('sidebar.menu')}</h3>
-                            <div className="space-y-0.5">
+                    <div className="flex-grow overflow-y-auto px-2 space-y-4 custom-scrollbar">
+                        
+                        {/* Home Section */}
+                        <SidebarSection title={t('sidebar.home')}>
+                            <SidebarItem 
+                                icon={<svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" /></svg>}
+                                label={t('sidebar.myTasks')}
+                                isActive={activeView === 'my_tasks'}
+                                onClick={() => handleNavigation(() => { setActiveView('my_tasks'); setSelectedListId(null); })}
+                            />
+                            {permissions.has(Permission.VIEW_DASHBOARD) && (
                                 <SidebarItem 
-                                    icon={<svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" /></svg>}
-                                    label={t('sidebar.myTasks')}
-                                    isActive={activeView === 'my_tasks'}
-                                    onClick={() => handleNavigation(() => { setActiveView('my_tasks'); setSelectedListId(null); })}
+                                    icon={<svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M2 10a8 8 0 018-8v8h8a8 8 0 11-16 0z" /><path d="M12 2.252A8.014 8.014 0 0117.748 8H12V2.252z" /></svg>}
+                                    label={t('sidebar.dashboard')}
+                                    isActive={activeView === 'dashboard'}
+                                    onClick={() => handleNavigation(() => { setActiveView('dashboard'); setSelectedListId(null); })}
                                 />
-                                {permissions.has(Permission.VIEW_DASHBOARD) && (
-                                    <SidebarItem 
-                                        icon={<svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M2 10a8 8 0 018-8v8h8a8 8 0 11-16 0z" /><path d="M12 2.252A8.014 8.014 0 0117.748 8H12V2.252z" /></svg>}
-                                        label={t('sidebar.dashboard')}
-                                        isActive={activeView === 'dashboard'}
-                                        onClick={() => handleNavigation(() => { setActiveView('dashboard'); setSelectedListId(null); })}
-                                    />
-                                )}
-                                {permissions.has(Permission.MANAGE_APP) && (
-                                    <SidebarItem 
-                                        icon={<svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.96.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01-.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" /></svg>}
-                                        label={t('sidebar.appAdmin')}
-                                        isActive={activeView === 'app_admin'}
-                                        onClick={() => handleNavigation(() => { setActiveView('app_admin'); setSelectedListId(null); })}
-                                    />
-                                )}
+                            )}
+                            {permissions.has(Permission.MANAGE_APP) && (
+                                <SidebarItem 
+                                    icon={<svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.96.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01-.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" /></svg>}
+                                    label={t('sidebar.appAdmin')}
+                                    isActive={isAdminPanelOpen}
+                                    onClick={() => {
+                                        setIsAdminPanelOpen(true);
+                                        if (window.innerWidth < 768) setIsSidebarOpen(false);
+                                    }}
+                                />
+                            )}
+                        </SidebarSection>
+
+                        {/* Favorites (Placeholder for now) */}
+                        <SidebarSection title={t('sidebar.favorites')}>
+                            <div className="px-3 text-xs text-text-secondary/60 italic py-1">
+                                {t('sidebar.noFavorites')}
                             </div>
-                        </section>
+                        </SidebarSection>
 
                         {/* Projects Section */}
-                        <section>
-                            <div className="flex justify-between items-center mb-2 pl-3 pr-1">
-                                <h3 className="text-xs font-bold text-text-secondary uppercase tracking-wider">{t('sidebar.projects')}</h3>
-                                {permissions.has(Permission.MANAGE_WORKSPACES_AND_PROJECTS) && (
-                                   <div className="flex items-center gap-1">
-                                        <button onClick={() => { setFolderToEdit(null); setIsFolderModalOpen(true); }} className="text-text-secondary hover:text-text-primary p-1 rounded hover:bg-secondary-focus transition-colors" title={t('sidebar.newFolder')}>
-                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path d="M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" /><path d="M10 12a2 2 0 100-4 2 2 0 000 4z" /></svg>
-                                        </button>
-                                        <button onClick={() => { setListToEdit(null); setIsProjectModalOpen(true); }} className="text-text-secondary hover:text-text-primary p-1 rounded hover:bg-secondary-focus transition-colors" title={t('sidebar.newProject')}>
-                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" /></svg>
-                                        </button>
-                                    </div>
-                                )}
-                            </div>
-
-                            <nav className="space-y-0.5 -mx-2" onDrop={handleDrop} onDragOver={e => e.preventDefault()}>
+                        <SidebarSection 
+                            title={t('sidebar.projects')}
+                            action={permissions.has(Permission.MANAGE_WORKSPACES_AND_PROJECTS) ? (
+                                <div className="flex items-center gap-0.5">
+                                    <button onClick={(e) => { e.stopPropagation(); setFolderToEdit(null); setIsFolderModalOpen(true); }} className="text-text-secondary hover:text-text-primary p-1 rounded hover:bg-secondary-focus transition-colors" title={t('sidebar.newFolder')}>
+                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor"><path d="M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z" /></svg>
+                                    </button>
+                                    <button onClick={(e) => { e.stopPropagation(); setListToEdit(null); setIsProjectModalOpen(true); }} className="text-text-secondary hover:text-text-primary p-1 rounded hover:bg-secondary-focus transition-colors" title={t('sidebar.newProject')}>
+                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" /></svg>
+                                    </button>
+                                </div>
+                            ) : undefined}
+                        >
+                            <nav className="space-y-0.5" onDrop={handleDrop} onDragOver={e => e.preventDefault()}>
                                 {folderStructure.structured.map(folder => (
                                     <div key={folder.id} className="relative"
                                         draggable={isDraggable}
@@ -430,22 +475,26 @@ const Sidebar: React.FC = () => {
                                         onDragLeave={handleDragLeave}
                                     >
                                         {dropTarget?.targetId === folder.id && dropTarget.position === 'top' && <div className="absolute top-0 left-0 right-0 h-0.5 bg-primary z-10"></div>}
-                                        <div className={`rounded-lg transition-colors ${draggedItem?.id === folder.id ? 'opacity-50' : ''} ${dropTarget?.targetId === folder.id && dropTarget.position === 'middle' ? 'bg-primary/10 ring-1 ring-primary inset-0' : ''}`}>
+                                        <div className={`rounded-lg transition-colors duration-200 ${draggedItem?.id === folder.id ? 'opacity-50' : ''} ${dropTarget?.targetId === folder.id && dropTarget.position === 'middle' ? 'bg-primary/10 ring-1 ring-primary inset-0' : ''}`}>
                                             <button 
                                                 onClick={() => toggleFolder(folder.id)} 
-                                                className="w-full flex items-center px-3 py-1.5 text-sm text-text-secondary hover:text-text-primary font-medium hover:bg-secondary-focus rounded-lg"
+                                                className="w-full flex items-center px-3 py-1.5 text-sm text-text-secondary hover:text-text-primary font-medium hover:bg-secondary-focus rounded-lg group"
                                             >
-                                                <svg xmlns="http://www.w3.org/2000/svg" className={`h-3 w-3 mr-2 transition-transform ${openFolders.has(folder.id) ? 'rotate-90' : ''}`} viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" /></svg>
+                                                <svg xmlns="http://www.w3.org/2000/svg" className={`h-3 w-3 mr-2 transition-transform duration-200 text-text-secondary group-hover:text-text-primary ${openFolders.has(folder.id) ? 'rotate-90' : ''}`} viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" /></svg>
                                                 <span className="truncate">{folder.name}</span>
                                             </button>
                                             {openFolders.has(folder.id) && (
-                                                <ul className="mt-0.5 space-y-0.5">
+                                                <ul className="mt-0.5 space-y-0.5 relative">
+                                                    <div className="absolute left-4 top-0 bottom-0 w-px bg-border/50"></div>
                                                     {folder.lists.map(list => (
                                                          <li key={list.id} className="relative" draggable={isDraggable} onDragStart={(e) => handleDragStart(e, list.id, 'list')} onDragEnd={handleDragEnd} onDragOver={(e) => handleDragOver(e, list.id, 'list')} onDragLeave={handleDragLeave}>
                                                             {dropTarget?.targetId === list.id && dropTarget.position === 'top' && <div className="absolute top-0 left-0 right-0 h-0.5 bg-primary z-10"></div>}
-                                                            <a href="#" onClick={(e) => { e.preventDefault(); handleNavigation(() => { setSelectedListId(list.id); setActiveView('list'); }); }} className={`block pl-8 pr-3 py-1.5 rounded-lg text-sm transition-colors ${selectedListId === list.id && activeView === 'list' ? 'bg-primary/10 text-primary font-medium' : 'hover:bg-secondary-focus text-text-secondary hover:text-text-primary'} ${draggedItem?.id === list.id ? 'opacity-50' : ''}`}>
+                                                            <a href="#" onClick={(e) => { e.preventDefault(); handleNavigation(() => { setSelectedListId(list.id); setActiveView('list'); }); }} 
+                                                               className={`block pl-8 pr-3 py-1.5 rounded-lg text-sm transition-all duration-200 relative overflow-hidden ${selectedListId === list.id && activeView === 'list' ? 'bg-primary/10 text-primary font-medium' : 'hover:bg-secondary-focus text-text-secondary hover:text-text-primary'} ${draggedItem?.id === list.id ? 'opacity-50' : ''}`}
+                                                            >
+                                                                {selectedListId === list.id && activeView === 'list' && <div className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-4 bg-primary rounded-r-full"></div>}
                                                                 <div className="flex items-center">
-                                                                     <span className={`w-2 h-2 rounded-full mr-2 ${list.color}`}></span>
+                                                                     <span className={`w-2 h-2 rounded-full mr-2 flex-shrink-0 ${list.color}`}></span>
                                                                      <span className="truncate">{list.name}</span>
                                                                 </div>
                                                             </a>
@@ -461,9 +510,12 @@ const Sidebar: React.FC = () => {
                                  {folderStructure.standaloneLists.map(list => (
                                     <div key={list.id} className="relative" draggable={isDraggable} onDragStart={(e) => handleDragStart(e, list.id, 'list')} onDragEnd={handleDragEnd} onDragOver={(e) => handleDragOver(e, list.id, 'list')} onDragLeave={handleDragLeave}>
                                          {dropTarget?.targetId === list.id && dropTarget.position === 'top' && <div className="absolute top-0 left-0 right-0 h-0.5 bg-primary z-10"></div>}
-                                        <a href="#" onClick={(e) => { e.preventDefault(); handleNavigation(() => { setSelectedListId(list.id); setActiveView('list'); }); }} className={`block px-3 py-1.5 rounded-lg text-sm transition-colors ${selectedListId === list.id && activeView === 'list' ? 'bg-primary/10 text-primary font-medium' : 'hover:bg-secondary-focus text-text-secondary hover:text-text-primary'} ${draggedItem?.id === list.id ? 'opacity-50' : ''}`}>
+                                        <a href="#" onClick={(e) => { e.preventDefault(); handleNavigation(() => { setSelectedListId(list.id); setActiveView('list'); }); }} 
+                                           className={`block px-3 py-1.5 rounded-lg text-sm transition-all duration-200 relative overflow-hidden ${selectedListId === list.id && activeView === 'list' ? 'bg-primary/10 text-primary font-medium' : 'hover:bg-secondary-focus text-text-secondary hover:text-text-primary'} ${draggedItem?.id === list.id ? 'opacity-50' : ''}`}
+                                        >
+                                            {selectedListId === list.id && activeView === 'list' && <div className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-4 bg-primary rounded-r-full"></div>}
                                              <div className="flex items-center">
-                                                 <span className={`w-2.5 h-2.5 rounded-full mr-3 ${list.color}`}></span>
+                                                 <span className={`w-2.5 h-2.5 rounded-full mr-3 flex-shrink-0 ${list.color}`}></span>
                                                  <span className="truncate">{list.name}</span>
                                              </div>
                                         </a>
@@ -471,12 +523,13 @@ const Sidebar: React.FC = () => {
                                     </div>
                                 ))}
                             </nav>
-                        </section>
+                        </SidebarSection>
+
                     </div>
 
-                    <div className="p-4 border-t border-border mt-auto space-y-2 bg-secondary">
+                    <div className="p-2 border-t border-border mt-auto space-y-1 bg-secondary">
                         <SidebarItem 
-                            icon={<svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.96.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01-.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" /></svg>}
+                            icon={<svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.96.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01-.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" /></svg>}
                             label={t('sidebar.settings')}
                             onClick={() => setIsSettingsModalOpen(true)}
                         />
@@ -490,8 +543,8 @@ const Sidebar: React.FC = () => {
                                     onUpdateUserStatus={(status) => handleUpdateUserStatus(currentUser.id, status)}
                                 />
                             )}
-                            <button onClick={() => setIsUserPanelOpen(p => !p)} className="w-full flex items-center text-left p-2 rounded-lg hover:bg-surface transition-colors group">
-                                <AvatarWithStatus user={currentUser} className="w-9 h-9 border border-border" />
+                            <button onClick={() => setIsUserPanelOpen(p => !p)} className="w-full flex items-center text-left p-2 rounded-lg hover:bg-surface transition-colors group border border-transparent hover:border-border">
+                                <AvatarWithStatus user={currentUser} className="w-9 h-9 border border-border bg-surface" />
                                 <div className="flex-grow min-w-0 ml-3">
                                     <p className="font-semibold text-sm text-text-primary truncate group-hover:text-primary transition-colors">{currentUser.name}</p>
                                     <p className="text-xs text-text-secondary truncate">{currentUser.title}</p>

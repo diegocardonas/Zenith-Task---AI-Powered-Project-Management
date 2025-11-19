@@ -174,9 +174,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     });
 
     // --- UI State ---
-    const [activeView, setActiveView] = useState('board'); // 'board', 'list', 'calendar', etc. or 'dashboard', 'my_tasks'
+    const [activeView, setActiveView] = useState('board'); 
     const [currentView, setCurrentView] = useState<ViewType>(ViewType.Board);
     const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+    const [isAdminPanelOpen, setIsAdminPanelOpen] = useState(false); // NEW STATE for Admin Modal
     const [isWorkspaceModalOpen, setIsWorkspaceModalOpen] = useState(false);
     const [workspaceToEdit, setWorkspaceToEdit] = useState<Workspace | null>(null);
     const [isProjectModalOpen, setIsProjectModalOpen] = useState(false);
@@ -545,6 +546,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         activeView,
         currentView,
         isSidebarOpen,
+        isAdminPanelOpen, // Expose to consumers
         isWorkspaceModalOpen,
         workspaceToEdit,
         isProjectModalOpen,
@@ -605,6 +607,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setActiveView,
         setCurrentView,
         setIsSidebarOpen,
+        setIsAdminPanelOpen, // Expose action
         setIsWorkspaceModalOpen,
         setWorkspaceToEdit,
         setIsProjectModalOpen,

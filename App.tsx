@@ -17,7 +17,7 @@ import WelcomePage from './components/WelcomePage';
 import SettingsModal from './components/SettingsModal';
 import FolderModal from './components/FolderModal';
 import ConfirmationModal from './components/ConfirmationModal';
-import { useAppContext } from './contexts/AppContext';
+import { useAppContext, AppProvider } from './contexts/AppContext';
 import { Toast, Permission } from './types';
 import { useTranslation } from './i18n';
 
@@ -93,6 +93,7 @@ const App: React.FC = () => {
     colorScheme,
     isConfirmationModalOpen,
     confirmationModalProps,
+    isAdminPanelOpen, // Consumed from Context
   } = state;
 
   const {
@@ -149,8 +150,7 @@ const App: React.FC = () => {
               break;
           case 'navigate_admin':
               if (permissions.has(Permission.MANAGE_APP)) {
-                actions.setActiveView('app_admin');
-                actions.setSelectedListId(null);
+                actions.setIsAdminPanelOpen(true); // Open modal instead of changing view
               }
               break;
           case 'create_task':
@@ -189,12 +189,15 @@ const App: React.FC = () => {
         
         {activeView === 'dashboard' && permissions.has(Permission.VIEW_DASHBOARD) ? (
           <AdminDashboard />
-        ) : activeView === 'app_admin' && permissions.has(Permission.MANAGE_APP) ? (
-          <AppAdminPanel />
         ) : activeView === 'my_tasks' ? (
           <MyTasksView />
         ) : (
           <MainContent />
+        )}
+        
+        {/* Modals */}
+        {isAdminPanelOpen && permissions.has(Permission.MANAGE_APP) && (
+            <AppAdminPanel />
         )}
 
         {selectedTask && <TaskModal />}
@@ -234,7 +237,7 @@ const App: React.FC = () => {
   return (
     <>
       {renderContent()}
-      <div className="fixed top-5 right-5 z-50 space-y-2 pointer-events-none">
+      <div className="fixed top-5 right-5 z-[60] space-y-2 pointer-events-none">
         {toasts.map(toast => (
           <div key={toast.id} className="pointer-events-auto">
              <ToastComponent toast={toast} onClose={() => removeToast(toast.id)} />
