@@ -35,26 +35,27 @@ const AdminSidebar: React.FC<{ activeTab: string; onSelect: (tab: string) => voi
     ];
 
     return (
-        <aside className="w-64 bg-slate-900/50 border-r border-white/10 flex flex-col h-full backdrop-blur-md">
-            <div className="p-6 border-b border-white/10">
+        <aside className="w-full md:w-64 bg-slate-900/50 md:border-r border-b md:border-b-0 border-white/10 flex flex-col md:h-full backdrop-blur-md flex-shrink-0 z-20">
+            <div className="p-4 md:p-6 border-b border-white/10 flex items-center justify-between">
                 <h2 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2">
                     <span className="w-2 h-2 rounded-full bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.5)] animate-pulse"></span>
-                    {t('header.appAdmin')}
+                    <span className="hidden md:inline">{t('header.appAdmin')}</span>
+                    <span className="md:hidden">Admin</span>
                 </h2>
             </div>
-            <nav className="flex-grow p-4 space-y-1">
+            <nav className="flex md:flex-col overflow-x-auto md:overflow-visible p-2 md:p-4 space-x-2 md:space-x-0 md:space-y-1 no-scrollbar">
                 {tabs.map(tab => (
                     <button
                         key={tab.id}
                         onClick={() => onSelect(tab.id)}
-                        className={`w-full flex items-center px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${activeTab === tab.id ? 'bg-primary/20 text-primary border border-primary/30 shadow-lg shadow-primary/10' : 'text-slate-400 hover:bg-white/5 hover:text-white'}`}
+                        className={`flex-shrink-0 flex items-center px-3 py-2 md:px-4 md:py-3 rounded-xl text-sm font-medium transition-all duration-200 whitespace-nowrap ${activeTab === tab.id ? 'bg-primary/20 text-primary border border-primary/30 shadow-lg shadow-primary/10' : 'text-slate-400 hover:bg-white/5 hover:text-white'}`}
                     >
-                        <span className={`mr-3 ${activeTab === tab.id ? 'text-primary' : 'text-slate-500'}`}>{tab.icon}</span>
+                        <span className={`mr-2 md:mr-3 ${activeTab === tab.id ? 'text-primary' : 'text-slate-500'}`}>{tab.icon}</span>
                         {tab.label}
                     </button>
                 ))}
             </nav>
-            <div className="p-4 border-t border-white/10">
+            <div className="hidden md:block p-4 border-t border-white/10 mt-auto">
                 <div className="flex items-center gap-2 text-xs text-emerald-400 font-semibold bg-emerald-500/10 p-3 rounded-lg border border-emerald-500/20">
                     <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.5)]"></div>
                     {t('admin.allSystemsOperational')}
@@ -65,7 +66,6 @@ const AdminSidebar: React.FC<{ activeTab: string; onSelect: (tab: string) => voi
 };
 
 const SystemActivityChart: React.FC = () => {
-    // Mock simple line chart with specific styling for dark mode console
     return (
         <div className="w-full h-48 flex items-end gap-1">
              {Array.from({ length: 40 }).map((_, i) => {
@@ -87,37 +87,37 @@ const SystemActivityChart: React.FC = () => {
 const OverviewTabContent: React.FC<{ stats: any }> = ({ stats }) => {
     const { t } = useTranslation();
     return (
-        <div className="p-8 space-y-8 animate-fadeIn h-full overflow-y-auto">
+        <div className="p-4 md:p-8 space-y-6 md:space-y-8 animate-fadeIn h-full overflow-y-auto pb-24 md:pb-8">
             <div>
-                <h2 className="text-3xl font-bold text-white mb-2">{t('admin.overview')}</h2>
-                <p className="text-slate-400">Real-time system performance and user metrics.</p>
+                <h2 className="text-2xl md:text-3xl font-bold text-white mb-2">{t('admin.overview')}</h2>
+                <p className="text-slate-400 text-sm md:text-base">Real-time system performance and user metrics.</p>
             </div>
             
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
                 <div className="bg-slate-800/50 border border-white/5 p-5 rounded-2xl hover:border-primary/30 transition-colors">
                     <p className="text-slate-400 text-sm font-medium uppercase tracking-wider">{t('admin.totalUsers')}</p>
                     <div className="mt-2 flex items-baseline gap-2">
-                        <span className="text-3xl font-bold text-white">{stats.total}</span>
+                        <span className="text-2xl md:text-3xl font-bold text-white">{stats.total}</span>
                         <span className="text-emerald-400 text-xs font-bold">+12%</span>
                     </div>
                 </div>
                  <div className="bg-slate-800/50 border border-white/5 p-5 rounded-2xl hover:border-primary/30 transition-colors">
                     <p className="text-slate-400 text-sm font-medium uppercase tracking-wider">{t('admin.activeMembers')}</p>
                     <div className="mt-2 flex items-baseline gap-2">
-                        <span className="text-3xl font-bold text-white">{stats.active}</span>
+                        <span className="text-2xl md:text-3xl font-bold text-white">{stats.active}</span>
                         <span className="text-emerald-400 text-xs font-bold">+5%</span>
                     </div>
                 </div>
                  <div className="bg-slate-800/50 border border-white/5 p-5 rounded-2xl hover:border-primary/30 transition-colors">
                     <p className="text-slate-400 text-sm font-medium uppercase tracking-wider">{t('common.admin')}</p>
                     <div className="mt-2 flex items-baseline gap-2">
-                        <span className="text-3xl font-bold text-white">{stats.admins}</span>
+                        <span className="text-2xl md:text-3xl font-bold text-white">{stats.admins}</span>
                     </div>
                 </div>
                  <div className="bg-slate-800/50 border border-white/5 p-5 rounded-2xl hover:border-primary/30 transition-colors">
                     <p className="text-slate-400 text-sm font-medium uppercase tracking-wider">{t('admin.newMembers')}</p>
                     <div className="mt-2 flex items-baseline gap-2">
-                        <span className="text-3xl font-bold text-white">{stats.newUsers}</span>
+                        <span className="text-2xl md:text-3xl font-bold text-white">{stats.newUsers}</span>
                         <span className="text-slate-500 text-xs font-bold">This Month</span>
                     </div>
                 </div>
@@ -190,13 +190,11 @@ const UserTable: React.FC<{
             <table className="w-full text-sm text-left text-slate-400">
                 <thead className="text-xs text-slate-500 uppercase bg-white/5 border-b border-white/10">
                     <tr>
-                        <th scope="col" className="p-4 w-4">
-                           {/* Header Checkbox could go here */}
-                        </th>
+                        <th scope="col" className="p-4 w-4"></th>
                         <th scope="col" className="px-6 py-3">{t('common.name')}</th>
-                        <th scope="col" className="px-6 py-3">{t('common.status')}</th>
-                        <th scope="col" className="px-6 py-3">{t('common.role')}</th>
-                        <th scope="col" className="px-6 py-3">{t('common.team')}</th>
+                        <th scope="col" className="px-6 py-3 hidden sm:table-cell">{t('common.status')}</th>
+                        <th scope="col" className="px-6 py-3 hidden md:table-cell">{t('common.role')}</th>
+                        <th scope="col" className="px-6 py-3 hidden lg:table-cell">{t('common.team')}</th>
                         <th scope="col" className="px-6 py-3 text-right">{t('common.actions')}</th>
                     </tr>
                 </thead>
@@ -218,17 +216,17 @@ const UserTable: React.FC<{
                                     <AvatarWithStatus user={user} className="w-8 h-8 mr-3" />
                                     <div>
                                         <div className="text-base font-semibold">{user.name}</div>
-                                        <div className="font-normal text-slate-500">{user.email}</div>
+                                        <div className="font-normal text-slate-500 text-xs">{user.email}</div>
                                     </div>
                                 </div>
                             </td>
-                            <td className="px-6 py-4">
+                            <td className="px-6 py-4 hidden sm:table-cell">
                                 <div className="flex items-center">
                                     <div className={`h-2 w-2 rounded-full mr-2 ${user.status === 'Online' ? 'bg-emerald-500 shadow-[0_0_5px_rgba(16,185,129,0.5)]' : user.status === 'Busy' ? 'bg-red-500' : 'bg-slate-500'}`}></div>
                                     {t(`common.${user.status.toLowerCase()}`)}
                                 </div>
                             </td>
-                            <td className="px-6 py-4">
+                            <td className="px-6 py-4 hidden md:table-cell">
                                 <select
                                     value={user.role}
                                     onChange={(e) => onUpdateRole(user.id, e.target.value as Role)}
@@ -240,7 +238,7 @@ const UserTable: React.FC<{
                                     ))}
                                 </select>
                             </td>
-                            <td className="px-6 py-4">
+                            <td className="px-6 py-4 hidden lg:table-cell">
                                 {user.team}
                             </td>
                             <td className="px-6 py-4 text-right">
@@ -302,10 +300,10 @@ const UsersTabContent: React.FC<{
     };
 
     return (
-        <div className="p-8 space-y-6 h-full flex flex-col overflow-y-auto">
+        <div className="p-4 md:p-8 space-y-6 h-full flex flex-col overflow-y-auto pb-24 md:pb-8">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-slate-800/40 p-5 rounded-2xl border border-white/10">
-                <div className="flex items-center gap-3 w-full md:w-auto">
-                    <div className="relative flex-grow md:flex-grow-0 group">
+                <div className="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto">
+                    <div className="relative flex-grow w-full sm:w-auto group">
                         <svg className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500 group-focus-within:text-primary transition-colors" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                         </svg>
@@ -320,7 +318,7 @@ const UsersTabContent: React.FC<{
                     <select 
                         value={filterRole} 
                         onChange={(e) => setFilterRole(e.target.value as Role | 'all')}
-                        className="bg-slate-900 border border-white/10 rounded-xl py-2.5 px-3 text-sm text-white focus:ring-2 focus:ring-primary"
+                        className="bg-slate-900 border border-white/10 rounded-xl py-2.5 px-3 text-sm text-white focus:ring-2 focus:ring-primary w-full sm:w-auto"
                     >
                         <option value="all">{t('common.allStatuses')}</option>
                         {Object.values(Role).map(r => <option key={r} value={r}>{t(`common.${r.toLowerCase()}`)}</option>)}
@@ -384,11 +382,11 @@ const SettingsTabContent: React.FC = () => {
     );
 
     return (
-        <div className="p-10 max-w-4xl mx-auto animate-fadeIn h-full overflow-y-auto">
+        <div className="p-6 md:p-10 max-w-4xl mx-auto animate-fadeIn h-full overflow-y-auto pb-24 md:pb-10">
             <h2 className="text-3xl font-bold text-white mb-2">{t('admin.globalSettings')}</h2>
             <p className="text-slate-400 mb-8">Manage organization-wide configurations and security policies.</p>
             
-            <div className="bg-slate-800/40 rounded-2xl border border-white/10 p-8 mb-8 shadow-lg">
+            <div className="bg-slate-800/40 rounded-2xl border border-white/10 p-6 md:p-8 mb-8 shadow-lg">
                 <h3 className="text-lg font-semibold text-white mb-6 flex items-center gap-2">
                     <svg className="w-5 h-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>
                     {t('admin.branding')}
@@ -401,7 +399,7 @@ const SettingsTabContent: React.FC = () => {
                 </div>
             </div>
 
-            <div className="bg-slate-800/40 rounded-2xl border border-white/10 p-8 mb-8 shadow-lg">
+            <div className="bg-slate-800/40 rounded-2xl border border-white/10 p-6 md:p-8 mb-8 shadow-lg">
                  <h3 className="text-lg font-semibold text-white mb-2 flex items-center gap-2">
                     <svg className="w-5 h-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
                     {t('admin.accessControl')}
@@ -410,7 +408,7 @@ const SettingsTabContent: React.FC = () => {
                  <Toggle label={t('admin.publicProjects')} checked={publicProjects} onChange={setPublicProjects} />
             </div>
 
-            <div className="bg-slate-800/40 rounded-2xl border border-white/10 p-8 shadow-lg">
+            <div className="bg-slate-800/40 rounded-2xl border border-white/10 p-6 md:p-8 shadow-lg">
                  <h3 className="text-lg font-semibold text-white mb-2 flex items-center gap-2">
                     <svg className="w-5 h-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
                     {t('admin.security')}
@@ -433,13 +431,13 @@ const AuditLogTabContent: React.FC = () => {
     ];
 
     return (
-        <div className="p-8 animate-fadeIn h-full overflow-y-auto">
+        <div className="p-4 md:p-8 animate-fadeIn h-full overflow-y-auto pb-24 md:pb-8">
              <div>
-                <h2 className="text-3xl font-bold text-white mb-2">{t('admin.auditLog')}</h2>
-                <p className="text-slate-400 mb-8">Track all important activities within the workspace.</p>
+                <h2 className="text-2xl md:text-3xl font-bold text-white mb-2">{t('admin.auditLog')}</h2>
+                <p className="text-slate-400 mb-8 text-sm md:text-base">Track all important activities within the workspace.</p>
             </div>
-            <div className="bg-slate-800/30 rounded-2xl border border-white/10 overflow-hidden shadow-lg">
-                 <table className="w-full text-sm text-left text-slate-400">
+            <div className="bg-slate-800/30 rounded-2xl border border-white/10 overflow-hidden shadow-lg overflow-x-auto">
+                 <table className="w-full text-sm text-left text-slate-400 min-w-[600px]">
                     <thead className="text-xs text-slate-500 uppercase bg-slate-900/50 border-b border-white/10">
                         <tr>
                             <th className="px-6 py-4">{t('admin.user')}</th>
@@ -501,15 +499,15 @@ const AppAdminPanel: React.FC = () => {
     if (!isAdminPanelOpen) return null;
 
     return (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-[100] flex justify-center items-center p-4 animate-fadeIn">
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-md z-[100] flex justify-center items-center p-0 md:p-4 animate-fadeIn">
             <div 
-                className="bg-[#0f172a] w-[95vw] h-[90vh] rounded-3xl shadow-2xl border border-white/10 overflow-hidden flex animate-scaleIn relative"
+                className="bg-[#0f172a] w-[100vw] h-[100vh] md:w-[95vw] md:h-[90vh] md:rounded-3xl shadow-2xl border-none md:border border-white/10 overflow-hidden flex flex-col md:flex-row animate-scaleIn relative"
                 onClick={e => e.stopPropagation()}
             >
-                {/* Close Button */}
+                {/* Close Button - Fixed position on Mobile to ensure visibility */}
                 <button 
                     onClick={() => setIsAdminPanelOpen(false)}
-                    className="absolute top-6 right-6 z-50 p-2 bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white rounded-full transition-all shadow-lg border border-white/10"
+                    className="absolute top-4 right-4 z-50 p-2 bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white rounded-full transition-all shadow-lg border border-white/10"
                 >
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -520,9 +518,9 @@ const AppAdminPanel: React.FC = () => {
                 <AdminSidebar activeTab={activeTab} onSelect={setActiveTab} />
                 
                 {/* Content */}
-                <main className="flex-grow relative bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-100">
+                <main className="flex-grow relative bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-100 overflow-hidden">
                     <div className="absolute inset-0 bg-slate-900/90"></div> {/* Overlay for readability over noise */}
-                    <div className="relative h-full">
+                    <div className="relative h-full overflow-y-auto">
                         {activeTab === 'overview' && <OverviewTabContent stats={stats} />}
                         {activeTab === 'users' && (
                             <UsersTabContent 
