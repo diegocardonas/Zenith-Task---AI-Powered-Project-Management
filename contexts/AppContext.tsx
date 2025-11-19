@@ -62,6 +62,7 @@ interface AppState {
     chatChannels: ChatChannel[];
     chatMessages: ChatMessage[];
     activeChatId: string | null;
+    isChatOpen: boolean;
 }
 
 type Action =
@@ -95,7 +96,8 @@ type Action =
     | { type: 'ADD_TEMPLATE'; payload: TaskTemplate }
     | { type: 'REORDER_SIDEBAR'; payload: { folders: Folder[], lists: List[] } }
     | { type: 'SEND_MESSAGE'; payload: ChatMessage }
-    | { type: 'SET_ACTIVE_CHAT'; payload: string | null };
+    | { type: 'SET_ACTIVE_CHAT'; payload: string | null }
+    | { type: 'SET_CHAT_OPEN'; payload: boolean };
 
 const appReducer = (state: AppState, action: Action): AppState => {
     switch (action.type) {
@@ -135,6 +137,7 @@ const appReducer = (state: AppState, action: Action): AppState => {
                 chatChannels: state.chatChannels.map(c => c.id === action.payload.channelId ? { ...c, lastMessage: action.payload.text, lastMessageTime: action.payload.timestamp } : c)
             };
         case 'SET_ACTIVE_CHAT': return { ...state, activeChatId: action.payload };
+        case 'SET_CHAT_OPEN': return { ...state, isChatOpen: action.payload };
         default: return state;
     }
 };
@@ -199,6 +202,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         chatChannels: initialChannels,
         chatMessages: initialMessages,
         activeChatId: initialChannels[0].id,
+        isChatOpen: false,
     });
 
     // --- UI State ---
@@ -541,7 +545,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     const handleSetActiveChat = (chatId: string) => {
         dispatch({ type: 'SET_ACTIVE_CHAT', payload: chatId });
-        // Here we would normally mark messages as read
+    };
+
+    const setIsChatOpen = (isOpen: boolean) => {
+        dispatch({ type: 'SET_CHAT_OPEN', payload: isOpen });
     };
 
     const handleAIAction = useCallback((name: string, args: any) => {
@@ -665,6 +672,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         handleAIAction,
         handleSendMessage,
         handleSetActiveChat,
+        setIsChatOpen,
         
         setActiveView,
         setCurrentView,

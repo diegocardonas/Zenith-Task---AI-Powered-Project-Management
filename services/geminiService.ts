@@ -1,5 +1,5 @@
 import { GoogleGenAI, Type, GenerateContentResponse, FunctionDeclaration } from "@google/genai";
-import { Priority, Task, User, Status, List, Comment } from "../types";
+import { Priority, Task, User, Status, List, Comment, ChatMessage } from "../types";
 import { i18n } from '../i18n';
 
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
@@ -290,5 +290,59 @@ export const getAIChatResponse = async (
     } catch (error) {
         console.error("Error getting AI chat response:", error);
         throw new Error(i18n.t('gemini.connectionError'));
+    }
+};
+
+export const generateChatSummary = async (messages: ChatMessage[], users: User[]): Promise<string> => {
+    if (messages.length === 0) return "No hay mensajes suficientes para resumir.";
+    try {
+        const conversation = messages.map(m => {
+            const user = users.find(u => u.id === m.senderId);
+            return `${user?.name || 'Unknown'}: ${m.text}`;
+        }).join('\n');
+
+        const prompt = `Summarize the following team chat conversation into key points and action items (if any). Be concise and professional. Format with Markdown bullet points.
+        
+        Conversation:
+        ${conversation}`;
+
+        const response = await ai.models.generateContent({
+            model,
+            contents: prompt,
+        });
+
+        return response.text;
+    } catch (error) {
+        console.error("Error generating chat summary:", error);
+        return "No se pudo generar el resumen en este momento.";
+    }
+};
+
+export const generateChatReplySuggestions = async (messages: ChatMessage[], currentUser: User): Promise<string[]> => {
+    if (messages.length === 0) return [];
+    try {
+        const recentMessages = messages.slice(-5);
+        const conversation = recentMessages.map(m => `${m.senderId === currentUser.id ? 'Me' : 'Them'}: ${m.text}`).join('\n');
+        
+        const prompt = `You are a helpful teammate. Based on this chat conversation, suggest 3 short, professional, and relevant replies for "Me".
+        Conversation:
+        ${conversation}
+        
+        Return ONLY a JSON array of strings.`;
+
+        const response = await ai.models.generateContent({
+            model,
+            contents: prompt,
+            config: {
+                responseMimeType: "application/json",
+                responseSchema: { type: Type.ARRAY, items: { type: Type.STRING } }
+            }
+        });
+        const jsonString = response.text.trim();
+        const result = JSON.parse(jsonString);
+        return Array.isArray(result) ? result.slice(0, 3) : [];
+    } catch (error) {
+        console.error("Error generating chat replies:", error);
+        return [];
     }
 };

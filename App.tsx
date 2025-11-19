@@ -95,7 +95,8 @@ const App: React.FC = () => {
     colorScheme,
     isConfirmationModalOpen,
     confirmationModalProps,
-    isAdminPanelOpen, // Consumed from Context
+    isAdminPanelOpen,
+    isChatOpen
   } = state;
 
   const {
@@ -106,7 +107,7 @@ const App: React.FC = () => {
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-        if (selectedTask || editingUser || isWorkspaceModalOpen || isProjectModalOpen || isFolderModalOpen || isCommandPaletteOpen || isSummaryModalOpen || isSettingsModalOpen || isBlockingTasksModalOpen || isConfirmationModalOpen) return;
+        if (selectedTask || editingUser || isWorkspaceModalOpen || isProjectModalOpen || isFolderModalOpen || isCommandPaletteOpen || isSummaryModalOpen || isSettingsModalOpen || isBlockingTasksModalOpen || isConfirmationModalOpen || isChatOpen) return;
         const target = event.target as HTMLElement;
         if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.tagName === 'SELECT') return;
 
@@ -128,7 +129,7 @@ const App: React.FC = () => {
     return () => {
         window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [activeView, state.selectedListId, selectedTask, editingUser, isWorkspaceModalOpen, isProjectModalOpen, isFolderModalOpen, isCommandPaletteOpen, isSummaryModalOpen, isSettingsModalOpen, isBlockingTasksModalOpen, isConfirmationModalOpen, actions, permissions]);
+  }, [activeView, state.selectedListId, selectedTask, editingUser, isWorkspaceModalOpen, isProjectModalOpen, isFolderModalOpen, isCommandPaletteOpen, isSummaryModalOpen, isSettingsModalOpen, isBlockingTasksModalOpen, isConfirmationModalOpen, isChatOpen, actions, permissions]);
 
   const handleCommand = (command: string, payload?: any) => {
       switch (command) {
@@ -193,13 +194,12 @@ const App: React.FC = () => {
           <AdminDashboard />
         ) : activeView === 'my_tasks' ? (
           <MyTasksView />
-        ) : activeView === 'chat' ? (
-          <TeamChatView />
         ) : (
           <MainContent />
         )}
         
         {/* Modals */}
+        {isChatOpen && <TeamChatView />}
         {isAdminPanelOpen && permissions.has(Permission.MANAGE_APP) && (
             <AppAdminPanel />
         )}

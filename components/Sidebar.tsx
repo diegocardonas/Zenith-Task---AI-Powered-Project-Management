@@ -174,7 +174,8 @@ const Sidebar: React.FC = () => {
         activeView,
         isSidebarOpen,
         isAdminPanelOpen,
-        chatChannels
+        chatChannels,
+        isChatOpen
     } = state;
     const {
         handleSelectWorkspace,
@@ -194,6 +195,7 @@ const Sidebar: React.FC = () => {
         handleSidebarReorder,
         showConfirmation,
         setIsAdminPanelOpen,
+        setIsChatOpen,
     } = actions;
 
     const [isUserPanelOpen, setIsUserPanelOpen] = useState(false);
@@ -436,8 +438,8 @@ const Sidebar: React.FC = () => {
                             <SidebarItem 
                                 icon={<svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M18 5v8a2 2 0 01-2 2h-5l-5 4v-4H4a2 2 0 01-2-2V5a2 2 0 012-2h12a2 2 0 012 2zM7 8H5v2h2V8zm2 0h2v2H9V8zm6 0h-2v2h2V8z" clipRule="evenodd" /></svg>}
                                 label={t('chat.teamChat')}
-                                isActive={activeView === 'chat'}
-                                onClick={() => handleNavigation(() => { setActiveView('chat'); setSelectedListId(null); })}
+                                isActive={isChatOpen}
+                                onClick={() => { setIsChatOpen(true); if (window.innerWidth < 768) setIsSidebarOpen(false); }}
                                 badge={totalUnreadChat > 0 ? totalUnreadChat : undefined}
                             />
                             {permissions.has(Permission.VIEW_DASHBOARD) && (
@@ -546,7 +548,7 @@ const Sidebar: React.FC = () => {
 
                     <div className="p-3 border-t border-white/5 mt-auto space-y-1 bg-[#141b2d]">
                         <SidebarItem 
-                            icon={<svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.96.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01-.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" /></svg>}
+                            icon={<svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.96.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01-.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" /></svg>}
                             label={t('sidebar.settings')}
                             onClick={() => setIsSettingsModalOpen(true)}
                         />

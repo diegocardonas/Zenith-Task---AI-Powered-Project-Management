@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { User, List, Role, Task, Notification, Permission } from '../types';
 import GlobalSearch from './GlobalSearch';
@@ -69,7 +70,8 @@ const Header: React.FC<HeaderProps> = ({ title }) => {
         lists: allLists, 
         users: allUsers, 
         notifications,
-        selectedList
+        selectedList,
+        chatChannels
     } = state;
 
     const {
@@ -85,6 +87,7 @@ const Header: React.FC<HeaderProps> = ({ title }) => {
         setIsProjectModalOpen,
         handleDeleteList,
         handleGenerateSummary,
+        setIsChatOpen
     } = actions;
     
     const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
@@ -114,6 +117,7 @@ const Header: React.FC<HeaderProps> = ({ title }) => {
     const setEditingUser = (user: User | null) => setEditingUserId(user ? user.id : null);
 
     const unreadCount = notifications.filter(n => !n.read).length;
+    const unreadChatCount = chatChannels.reduce((acc, c) => acc + (c.unreadCount || 0), 0);
 
     return (
         <header className="flex-shrink-0 flex items-center justify-between p-3 sm:p-6 border-b border-border bg-surface/50 backdrop-blur-sm sticky top-0 z-10">
@@ -152,6 +156,18 @@ const Header: React.FC<HeaderProps> = ({ title }) => {
                     </svg>
                 </button>
                 
+                {/* Chat Shortcut Button - Now opens Modal */}
+                <button
+                    onClick={() => setIsChatOpen(true)}
+                    className="relative flex-shrink-0 p-2 rounded-full hover:bg-secondary-focus text-text-secondary hover:text-text-primary transition-colors"
+                    title={t('chat.teamChat')}
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                    </svg>
+                    {unreadChatCount > 0 && <span className="absolute top-1.5 right-1.5 block h-2.5 w-2.5 rounded-full bg-primary border-2 border-surface"></span>}
+                </button>
+
                 <div ref={notificationsPanelRef} className="relative">
                     {isNotificationsOpen && (
                         <NotificationsPanel
@@ -167,7 +183,7 @@ const Header: React.FC<HeaderProps> = ({ title }) => {
                         aria-label={t('header.toggleNotifications')}
                     >
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                         </svg>
                         {unreadCount > 0 && <span className="absolute top-1.5 right-1.5 block h-2.5 w-2.5 rounded-full bg-red-500 border-2 border-surface"></span>}
                     </button>
@@ -184,7 +200,7 @@ const Header: React.FC<HeaderProps> = ({ title }) => {
                   </button>
                 )}
             </div>
-      </header>
+        </header>
     );
 }
 

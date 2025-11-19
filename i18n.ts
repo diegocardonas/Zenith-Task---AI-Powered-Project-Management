@@ -87,8 +87,14 @@ const es = {
     "teamChat": "Chat de Equipo",
     "channels": "Canales",
     "directMessages": "Mensajes Directos",
-    "placeholder": "Escribe un mensaje...",
-    "selectToStart": "Selecciona un chat para comenzar"
+    "placeholder": "Escribe un mensaje... (/task para tarea)",
+    "selectToStart": "Selecciona un chat para comenzar",
+    "summarize": "Resumir Chat",
+    "summary": "Resumen IA de la Conversación",
+    "taskCreated": "Tarea creada desde el chat: {{title}}",
+    "commandError": "Comando no reconocido",
+    "generatingSummary": "Leyendo mensajes...",
+    "suggestReplies": "Sugerir Respuestas"
   },
   "header": {
     "adminDashboard": "Dashboard de Admin",
@@ -595,8 +601,14 @@ const en = {
     "teamChat": "Team Chat",
     "channels": "Channels",
     "directMessages": "Direct Messages",
-    "placeholder": "Type a message...",
-    "selectToStart": "Select a chat to start messaging"
+    "placeholder": "Type a message... (/task for new task)",
+    "selectToStart": "Select a chat to start messaging",
+    "summarize": "Summarize Chat",
+    "summary": "AI Conversation Summary",
+    "taskCreated": "Task created from chat: {{title}}",
+    "commandError": "Command not recognized",
+    "generatingSummary": "Reading messages...",
+    "suggestReplies": "Suggest Replies"
   },
   "header": {
     "adminDashboard": "Admin Dashboard",
