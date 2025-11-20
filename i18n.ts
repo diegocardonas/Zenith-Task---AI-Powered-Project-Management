@@ -8,7 +8,7 @@ const es = {
     "viewer": "Observador",
     "guest": "Invitado",
     "todo": "Por Hacer",
-    "inProgress": "En Progreso",
+    "inprogress": "En Progreso",
     "done": "Hecho",
     "low": "Baja",
     "medium": "Media",
@@ -314,20 +314,20 @@ const es = {
     "actionMessage": "De acuerdo, {{actionText}}..."
   },
   "toasts": {
-    "taskDeleted": "Tarea eliminada correctamente",
+    "taskDeleted": "Tarea \"{{title}}\" eliminada correctamente.",
     "taskDeleted_plural": "{{count}} tareas eliminadas correctamente",
     "userProfileUpdated": "Perfil de usuario actualizado.",
     "userCreated": "Usuario \"{{name}}\" creado.",
-    "userDeleted": "Usuario eliminado.",
+    "userDeleted": "Usuario \"{{name}}\" eliminado correctamente.",
     "workspaceUpdated": "Espacio de trabajo actualizado.",
     "workspaceCreated": "Espacio de trabajo creado.",
-    "workspaceDeleted": "Espacio de trabajo eliminado.",
+    "workspaceDeleted": "Espacio de trabajo \"{{name}}\" eliminado correctamente.",
     "projectUpdated": "Proyecto actualizado.",
     "projectCreated": "Proyecto creado.",
-    "projectDeleted": "Proyecto eliminado.",
+    "projectDeleted": "Proyecto \"{{name}}\" eliminado correctamente.",
     "folderUpdated": "Carpeta actualizada.",
     "folderCreated": "Carpeta creada.",
-    "folderDeleted": "Carpeta eliminada.",
+    "folderDeleted": "Carpeta \"{{name}}\" eliminada correctamente.",
     "tasksReordered": "Orden de tareas actualizado.",
     "sidebarReordered": "Barra lateral reordenada.",
     "tasksUpdated": "{{count}} tarea actualizada.",
@@ -435,7 +435,8 @@ const es = {
     "deleteUser": "Eliminar {{name}}",
     "addTaskForDate": "Añadir tarea para {{date}}",
     "moveTask": "Mover Tarea",
-    "openTask": "Abrir detalles de la tarea: {{title}}"
+    "openTask": "Abrir detalles de la tarea: {{title}}",
+    "changeStatus": "Click para cambiar estado"
   },
   "confirmations": {
     "deleteProject": "Estás seguro de que quieres eliminar este proyecto? Todas las tareas dentro de él también serán eliminadas.",
@@ -470,7 +471,7 @@ const es = {
   },
   "board": {
     "todo": "Por Hacer",
-    "inProgress": "En Progreso",
+    "inprogress": "En Progreso",
     "done": "Hecho",
     "dropMessage": "Arrastra una tarea aquí o crea una nueva."
   },
@@ -539,7 +540,7 @@ const en = {
     "viewer": "Viewer",
     "guest": "Guest",
     "todo": "Todo",
-    "inProgress": "In Progress",
+    "inprogress": "In Progress",
     "done": "Done",
     "low": "Low",
     "medium": "Medium",
@@ -845,20 +846,20 @@ const en = {
     "actionMessage": "Okay, {{actionText}}..."
   },
   "toasts": {
-    "taskDeleted": "Task deleted successfully",
+    "taskDeleted": "Task \"{{title}}\" deleted successfully",
     "taskDeleted_plural": "{{count}} tasks deleted successfully",
     "userProfileUpdated": "User profile updated.",
     "userCreated": "User \"{{name}}\" created.",
-    "userDeleted": "User deleted.",
+    "userDeleted": "User \"{{name}}\" deleted successfully.",
     "workspaceUpdated": "Workspace updated.",
     "workspaceCreated": "Workspace created.",
-    "workspaceDeleted": "Workspace deleted.",
+    "workspaceDeleted": "Workspace \"{{name}}\" deleted successfully.",
     "projectUpdated": "Project updated.",
     "projectCreated": "Project created.",
-    "projectDeleted": "Project deleted.",
+    "projectDeleted": "Project \"{{name}}\" deleted successfully.",
     "folderUpdated": "Folder updated.",
     "folderCreated": "Folder created.",
-    "folderDeleted": "Folder deleted.",
+    "folderDeleted": "Folder \"{{name}}\" deleted successfully.",
     "tasksReordered": "Task order updated.",
     "sidebarReordered": "Sidebar reordered.",
     "tasksUpdated": "{{count}} task updated.",
@@ -966,7 +967,8 @@ const en = {
     "deleteUser": "Delete {{name}}",
     "addTaskForDate": "Add task for {{date}}",
     "moveTask": "Move Task",
-    "openTask": "Open task details for: {{title}}"
+    "openTask": "Open task details for: {{title}}",
+    "changeStatus": "Click to change status"
   },
   "confirmations": {
     "deleteProject": "Are you sure you want to delete this project? All tasks within it will also be deleted.",
@@ -1001,7 +1003,7 @@ const en = {
   },
   "board": {
     "todo": "To Do",
-    "inProgress": "In Progress",
+    "inprogress": "In Progress",
     "done": "Done",
     "dropMessage": "Drag a task here or create a new one."
   },

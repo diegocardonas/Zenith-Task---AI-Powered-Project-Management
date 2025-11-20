@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { Task, User, Status, Priority, Subtask, Role, Comment, Attachment, List, Permission } from '../types';
 import { generateSubtasks, generateTaskDescription, generateTaskTitleAndDescription, suggestTaskDetails, generateSmartReplies } from '../services/geminiService';
@@ -213,7 +214,7 @@ const TaskModal: React.FC = () => {
     
     const statusText: { [key in Status]: string } = {
         [Status.Todo]: t('common.todo'),
-        [Status.InProgress]: t('common.inProgress'),
+        [Status.InProgress]: t('common.inprogress'),
         [Status.Done]: t('common.done'),
     };
     const priorityText: { [key in Priority]: string } = {

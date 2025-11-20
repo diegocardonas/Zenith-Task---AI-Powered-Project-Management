@@ -55,6 +55,7 @@ const StatusDot: React.FC<{ status: Status; onClick?: (e: React.MouseEvent) => v
      return (
          <div 
             onClick={editable ? onClick : undefined}
+            title={editable ? t('tooltips.changeStatus') : ''}
             className={`flex items-center gap-2 px-2.5 py-1 rounded-full bg-white/5 border border-white/5 hover:bg-white/10 transition-all text-[10px] font-medium uppercase tracking-wide w-fit max-w-full ${editable ? 'cursor-pointer' : ''}`}
          >
              <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${dotColor[status]}`}></div>
@@ -178,7 +179,7 @@ const TaskRow: React.FC<TaskRowProps> = ({
         </div>
 
         {/* Column 7: Actions */}
-        <div className="hidden md:flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+        <div className="hidden md:flex items-center justify-end gap-1">
              {canEdit && (
                  <button 
                      onClick={(e) => { e.stopPropagation(); setSelectedTaskId(task.id); }}

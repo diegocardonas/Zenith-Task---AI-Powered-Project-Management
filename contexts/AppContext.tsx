@@ -107,7 +107,7 @@ const appReducer = (state: AppState, action: Action): AppState => {
         case 'UPDATE_TASK': return { ...state, tasks: state.tasks.map(t => t.id === action.payload.id ? action.payload : t) };
         case 'DELETE_TASK': return { ...state, tasks: state.tasks.filter(t => t.id !== action.payload) };
         case 'BULK_UPDATE_TASKS': {
-            // Optimization: Create a Set for O(1) lookups
+            // Optimization: Create a Set for O(1) lookups in iteration
             const idsSet = new Set(action.payload.ids);
             return { ...state, tasks: state.tasks.map(t => idsSet.has(t.id) ? { ...t, ...action.payload.updates } : t) };
         }
@@ -339,6 +339,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const handleDeleteAccount = () => {
         if (!state.currentUser) return;
         const userId = state.currentUser.id;
+        const userName = state.currentUser.name;
 
         // Validation: Cannot delete account if last admin
         const admins = state.users.filter(u => u.role === Role.Admin);
@@ -357,7 +358,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             dispatch({ type: 'DELETE_USER', payload: userId });
             dispatch({ type: 'SET_USER', payload: null });
             setIsSidebarOpen(false);
-            addToast({ message: t('toasts.userDeleted'), type: 'success' });
+            addToast({ message: t('toasts.userDeleted', { name: userName }), type: 'success' });
         });
     };
 
@@ -411,9 +412,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     const handleUpdateTask = (task: Task) => dispatch({ type: 'UPDATE_TASK', payload: task });
     const handleDeleteTask = (taskId: string) => {
+        const task = state.tasks.find(t => t.id === taskId);
+        const taskTitle = task ? task.title : t('common.tasks');
         showConfirmation(t('common.delete'), t('confirmations.deleteTask'), () => {
              dispatch({ type: 'DELETE_TASK', payload: taskId });
-             addToast({ message: t('toasts.taskDeleted'), type: 'success' });
+             addToast({ message: t('toasts.taskDeleted', { title: taskTitle }), type: 'success' });
              setSelectedTaskId(null);
         });
     };
@@ -454,13 +457,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     };
 
     const handleDeleteList = (listId: string) => {
+        const list = state.lists.find(l => l.id === listId);
+        const listName = list ? list.name : t('sidebar.projects');
         showConfirmation(t('common.delete'), t('confirmations.deleteProject'), () => {
             dispatch({ type: 'DELETE_LIST', payload: listId });
             // Also delete tasks in list
             const tasksToDelete = state.tasks.filter(t => t.listId === listId).map(t => t.id);
             dispatch({ type: 'BULK_DELETE_TASKS', payload: tasksToDelete });
             dispatch({ type: 'SELECT_LIST', payload: null });
-            addToast({ message: t('toasts.projectDeleted'), type: 'success' });
+            addToast({ message: t('toasts.projectDeleted', { name: listName }), type: 'success' });
         });
     };
 
@@ -548,7 +553,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
                 dispatch({ type: 'BULK_UPDATE_TASKS', payload: { ids: userTaskIds, updates: { assigneeId: null } } });
             }
             dispatch({ type: 'DELETE_USER', payload: userId });
-            addToast({ message: t('toasts.userDeleted'), type: 'success' });
+            addToast({ message: t('toasts.userDeleted', { name: user.name }), type: 'success' });
          });
     };
 

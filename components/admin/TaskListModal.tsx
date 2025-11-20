@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Task, User, Status, Priority } from '../../types';
 import AvatarWithStatus from '../AvatarWithStatus';
@@ -36,7 +37,7 @@ const TaskListModal: React.FC<TaskListModalProps> = ({ isOpen, onClose, title, t
 
   const statusText: { [key in Status]: string } = {
     [Status.Todo]: t('common.todo'),
-    [Status.InProgress]: t('common.inProgress'),
+    [Status.InProgress]: t('common.inprogress'),
     [Status.Done]: t('common.done'),
   };
 
