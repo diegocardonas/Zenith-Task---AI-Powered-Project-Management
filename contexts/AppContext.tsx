@@ -85,6 +85,7 @@ type Action =
     | { type: 'ADD_USER'; payload: User }
     | { type: 'UPDATE_USER'; payload: User }
     | { type: 'DELETE_USER'; payload: string }
+    | { type: 'BULK_DELETE_USERS'; payload: string[] }
     | { type: 'ADD_TOAST'; payload: Toast }
     | { type: 'REMOVE_TOAST'; payload: number }
     | { type: 'ADD_NOTIFICATION'; payload: Notification }
@@ -105,8 +106,15 @@ const appReducer = (state: AppState, action: Action): AppState => {
         case 'ADD_TASK': return { ...state, tasks: [...state.tasks, action.payload] };
         case 'UPDATE_TASK': return { ...state, tasks: state.tasks.map(t => t.id === action.payload.id ? action.payload : t) };
         case 'DELETE_TASK': return { ...state, tasks: state.tasks.filter(t => t.id !== action.payload) };
-        case 'BULK_UPDATE_TASKS': return { ...state, tasks: state.tasks.map(t => action.payload.ids.includes(t.id) ? { ...t, ...action.payload.updates } : t) };
-        case 'BULK_DELETE_TASKS': return { ...state, tasks: state.tasks.filter(t => !action.payload.includes(t.id)) };
+        case 'BULK_UPDATE_TASKS': {
+            // Optimization: Create a Set for O(1) lookups
+            const idsSet = new Set(action.payload.ids);
+            return { ...state, tasks: state.tasks.map(t => idsSet.has(t.id) ? { ...t, ...action.payload.updates } : t) };
+        }
+        case 'BULK_DELETE_TASKS': {
+            const idsSet = new Set(action.payload);
+            return { ...state, tasks: state.tasks.filter(t => !idsSet.has(t.id)) };
+        }
         case 'SET_TASKS': return { ...state, tasks: action.payload };
         case 'ADD_LIST': return { ...state, lists: [...state.lists, action.payload] };
         case 'UPDATE_LIST': return { ...state, lists: state.lists.map(l => l.id === action.payload.id ? action.payload : l) };
@@ -120,6 +128,10 @@ const appReducer = (state: AppState, action: Action): AppState => {
         case 'ADD_USER': return { ...state, users: [...state.users, action.payload] };
         case 'UPDATE_USER': return { ...state, users: state.users.map(u => u.id === action.payload.id ? action.payload : u) };
         case 'DELETE_USER': return { ...state, users: state.users.filter(u => u.id !== action.payload) };
+        case 'BULK_DELETE_USERS': {
+             const idsSet = new Set(action.payload);
+             return { ...state, users: state.users.filter(u => !idsSet.has(u.id)) };
+        }
         case 'ADD_TOAST': return { ...state, toasts: [...state.toasts, action.payload] };
         case 'REMOVE_TOAST': return { ...state, toasts: state.toasts.filter(t => t.id !== action.payload) };
         case 'ADD_NOTIFICATION': return { ...state, notifications: [action.payload, ...state.notifications] };
@@ -522,6 +534,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
                  return;
              }
          }
+         
+         // VALIDATION: Cannot delete self via this method (use delete account)
+         if (state.currentUser && state.currentUser.id === userId) {
+             addToast({ message: "Usa la opción de eliminar cuenta en ajustes.", type: 'error' });
+             return;
+         }
 
          showConfirmation(t('common.delete'), t('confirmations.deleteUser', { name: user.name }), () => {
             // Optimized: Bulk update tasks to remove assignee instead of iterating one by one
@@ -533,6 +551,41 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             addToast({ message: t('toasts.userDeleted'), type: 'success' });
          });
     };
+
+    const handleBulkDeleteUsers = (userIds: string[]) => {
+         // Filter out safe deletions (exclude self and last admin check logic if needed)
+         const idsToDelete = userIds.filter(id => {
+             const user = state.users.find(u => u.id === id);
+             if (!user) return false;
+             // Prevent deleting self
+             if (state.currentUser && state.currentUser.id === id) return false;
+             // Prevent deleting last admin
+             if (user.role === Role.Admin) {
+                 const admins = state.users.filter(u => u.role === Role.Admin);
+                 // If deleting this admin leaves 0 admins (assuming we are deleting multiple admins at once)
+                 // We need a more complex check: count admins NOT in deletion list
+                 const remainingAdmins = admins.filter(a => !userIds.includes(a.id));
+                 if (remainingAdmins.length === 0) return false;
+             }
+             return true;
+         });
+
+         if (idsToDelete.length === 0) {
+             addToast({ message: "No se pueden eliminar los usuarios seleccionados (Administrador único o Usuario actual).", type: 'error' });
+             return;
+         }
+
+         showConfirmation(t('common.delete'), t('confirmations.deleteTasks_plural', { count: idsToDelete.length }), () => {
+             const idsSet = new Set(idsToDelete);
+             const userTaskIds = state.tasks.filter(t => t.assigneeId && idsSet.has(t.assigneeId)).map(t => t.id);
+             
+             if (userTaskIds.length > 0) {
+                 dispatch({ type: 'BULK_UPDATE_TASKS', payload: { ids: userTaskIds, updates: { assigneeId: null } } });
+             }
+             dispatch({ type: 'BULK_DELETE_USERS', payload: idsToDelete });
+             addToast({ message: t('toasts.bulkUpdateSuccess', { count: idsToDelete.length }), type: 'success' });
+         });
+    }
 
     const handleGenerateSummary = async () => {
         const list = state.lists.find(l => l.id === state.selectedListId);
@@ -692,6 +745,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         handleCreateUser,
         handleUpdateUserRole,
         handleDeleteUser,
+        handleBulkDeleteUsers,
         handleGenerateSummary,
         handleSaveTemplate,
         handleAIAction,

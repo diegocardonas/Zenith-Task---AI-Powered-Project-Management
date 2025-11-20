@@ -278,10 +278,11 @@ const UsersTabContent: React.FC<{
     tasks: Task[];
     onEdit: (id: string) => void;
     onDelete: (id: string) => void;
+    onBulkDelete: (ids: string[]) => void;
     onUpdateRole: (id: string, role: Role) => void;
     isLastAdmin: (user: User) => boolean;
     onCreateUser: (name: string, role: Role) => void;
-}> = ({ users, currentUser, tasks, onEdit, onDelete, onUpdateRole, isLastAdmin, onCreateUser }) => {
+}> = ({ users, currentUser, tasks, onEdit, onDelete, onBulkDelete, onUpdateRole, isLastAdmin, onCreateUser }) => {
     const { t } = useTranslation();
     const [filterRole, setFilterRole] = useState<Role | 'all'>('all');
     const [searchTerm, setSearchTerm] = useState('');
@@ -318,11 +319,9 @@ const UsersTabContent: React.FC<{
         });
     };
 
-    const handleBulkDelete = () => {
-        if(confirm(t('confirmations.deleteTasks_plural', {count: selectedUserIds.size}))) {
-            Array.from(selectedUserIds).forEach(id => onDelete(id));
-            setSelectedUserIds(new Set());
-        }
+    const handleBulkDeleteClick = () => {
+        onBulkDelete(Array.from(selectedUserIds));
+        setSelectedUserIds(new Set());
     };
 
     return (
@@ -355,7 +354,7 @@ const UsersTabContent: React.FC<{
                     {selectedUserIds.size > 0 && (
                          <div className="flex items-center gap-2 animate-fadeIn bg-red-500/10 px-3 py-1.5 rounded-lg border border-red-500/20">
                              <span className="text-sm font-semibold text-red-400">{t('admin.selectedUsers', {count: selectedUserIds.size})}</span>
-                             <button onClick={handleBulkDelete} className="text-red-400 hover:text-red-300 text-sm font-medium transition-colors underline">
+                             <button onClick={handleBulkDeleteClick} className="text-red-400 hover:text-red-300 text-sm font-medium transition-colors underline">
                                 {t('common.delete')}
                              </button>
                          </div>
@@ -574,7 +573,8 @@ const AppAdminPanel: React.FC = () => {
         handleDeleteUser, 
         handleCreateUser,
         setEditingUserId,
-        setIsAdminPanelOpen
+        setIsAdminPanelOpen,
+        handleBulkDeleteUsers
     } = actions;
     const [activeTab, setActiveTab] = useState('overview');
     
@@ -631,6 +631,7 @@ const AppAdminPanel: React.FC = () => {
                                 tasks={tasks}
                                 onEdit={setEditingUserId}
                                 onDelete={handleDeleteUser}
+                                onBulkDelete={handleBulkDeleteUsers}
                                 onUpdateRole={handleUpdateUserRole}
                                 isLastAdmin={isLastAdmin}
                                 onCreateUser={handleCreateUser}
