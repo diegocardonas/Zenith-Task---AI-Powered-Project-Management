@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 const es = {
   "common": {
     "admin": "Admin",
+    "manager": "Gerente",
     "member": "Miembro",
     "viewer": "Observador",
     "guest": "Invitado",
@@ -384,8 +385,9 @@ const es = {
     "actions": "Acciones",
     "noTasksWithFilter": "No hay tareas para mostrar con el filtro actual.",
     "roleDescriptions": "Descripciones de Roles",
-    "adminDescription": "Control total. Puede gestionar espacios de trabajo, facturación y todos los miembros.",
-    "memberDescription": "Puede crear y gestionar proyectos, tareas y carpetas. No puede gestionar miembros ni la configuración del espacio de trabajo.",
+    "adminDescription": "Control total del sistema. Facturación, configuración global y gestión de usuarios del sistema.",
+    "managerDescription": "Gestión operativa. Puede crear proyectos, asignar tareas y ver estadísticas del equipo.",
+    "memberDescription": "Puede crear y gestionar tareas dentro de los proyectos existentes.",
     "viewerDescription": "Puede ver y comentar en proyectos y tareas, pero no puede crear ni editar contenido.",
     "guestDescription": "Acceso limitado de solo lectura a proyectos o tareas específicas a las que se les invite.",
     "workload": "Carga",
@@ -536,6 +538,7 @@ const es = {
 const en = {
   "common": {
     "admin": "Admin",
+    "manager": "Manager",
     "member": "Member",
     "viewer": "Viewer",
     "guest": "Guest",
@@ -916,8 +919,9 @@ const en = {
     "actions": "Actions",
     "noTasksWithFilter": "No tasks to show with the current filter.",
     "roleDescriptions": "Role Descriptions",
-    "adminDescription": "Full control. Can manage workspaces, billing, and all members.",
-    "memberDescription": "Can create and manage projects, tasks, and folders. Cannot manage members or workspace settings.",
+    "adminDescription": "Full system control. Billing, global settings, and system user management.",
+    "managerDescription": "Operational management. Can create projects, assign tasks, and view team stats.",
+    "memberDescription": "Can create and manage tasks within existing projects.",
     "viewerDescription": "Can view and comment on projects and tasks, but cannot create or edit content.",
     "guestDescription": "Limited, read-only access to specific projects or tasks they are invited to.",
     "workload": "Workload",

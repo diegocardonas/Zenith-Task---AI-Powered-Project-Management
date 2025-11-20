@@ -21,24 +21,26 @@ export enum ViewType {
 }
 
 export enum Role {
-  Admin = 'Admin',
-  Member = 'Member',
-  Viewer = 'Viewer',
-  Guest = 'Guest',
+  Admin = 'Admin',     // System Admin (App settings, billing, user mgmt)
+  Manager = 'Manager', // Project Manager (Project structure, team tasks)
+  Member = 'Member',   // Worker (Tasks only)
+  Viewer = 'Viewer',   // Read-only
+  Guest = 'Guest',     // Limited
 }
 
 export enum Permission {
-  // High-level admin
-  MANAGE_APP = 'MANAGE_APP', // Access App Admin Panel, manage users
-  VIEW_DASHBOARD = 'VIEW_DASHBOARD', // Access Admin Dashboard
+  // High-level admin (System level)
+  MANAGE_APP = 'MANAGE_APP', // Access App Admin Panel, global settings, billing
+  MANAGE_USERS = 'MANAGE_USERS', // Create/Delete system users
 
-  // Project and structure management
+  // Project management (Operational level)
+  VIEW_DASHBOARD = 'VIEW_DASHBOARD', // Access Project Dashboard/Stats
   MANAGE_WORKSPACES_AND_PROJECTS = 'MANAGE_WORKSPACES_AND_PROJECTS', // Create/edit/delete workspaces, folders, projects
 
   // Task-level permissions
   CREATE_TASKS = 'CREATE_TASKS',
   EDIT_TASKS = 'EDIT_TASKS', // Edit all fields of a task, move it, etc.
-  DELETE_TASKS = 'DELETE_TASKS',
+  DELETE_TASKS = 'DELETE_TASKS', // Ability to delete tasks
   
   // Interaction permissions
   COMMENT = 'COMMENT',

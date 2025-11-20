@@ -1,9 +1,7 @@
 
 import React, { useState, useRef, useEffect, useMemo } from 'react';
-import { List, User, Role, Workspace, Folder, Permission } from '../types';
-import UserPanel from './UserPanel';
+import { List, Workspace, Folder, Permission } from '../types';
 import Logo from './Logo';
-import AvatarWithStatus from './AvatarWithStatus';
 import { useAppContext } from '../contexts/AppContext';
 import { useTranslation } from '../i18n';
 
@@ -173,7 +171,6 @@ const Sidebar: React.FC = () => {
         currentUser,
         activeView,
         isSidebarOpen,
-        isAdminPanelOpen,
         chatChannels,
         isChatOpen
     } = state;
@@ -188,19 +185,12 @@ const Sidebar: React.FC = () => {
         setListToEdit,
         setIsFolderModalOpen,
         setFolderToEdit,
-        setEditingUserId,
-        handleLogout,
         setIsSettingsModalOpen,
-        handleUpdateUserStatus,
         handleSidebarReorder,
-        showConfirmation,
-        setIsAdminPanelOpen,
         setIsChatOpen,
     } = actions;
 
-    const [isUserPanelOpen, setIsUserPanelOpen] = useState(false);
     const [openFolders, setOpenFolders] = useState<Set<string>>(new Set(folders.map(f => f.id)));
-    const userPanelRef = useRef<HTMLDivElement>(null);
     const selectedWorkspace = workspaces.find(w => w.id === selectedWorkspaceId);
 
     const [draggedItem, setDraggedItem] = useState<{ id: string; type: 'folder' | 'list' } | null>(null);
@@ -211,29 +201,11 @@ const Sidebar: React.FC = () => {
     // Calculate total unread messages
     const totalUnreadChat = useMemo(() => chatChannels.reduce((acc, c) => acc + (c.unreadCount || 0), 0), [chatChannels]);
 
-    useEffect(() => {
-        const handleClickOutside = (event: MouseEvent) => {
-            if (userPanelRef.current && !userPanelRef.current.contains(event.target as Node)) {
-                setIsUserPanelOpen(false);
-            }
-        };
-        document.addEventListener("mousedown", handleClickOutside);
-        return () => document.removeEventListener("mousedown", handleClickOutside);
-    }, []);
-
     const handleNavigation = (callback: () => void) => {
         callback();
         if (window.innerWidth < 768) {
             setIsSidebarOpen(false);
         }
-    };
-
-    const performLogout = () => {
-        showConfirmation(
-            t('sidebar.logout'),
-            t('confirmations.logout'),
-            () => handleLogout()
-        );
     };
 
     const toggleFolder = (folderId: string) => {
@@ -450,24 +422,6 @@ const Sidebar: React.FC = () => {
                                     onClick={() => handleNavigation(() => { setActiveView('dashboard'); setSelectedListId(null); })}
                                 />
                             )}
-                            {permissions.has(Permission.MANAGE_APP) && (
-                                <SidebarItem 
-                                    icon={<svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.96.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01-.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" /></svg>}
-                                    label={t('sidebar.appAdmin')}
-                                    isActive={isAdminPanelOpen}
-                                    onClick={() => {
-                                        setIsAdminPanelOpen(true);
-                                        if (window.innerWidth < 768) setIsSidebarOpen(false);
-                                    }}
-                                />
-                            )}
-                        </SidebarSection>
-
-                        {/* Favorites (Placeholder for now) */}
-                        <SidebarSection title={t('sidebar.favorites')}>
-                            <div className="px-3 text-xs text-text-secondary/40 italic py-1.5">
-                                {t('sidebar.noFavorites')}
-                            </div>
                         </SidebarSection>
 
                         {/* Projects Section */}
@@ -544,35 +498,6 @@ const Sidebar: React.FC = () => {
                             </nav>
                         </SidebarSection>
 
-                    </div>
-
-                    <div className="p-3 border-t border-white/5 mt-auto space-y-1 bg-[#141b2d]">
-                        <SidebarItem 
-                            icon={<svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.96.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01-.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" /></svg>}
-                            label={t('sidebar.settings')}
-                            onClick={() => setIsSettingsModalOpen(true)}
-                        />
-                        <div ref={userPanelRef} className="relative">
-                            {isUserPanelOpen && (
-                                <UserPanel
-                                    currentUser={currentUser}
-                                    onOpenUserProfile={() => setEditingUserId(currentUser.id)}
-                                    onLogout={performLogout}
-                                    onClose={() => setIsUserPanelOpen(false)}
-                                    onUpdateUserStatus={(status) => handleUpdateUserStatus(currentUser.id, status)}
-                                />
-                            )}
-                            <button onClick={() => setIsUserPanelOpen(p => !p)} className="w-full flex items-center text-left p-2 rounded-lg hover:bg-white/5 transition-colors group border border-transparent hover:border-white/5 mt-1">
-                                <AvatarWithStatus user={currentUser} className="w-9 h-9 border-2 border-white/10 bg-surface" />
-                                <div className="flex-grow min-w-0 ml-3">
-                                    <p className="font-semibold text-sm text-text-primary truncate group-hover:text-white transition-colors">{currentUser.name}</p>
-                                    <p className="text-[11px] text-text-secondary truncate">{currentUser.title}</p>
-                                </div>
-                                <svg className="w-4 h-4 text-text-secondary group-hover:text-white transition-colors" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                                    <path fillRule="evenodd" d="M10 3a1 1 0 01.707.293l3 3a1 1 0 01-1.414 1.414L10 5.414 7.707 7.707a1 1 0 01-1.414-1.414l3-3A1 1 0 0110 3zm-3.707 9.293a1 1 0 011.414 0L10 14.586l2.293-2.293a1 1 0 011.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clipRule="evenodd" />
-                                </svg>
-                            </button>
-                        </div>
                     </div>
                 </div>
             </aside>

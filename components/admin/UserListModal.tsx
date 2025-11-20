@@ -1,5 +1,6 @@
+
 import React from 'react';
-import { User } from '../../types';
+import { User, Role } from '../../types';
 import AvatarWithStatus from '../AvatarWithStatus';
 import { useTranslation } from '../../i18n';
 
@@ -13,6 +14,14 @@ interface UserListModalProps {
 const UserListModal: React.FC<UserListModalProps> = ({ isOpen, onClose, users, onSelectUser }) => {
   const { t } = useTranslation();
   if (!isOpen) return null;
+  
+  const roleConfig: Record<Role, string> = {
+      [Role.Admin]: 'bg-red-500/10 text-red-500',
+      [Role.Manager]: 'bg-purple-500/10 text-purple-500',
+      [Role.Member]: 'bg-blue-500/10 text-blue-500',
+      [Role.Viewer]: 'bg-yellow-500/10 text-yellow-500',
+      [Role.Guest]: 'bg-gray-500/10 text-gray-500'
+  };
 
   return (
     <div
@@ -47,9 +56,9 @@ const UserListModal: React.FC<UserListModalProps> = ({ isOpen, onClose, users, o
                   <p className="font-semibold text-text-primary">{user.name}</p>
                   <p className="text-sm text-text-secondary">{user.title}</p>
                 </div>
-                <div className="text-right">
-                    <p className="text-sm text-text-secondary">{user.email}</p>
-                    <span className="bg-primary/20 text-primary text-xs font-medium px-2.5 py-0.5 rounded-full">{t(`common.${user.role.toLowerCase()}`)}</span>
+                <div className="text-right flex flex-col items-end gap-1">
+                    <p className="text-sm text-text-secondary hidden sm:block">{user.email}</p>
+                    <span className={`${roleConfig[user.role]} text-xs font-medium px-2.5 py-0.5 rounded-full`}>{t(`common.${user.role.toLowerCase()}`)}</span>
                 </div>
               </button>
             ))}

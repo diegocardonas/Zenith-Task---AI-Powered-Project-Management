@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo } from 'react';
 import { User, Role, Permission } from '../types';
 import AvatarWithStatus from './AvatarWithStatus';
@@ -34,7 +35,7 @@ const UserManagementModal: React.FC<UserManagementModalProps> = ({
 
   if (!isOpen) return null;
 
-  const canManageUsers = permissions.has(Permission.MANAGE_APP);
+  const canManageUsers = permissions.has(Permission.MANAGE_USERS); // Updated permission check
 
   const handleAddUser = () => {
     if (newUserName.trim() === '') {

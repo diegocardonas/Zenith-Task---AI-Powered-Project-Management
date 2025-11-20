@@ -14,9 +14,10 @@ const initialWorkspaces: Workspace[] = [
 ];
 
 const initialUsers: User[] = [
-    { id: 'u1', name: 'Alex Morgan', avatar: 'https://i.pravatar.cc/150?u=1', role: Role.Admin, title: 'Product Manager', email: 'alex@example.com', team: 'Product', bio: 'Loves building things.', status: UserStatus.Online, skills: ['Product Management', 'Strategy', 'Agile'] },
-    { id: 'u2', name: 'Sarah Jenkins', avatar: 'https://i.pravatar.cc/150?u=2', role: Role.Member, title: 'Frontend Dev', email: 'sarah@example.com', team: 'Engineering', bio: 'React enthusiast.', status: UserStatus.Busy, skills: ['React', 'TypeScript', 'Tailwind CSS'] },
-    { id: 'u3', name: 'Mike Ross', avatar: 'https://i.pravatar.cc/150?u=3', role: Role.Viewer, title: 'Stakeholder', email: 'mike@example.com', team: 'Marketing', bio: 'Keeping an eye on progress.', status: UserStatus.Offline, skills: ['Marketing', 'SEO', 'Analytics'] },
+    { id: 'u1', name: 'Alex Morgan', avatar: 'https://i.pravatar.cc/150?u=1', role: Role.Admin, title: 'System Admin', email: 'alex@example.com', team: 'IT & Ops', bio: 'Ensuring system stability.', status: UserStatus.Online, skills: ['DevOps', 'Security', 'System Arch'] },
+    { id: 'u2', name: 'Sarah Jenkins', avatar: 'https://i.pravatar.cc/150?u=2', role: Role.Manager, title: 'Senior Project Manager', email: 'sarah@example.com', team: 'Product', bio: 'Driving product vision.', status: UserStatus.Busy, skills: ['Agile', 'Scrum', 'Product Strategy'] },
+    { id: 'u3', name: 'Mike Ross', avatar: 'https://i.pravatar.cc/150?u=3', role: Role.Member, title: 'Frontend Dev', email: 'mike@example.com', team: 'Engineering', bio: 'React enthusiast.', status: UserStatus.Online, skills: ['React', 'TypeScript', 'Tailwind'] },
+    { id: 'u4', name: 'Emily Blunt', avatar: 'https://i.pravatar.cc/150?u=4', role: Role.Viewer, title: 'Stakeholder', email: 'emily@example.com', team: 'Marketing', bio: 'Watching progress.', status: UserStatus.Offline, skills: ['Marketing', 'SEO'] },
 ];
 
 const initialLists: List[] = [
@@ -25,22 +26,19 @@ const initialLists: List[] = [
 ];
 
 const initialTasks: Task[] = [
-    { id: 't1', title: 'Design Homepage', description: 'Create new mockups', status: Status.InProgress, priority: Priority.High, assigneeId: 'u2', dueDate: new Date(Date.now() + 86400000).toISOString(), listId: 'l1', subtasks: [], comments: [], attachments: [], reminder: null, createdAt: new Date().toISOString(), dependsOn: [], activityLog: [] },
-    { id: 't2', title: 'Setup CI/CD', description: 'Configure Github Actions', status: Status.Todo, priority: Priority.Medium, assigneeId: 'u2', dueDate: new Date(Date.now() + 172800000).toISOString(), listId: 'l2', subtasks: [], comments: [], attachments: [], reminder: null, createdAt: new Date().toISOString(), dependsOn: [], activityLog: [] },
+    { id: 't1', title: 'Design Homepage', description: 'Create new mockups', status: Status.InProgress, priority: Priority.High, assigneeId: 'u3', dueDate: new Date(Date.now() + 86400000).toISOString(), listId: 'l1', subtasks: [], comments: [], attachments: [], reminder: null, createdAt: new Date().toISOString(), dependsOn: [], activityLog: [] },
+    { id: 't2', title: 'Setup CI/CD', description: 'Configure Github Actions', status: Status.Todo, priority: Priority.Medium, assigneeId: 'u3', dueDate: new Date(Date.now() + 172800000).toISOString(), listId: 'l2', subtasks: [], comments: [], attachments: [], reminder: null, createdAt: new Date().toISOString(), dependsOn: [], activityLog: [] },
 ];
 
 // Initial Chat Data
 const initialChannels: ChatChannel[] = [
-    { id: 'c1', name: 'General', type: 'group', participants: ['u1', 'u2', 'u3'], lastMessage: 'Welcome everyone!', lastMessageTime: new Date(Date.now() - 86400000).toISOString(), unreadCount: 0 },
-    { id: 'c2', name: 'Engineering', type: 'group', participants: ['u1', 'u2'], lastMessage: 'Deploying to prod...', lastMessageTime: new Date(Date.now() - 3600000).toISOString(), unreadCount: 2 },
-    { id: 'dm-u2', name: 'Sarah Jenkins', type: 'dm', participants: ['u1', 'u2'], lastMessage: 'Can you check this PR?', lastMessageTime: new Date(Date.now() - 1800000).toISOString(), unreadCount: 1 },
-    { id: 'dm-u3', name: 'Mike Ross', type: 'dm', participants: ['u1', 'u3'], lastMessage: 'Thanks for the update', lastMessageTime: new Date(Date.now() - 7200000).toISOString(), unreadCount: 0 },
+    { id: 'c1', name: 'General', type: 'group', participants: ['u1', 'u2', 'u3', 'u4'], lastMessage: 'Welcome everyone!', lastMessageTime: new Date(Date.now() - 86400000).toISOString(), unreadCount: 0 },
+    { id: 'c2', name: 'Engineering', type: 'group', participants: ['u2', 'u3'], lastMessage: 'Deploying to prod...', lastMessageTime: new Date(Date.now() - 3600000).toISOString(), unreadCount: 2 },
 ];
 
 const initialMessages: ChatMessage[] = [
     { id: 'm1', channelId: 'c1', senderId: 'u1', text: 'Welcome everyone to the new platform!', timestamp: new Date(Date.now() - 86400000).toISOString() },
-    { id: 'm2', channelId: 'c2', senderId: 'u2', text: 'Hey Alex, deploying to prod in 10.', timestamp: new Date(Date.now() - 3600000).toISOString() },
-    { id: 'm3', channelId: 'dm-u2', senderId: 'u2', text: 'Can you check this PR?', timestamp: new Date(Date.now() - 1800000).toISOString() },
+    { id: 'm2', channelId: 'c2', senderId: 'u3', text: 'Hey Sarah, deploying to prod in 10.', timestamp: new Date(Date.now() - 3600000).toISOString() },
 ];
 
 // --- State & Reducer ---
@@ -158,25 +156,31 @@ const appReducer = (state: AppState, action: Action): AppState => {
 const getPermissions = (role: Role): Set<Permission> => {
     const permissions = new Set<Permission>();
     
-    if (role === Role.Guest) {
-        // Minimal access
-    }
+    // Guest: Limited to reading basic info (handled by component logic), no specific permission flags here.
 
-    if (role === Role.Viewer || role === Role.Member || role === Role.Admin) {
+    // Viewer: Read-only + Comment
+    if (role === Role.Viewer || role === Role.Member || role === Role.Manager || role === Role.Admin) {
         permissions.add(Permission.COMMENT);
     }
 
-    if (role === Role.Member || role === Role.Admin) {
+    // Member: Work execution level
+    if (role === Role.Member || role === Role.Manager || role === Role.Admin) {
         permissions.add(Permission.CREATE_TASKS);
         permissions.add(Permission.EDIT_TASKS);
-        permissions.add(Permission.DELETE_TASKS);
-        permissions.add(Permission.MANAGE_WORKSPACES_AND_PROJECTS);
         permissions.add(Permission.DRAG_AND_DROP);
     }
 
+    // Manager: Project management level (Operational Admin)
+    if (role === Role.Manager || role === Role.Admin) {
+        permissions.add(Permission.MANAGE_WORKSPACES_AND_PROJECTS); // Create projects, folders
+        permissions.add(Permission.DELETE_TASKS); // Delete any task
+        permissions.add(Permission.VIEW_DASHBOARD); // See project stats
+    }
+
+    // Admin: System level (Super Admin)
     if (role === Role.Admin) {
-        permissions.add(Permission.MANAGE_APP);
-        permissions.add(Permission.VIEW_DASHBOARD);
+        permissions.add(Permission.MANAGE_APP);   // Global settings, billing
+        permissions.add(Permission.MANAGE_USERS); // Add/Remove users from the app
     }
 
     return permissions;

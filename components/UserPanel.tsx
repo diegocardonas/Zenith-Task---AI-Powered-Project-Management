@@ -8,6 +8,8 @@ interface UserPanelProps {
   onLogout: () => void;
   onClose: () => void;
   onUpdateUserStatus: (userId: string, status: UserStatus) => void;
+  canManageApp: boolean;
+  onOpenAppAdmin: () => void;
 }
 
 const UserPanel: React.FC<UserPanelProps> = ({
@@ -16,6 +18,8 @@ const UserPanel: React.FC<UserPanelProps> = ({
   onLogout,
   onClose,
   onUpdateUserStatus,
+  canManageApp,
+  onOpenAppAdmin
 }) => {
   const { t } = useTranslation();
   const [isStatusSelectorOpen, setIsStatusSelectorOpen] = useState(false);
@@ -44,19 +48,24 @@ const UserPanel: React.FC<UserPanelProps> = ({
   return (
     <div className="absolute bottom-full mb-2 w-72 bg-surface rounded-lg shadow-lg border border-border z-50 animate-fadeIn flex flex-col">
       <div className="p-2">
-        <button onClick={() => { onOpenUserProfile(); onClose(); }} className="w-full text-left p-2 rounded-md hover:bg-secondary-focus flex items-center text-text-secondary hover:text-text-primary text-sm">{t('sidebar.viewProfile')}</button>
+        <button onClick={() => { onOpenUserProfile(); onClose(); }} className="w-full text-left p-2 rounded-md hover:bg-secondary-focus flex items-center text-text-secondary hover:text-text-primary text-sm transition-colors">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-3 opacity-70" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+            </svg>
+            {t('sidebar.viewProfile')}
+        </button>
         
         <div className="border-t border-border my-1"></div>
         
         <div className="p-2">
-            <p className="text-xs font-semibold text-text-secondary mb-2">{t('sidebar.setStatus')}</p>
+            <p className="text-[10px] font-bold text-text-secondary uppercase tracking-wider mb-2 px-2">{t('sidebar.setStatus')}</p>
             <div className="relative" ref={statusSelectorRef}>
                 <button
                     onClick={() => setIsStatusSelectorOpen(p => !p)}
-                    className="w-full text-left p-2 rounded-md hover:bg-secondary-focus flex items-center justify-between text-sm"
+                    className="w-full text-left p-2 rounded-md hover:bg-secondary-focus flex items-center justify-between text-sm transition-colors"
                 >
                     <div className="flex items-center">
-                        <span className={`w-3 h-3 rounded-full mr-3 ${currentStatusOption.color}`}></span>
+                        <span className={`w-2.5 h-2.5 rounded-full mr-3 ${currentStatusOption.color} shadow-sm`}></span>
                         <span className="text-text-primary">{currentStatusOption.label}</span>
                     </div>
                     <svg className={`w-4 h-4 text-text-secondary transition-transform ${isStatusSelectorOpen ? 'rotate-180' : ''}`} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
@@ -64,7 +73,7 @@ const UserPanel: React.FC<UserPanelProps> = ({
                     </svg>
                 </button>
                 {isStatusSelectorOpen && (
-                    <div className="absolute bottom-full mb-1 w-full bg-secondary-focus rounded-lg shadow-lg border border-border z-20 animate-fadeIn p-1">
+                    <div className="absolute bottom-full mb-1 w-full bg-secondary-focus rounded-lg shadow-xl border border-border z-20 animate-fadeIn p-1">
                         {statusOptions.map(({ status, label, color }) => (
                             <button
                                 key={status}
@@ -72,9 +81,9 @@ const UserPanel: React.FC<UserPanelProps> = ({
                                     onUpdateUserStatus(currentUser.id, status);
                                     onClose();
                                 }}
-                                className="w-full text-left p-2 hover:bg-surface rounded-md flex items-center text-sm text-text-secondary hover:text-text-primary"
+                                className="w-full text-left p-2 hover:bg-surface rounded-md flex items-center text-sm text-text-secondary hover:text-text-primary transition-colors"
                             >
-                                <span className={`w-3 h-3 rounded-full mr-3 ${color}`}></span>
+                                <span className={`w-2 h-2 rounded-full mr-3 ${color}`}></span>
                                 <span>{label}</span>
                                 {currentUser.status === status && (
                                      <svg className="w-4 h-4 text-primary ml-auto" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
@@ -88,9 +97,25 @@ const UserPanel: React.FC<UserPanelProps> = ({
             </div>
         </div>
 
+        {canManageApp && (
+            <>
+                <div className="border-t border-border my-1"></div>
+                <button 
+                    onClick={() => { onOpenAppAdmin(); onClose(); }} 
+                    className="w-full text-left p-2 rounded-md hover:bg-secondary-focus flex items-center text-text-secondary hover:text-text-primary text-sm group transition-colors"
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-3 opacity-70 group-hover:text-primary transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    {t('sidebar.appAdmin')}
+                </button>
+            </>
+        )}
+
         <div className="border-t border-border my-1"></div>
-        <button onClick={onLogout} className="w-full text-left p-2 rounded-md hover:bg-secondary-focus flex items-center text-red-400 hover:text-red-300 text-sm">
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clipRule="evenodd" /></svg>
+        <button onClick={onLogout} className="w-full text-left p-2 rounded-md hover:bg-secondary-focus flex items-center text-red-400 hover:text-red-300 text-sm transition-colors">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-3 opacity-70" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clipRule="evenodd" /></svg>
           {t('sidebar.logout')}
         </button>
       </div>

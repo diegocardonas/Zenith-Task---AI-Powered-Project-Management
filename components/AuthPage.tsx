@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useAppContext } from '../contexts/AppContext';
 import { useTranslation } from '../i18n';
@@ -101,30 +102,50 @@ const AuthPage: React.FC = () => {
           {mode === 'login' && (
               <div className="mt-8 pt-6 border-t border-border">
                   <p className="text-xs text-text-secondary mb-3 text-center uppercase font-bold tracking-wider">{t('auth.fastLogin')}</p>
-                  <div className="grid grid-cols-3 gap-2">
+                  <div className="grid grid-cols-2 gap-3">
                       <button 
                         type="button"
                         onClick={() => fillCredentials('alex@example.com')}
-                        className="flex flex-col items-center justify-center p-2 bg-secondary hover:bg-secondary-focus border border-border rounded-lg transition-all hover:border-primary/50 group"
+                        className="flex flex-col items-center justify-center p-3 bg-secondary hover:bg-secondary-focus border border-border rounded-lg transition-all hover:border-primary/50 group"
                       >
-                          <span className="text-xs font-bold text-primary group-hover:text-white mb-1">Admin</span>
-                          <span className="text-[10px] text-text-secondary">Alex</span>
+                          <div className="flex items-center gap-2 mb-1">
+                             <span className="w-2 h-2 rounded-full bg-red-500"></span>
+                             <span className="text-xs font-bold text-white group-hover:text-primary transition-colors">App Admin</span>
+                          </div>
+                          <span className="text-[10px] text-text-secondary">Alex Morgan</span>
                       </button>
                       <button 
                         type="button"
                         onClick={() => fillCredentials('sarah@example.com')}
-                        className="flex flex-col items-center justify-center p-2 bg-secondary hover:bg-secondary-focus border border-border rounded-lg transition-all hover:border-primary/50 group"
+                        className="flex flex-col items-center justify-center p-3 bg-secondary hover:bg-secondary-focus border border-border rounded-lg transition-all hover:border-primary/50 group"
                       >
-                          <span className="text-xs font-bold text-blue-400 group-hover:text-white mb-1">Member</span>
-                          <span className="text-[10px] text-text-secondary">Sarah</span>
+                           <div className="flex items-center gap-2 mb-1">
+                             <span className="w-2 h-2 rounded-full bg-purple-500"></span>
+                             <span className="text-xs font-bold text-white group-hover:text-primary transition-colors">Manager</span>
+                          </div>
+                          <span className="text-[10px] text-text-secondary">Sarah Jenkins</span>
                       </button>
                       <button 
                         type="button"
                         onClick={() => fillCredentials('mike@example.com')}
-                        className="flex flex-col items-center justify-center p-2 bg-secondary hover:bg-secondary-focus border border-border rounded-lg transition-all hover:border-primary/50 group"
+                        className="flex flex-col items-center justify-center p-3 bg-secondary hover:bg-secondary-focus border border-border rounded-lg transition-all hover:border-primary/50 group"
                       >
-                          <span className="text-xs font-bold text-yellow-400 group-hover:text-white mb-1">Viewer</span>
-                          <span className="text-[10px] text-text-secondary">Mike</span>
+                           <div className="flex items-center gap-2 mb-1">
+                             <span className="w-2 h-2 rounded-full bg-blue-500"></span>
+                             <span className="text-xs font-bold text-white group-hover:text-primary transition-colors">Member</span>
+                          </div>
+                          <span className="text-[10px] text-text-secondary">Mike Ross</span>
+                      </button>
+                       <button 
+                        type="button"
+                        onClick={() => fillCredentials('emily@example.com')}
+                        className="flex flex-col items-center justify-center p-3 bg-secondary hover:bg-secondary-focus border border-border rounded-lg transition-all hover:border-primary/50 group"
+                      >
+                           <div className="flex items-center gap-2 mb-1">
+                             <span className="w-2 h-2 rounded-full bg-yellow-500"></span>
+                             <span className="text-xs font-bold text-white group-hover:text-primary transition-colors">Viewer</span>
+                          </div>
+                          <span className="text-[10px] text-text-secondary">Emily Blunt</span>
                       </button>
                   </div>
               </div>
