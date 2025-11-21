@@ -241,16 +241,20 @@ const UserTable: React.FC<{
                                 </div>
                             </td>
                             <td className="px-6 py-4 hidden md:table-cell">
-                                <select
-                                    value={user.role}
-                                    onChange={(e) => onUpdateRole(user.id, e.target.value as Role)}
-                                    disabled={user.id === currentUser.id || isLastAdmin(user)}
-                                    className="bg-slate-900/50 border border-white/10 text-white text-xs rounded-lg focus:ring-primary focus:border-primary block p-1.5"
-                                >
-                                    {Object.values(Role).map((role) => (
-                                        <option key={role} value={role}>{t(`common.${role.toLowerCase()}`)}</option>
-                                    ))}
-                                </select>
+                                {user.role === Role.Manager ? (
+                                    <RoleBadge role={Role.Manager} />
+                                ) : (
+                                    <select
+                                        value={user.role}
+                                        onChange={(e) => onUpdateRole(user.id, e.target.value as Role)}
+                                        disabled={user.id === currentUser.id || isLastAdmin(user)}
+                                        className="bg-slate-900/50 border border-white/10 text-white text-xs rounded-lg focus:ring-primary focus:border-primary block p-1.5"
+                                    >
+                                        {Object.values(Role).map((role) => (
+                                            <option key={role} value={role}>{t(`common.${role.toLowerCase()}`)}</option>
+                                        ))}
+                                    </select>
+                                )}
                             </td>
                             <td className="px-6 py-4 hidden lg:table-cell">
                                 {user.team}

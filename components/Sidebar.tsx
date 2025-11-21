@@ -185,7 +185,6 @@ const Sidebar: React.FC = () => {
         setListToEdit,
         setIsFolderModalOpen,
         setFolderToEdit,
-        setIsSettingsModalOpen,
         handleSidebarReorder,
         setIsChatOpen,
     } = actions;

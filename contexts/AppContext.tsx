@@ -13,11 +13,12 @@ const initialWorkspaces: Workspace[] = [
     { id: 'w1', name: 'Main Workspace' }
 ];
 
+// Updated Users with specific Roles for Demo
 const initialUsers: User[] = [
-    { id: 'u1', name: 'Alex Morgan', avatar: 'https://i.pravatar.cc/150?u=1', role: Role.Admin, title: 'System Admin', email: 'alex@example.com', team: 'IT & Ops', bio: 'Ensuring system stability.', status: UserStatus.Online, skills: ['DevOps', 'Security', 'System Arch'] },
-    { id: 'u2', name: 'Sarah Jenkins', avatar: 'https://i.pravatar.cc/150?u=2', role: Role.Manager, title: 'Senior Project Manager', email: 'sarah@example.com', team: 'Product', bio: 'Driving product vision.', status: UserStatus.Busy, skills: ['Agile', 'Scrum', 'Product Strategy'] },
-    { id: 'u3', name: 'Mike Ross', avatar: 'https://i.pravatar.cc/150?u=3', role: Role.Member, title: 'Frontend Dev', email: 'mike@example.com', team: 'Engineering', bio: 'React enthusiast.', status: UserStatus.Online, skills: ['React', 'TypeScript', 'Tailwind'] },
-    { id: 'u4', name: 'Emily Blunt', avatar: 'https://i.pravatar.cc/150?u=4', role: Role.Viewer, title: 'Stakeholder', email: 'emily@example.com', team: 'Marketing', bio: 'Watching progress.', status: UserStatus.Offline, skills: ['Marketing', 'SEO'] },
+    { id: 'u1', name: 'Alex Morgan', avatar: 'https://i.pravatar.cc/150?u=1', role: Role.Admin, title: 'System Owner', email: 'alex@example.com', team: 'Executive', bio: 'Managing the entire Zenith instance.', status: UserStatus.Online, skills: ['System Arch', 'Security'] },
+    { id: 'u2', name: 'Sarah Jenkins', avatar: 'https://i.pravatar.cc/150?u=2', role: Role.Manager, title: 'Product Lead', email: 'sarah@example.com', team: 'Product', bio: 'Leading the product roadmap.', status: UserStatus.Busy, skills: ['Agile', 'Strategy', 'Roadmapping'] },
+    { id: 'u3', name: 'Mike Ross', avatar: 'https://i.pravatar.cc/150?u=3', role: Role.Member, title: 'Senior Developer', email: 'mike@example.com', team: 'Engineering', bio: 'Building features.', status: UserStatus.Online, skills: ['React', 'TypeScript', 'Node.js'] },
+    { id: 'u4', name: 'Emily Blunt', avatar: 'https://i.pravatar.cc/150?u=4', role: Role.Viewer, title: 'Stakeholder', email: 'emily@example.com', team: 'Marketing', bio: 'Observing progress.', status: UserStatus.Offline, skills: ['Marketing', 'SEO'] },
 ];
 
 const initialLists: List[] = [
@@ -61,6 +62,7 @@ interface AppState {
     chatMessages: ChatMessage[];
     activeChatId: string | null;
     isChatOpen: boolean;
+    isAdminPanelOpen: boolean;
 }
 
 type Action =
@@ -96,7 +98,8 @@ type Action =
     | { type: 'REORDER_SIDEBAR'; payload: { folders: Folder[], lists: List[] } }
     | { type: 'SEND_MESSAGE'; payload: ChatMessage }
     | { type: 'SET_ACTIVE_CHAT'; payload: string | null }
-    | { type: 'SET_CHAT_OPEN'; payload: boolean };
+    | { type: 'SET_CHAT_OPEN'; payload: boolean }
+    | { type: 'SET_ADMIN_PANEL_OPEN'; payload: boolean };
 
 const appReducer = (state: AppState, action: Action): AppState => {
     switch (action.type) {
@@ -105,7 +108,6 @@ const appReducer = (state: AppState, action: Action): AppState => {
         case 'UPDATE_TASK': return { ...state, tasks: state.tasks.map(t => t.id === action.payload.id ? action.payload : t) };
         case 'DELETE_TASK': return { ...state, tasks: state.tasks.filter(t => t.id !== action.payload) };
         case 'BULK_UPDATE_TASKS': {
-            // Optimization: Create a Set for O(1) lookups in iteration
             const idsSet = new Set(action.payload.ids);
             return { ...state, tasks: state.tasks.map(t => idsSet.has(t.id) ? { ...t, ...action.payload.updates } : t) };
         }
@@ -148,6 +150,7 @@ const appReducer = (state: AppState, action: Action): AppState => {
             };
         case 'SET_ACTIVE_CHAT': return { ...state, activeChatId: action.payload };
         case 'SET_CHAT_OPEN': return { ...state, isChatOpen: action.payload };
+        case 'SET_ADMIN_PANEL_OPEN': return { ...state, isAdminPanelOpen: action.payload };
         default: return state;
     }
 };
@@ -156,31 +159,35 @@ const appReducer = (state: AppState, action: Action): AppState => {
 const getPermissions = (role: Role): Set<Permission> => {
     const permissions = new Set<Permission>();
     
-    // Guest: Limited to reading basic info (handled by component logic), no specific permission flags here.
-
-    // Viewer: Read-only + Comment
+    // --- Viewer ---
+    // Read-only access is implied by lack of other permissions.
     if (role === Role.Viewer || role === Role.Member || role === Role.Manager || role === Role.Admin) {
         permissions.add(Permission.COMMENT);
     }
 
-    // Member: Work execution level
+    // --- Member ---
+    // Execution level: Can do work.
     if (role === Role.Member || role === Role.Manager || role === Role.Admin) {
         permissions.add(Permission.CREATE_TASKS);
-        permissions.add(Permission.EDIT_TASKS);
+        permissions.add(Permission.EDIT_TASKS); // Edit own or others tasks
         permissions.add(Permission.DRAG_AND_DROP);
     }
 
-    // Manager: Project management level (Operational Admin)
+    // --- Manager ---
+    // Project Control level: Can structure work and delete things.
     if (role === Role.Manager || role === Role.Admin) {
-        permissions.add(Permission.MANAGE_WORKSPACES_AND_PROJECTS); // Create projects, folders
-        permissions.add(Permission.DELETE_TASKS); // Delete any task
-        permissions.add(Permission.VIEW_DASHBOARD); // See project stats
+        permissions.add(Permission.MANAGE_WORKSPACES_AND_PROJECTS); // Create/Edit Projects/Folders
+        permissions.add(Permission.DELETE_TASKS); // Delete capability
+        permissions.add(Permission.VIEW_DASHBOARD); // Project analytics
     }
 
-    // Admin: System level (Super Admin)
+    // --- Admin ---
+    // System Owner level: Can configure the SaaS aspect.
+    // IMPORTANT: Admin inherits all above via the `|| role === Role.Admin` checks above.
+    // PLUS exclusive system rights:
     if (role === Role.Admin) {
-        permissions.add(Permission.MANAGE_APP);   // Global settings, billing
-        permissions.add(Permission.MANAGE_USERS); // Add/Remove users from the app
+        permissions.add(Permission.MANAGE_APP);   // Access "App Admin" panel (Billing, Global Settings)
+        permissions.add(Permission.MANAGE_USERS); // Create/Delete Users system-wide
     }
 
     return permissions;
@@ -219,13 +226,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         chatMessages: initialMessages,
         activeChatId: initialChannels[0].id,
         isChatOpen: false,
+        isAdminPanelOpen: false,
     });
 
     // --- UI State ---
     const [activeView, setActiveView] = useState('board'); 
     const [currentView, setCurrentView] = useState<ViewType>(ViewType.Board);
     const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-    const [isAdminPanelOpen, setIsAdminPanelOpen] = useState(false); 
     const [isWorkspaceModalOpen, setIsWorkspaceModalOpen] = useState(false);
     const [workspaceToEdit, setWorkspaceToEdit] = useState<Workspace | null>(null);
     const [isProjectModalOpen, setIsProjectModalOpen] = useState(false);
@@ -353,7 +360,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         }
 
         showConfirmation(t('modals.deleteAccount'), t('modals.deleteAccountWarning'), () => {
-            // Optimized: Bulk update tasks to remove assignee instead of iterating one by one
             const userTaskIds = state.tasks.filter(t => t.assigneeId === userId).map(t => t.id);
             if (userTaskIds.length > 0) {
                 dispatch({ type: 'BULK_UPDATE_TASKS', payload: { ids: userTaskIds, updates: { assigneeId: null } } });
@@ -428,7 +434,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         dispatch({ type: 'BULK_UPDATE_TASKS', payload: { ids, updates } });
         addToast({ message: t('toasts.tasksUpdated', { count: ids.length }), type: 'success' });
     };
-    const handleTasksReorder = (tasks: Task[]) => dispatch({ type: 'SET_TASKS', payload: tasks }); // Assuming reorder just updates the whole list for now
+    const handleTasksReorder = (tasks: Task[]) => dispatch({ type: 'SET_TASKS', payload: tasks }); 
     const handleBulkDeleteTasks = (ids: string[]) => {
          showConfirmation(t('common.delete'), t('confirmations.deleteTasks_plural', { count: ids.length }), () => {
              dispatch({ type: 'BULK_DELETE_TASKS', payload: ids });
@@ -465,7 +471,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         const listName = list ? list.name : t('sidebar.projects');
         showConfirmation(t('common.delete'), t('confirmations.deleteProject'), () => {
             dispatch({ type: 'DELETE_LIST', payload: listId });
-            // Also delete tasks in list
             const tasksToDelete = state.tasks.filter(t => t.listId === listId).map(t => t.id);
             dispatch({ type: 'BULK_DELETE_TASKS', payload: tasksToDelete });
             dispatch({ type: 'SELECT_LIST', payload: null });
@@ -519,7 +524,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const handleUpdateUserRole = (userId: string, role: Role) => {
         const user = state.users.find(u => u.id === userId);
         if (user) {
-             // VALIDATION: Cannot demote last admin
              if (user.role === Role.Admin && role !== Role.Admin) {
                  const admins = state.users.filter(u => u.role === Role.Admin);
                  if (admins.length <= 1) {
@@ -535,7 +539,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
          const user = state.users.find(u => u.id === userId);
          if(!user) return;
 
-         // VALIDATION: Cannot delete last admin
          if (user.role === Role.Admin) {
              const admins = state.users.filter(u => u.role === Role.Admin);
              if (admins.length <= 1) {
@@ -544,14 +547,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
              }
          }
          
-         // VALIDATION: Cannot delete self via this method (use delete account)
          if (state.currentUser && state.currentUser.id === userId) {
              addToast({ message: "Usa la opción de eliminar cuenta en ajustes.", type: 'error' });
              return;
          }
 
          showConfirmation(t('common.delete'), t('confirmations.deleteUser', { name: user.name }), () => {
-            // Optimized: Bulk update tasks to remove assignee instead of iterating one by one
             const userTaskIds = state.tasks.filter(t => t.assigneeId === userId).map(t => t.id);
             if (userTaskIds.length > 0) {
                 dispatch({ type: 'BULK_UPDATE_TASKS', payload: { ids: userTaskIds, updates: { assigneeId: null } } });
@@ -562,17 +563,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     };
 
     const handleBulkDeleteUsers = (userIds: string[]) => {
-         // Filter out safe deletions (exclude self and last admin check logic if needed)
          const idsToDelete = userIds.filter(id => {
              const user = state.users.find(u => u.id === id);
              if (!user) return false;
-             // Prevent deleting self
              if (state.currentUser && state.currentUser.id === id) return false;
-             // Prevent deleting last admin
              if (user.role === Role.Admin) {
                  const admins = state.users.filter(u => u.role === Role.Admin);
-                 // If deleting this admin leaves 0 admins (assuming we are deleting multiple admins at once)
-                 // We need a more complex check: count admins NOT in deletion list
                  const remainingAdmins = admins.filter(a => !userIds.includes(a.id));
                  if (remainingAdmins.length === 0) return false;
              }
@@ -580,7 +576,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
          });
 
          if (idsToDelete.length === 0) {
-             addToast({ message: "No se pueden eliminar los usuarios seleccionados (Administrador único o Usuario actual).", type: 'error' });
+             addToast({ message: "No se pueden eliminar los usuarios seleccionados.", type: 'error' });
              return;
          }
 
@@ -636,6 +632,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     const setIsChatOpen = (isOpen: boolean) => {
         dispatch({ type: 'SET_CHAT_OPEN', payload: isOpen });
+    };
+
+    const setIsAdminPanelOpen = (isOpen: boolean) => {
+        dispatch({ type: 'SET_ADMIN_PANEL_OPEN', payload: isOpen });
     };
 
     const handleAIAction = useCallback((name: string, args: any) => {
@@ -699,7 +699,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         activeView,
         currentView,
         isSidebarOpen,
-        isAdminPanelOpen, // Expose to consumers
+        isAdminPanelOpen: state.isAdminPanelOpen, // Explicit mapping
         isWorkspaceModalOpen,
         workspaceToEdit,
         isProjectModalOpen,
@@ -800,13 +800,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     };
 
     useEffect(() => {
-        // Apply theme
         const root = document.documentElement;
-        const themeConfig = { 
-            light: { primary: '#6a1b9a', background: '#ffffff', surface: '#f8fafc', textPrimary: '#1e293b', textSecondary: '#475569' },
-            dark: { primary: '#8e24aa', background: '#111827', surface: '#1f2937', textPrimary: '#f9fafb', textSecondary: '#d1d5db' }
-        }; 
-        
         if (state.colorScheme === 'dark') {
             root.classList.add('dark');
         } else {
