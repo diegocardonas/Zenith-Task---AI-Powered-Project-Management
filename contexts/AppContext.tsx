@@ -10,36 +10,62 @@ import { generateProjectSummary } from '../services/geminiService';
 
 // --- Mock Initial Data ---
 const initialWorkspaces: Workspace[] = [
-    { id: 'w1', name: 'Main Workspace' }
+    { id: 'w1', name: 'Ceitel Operaciones' }
 ];
 
-// Updated Users with specific Roles for Demo
+const initialFolders: Folder[] = [
+    { id: 'f1', name: 'Contrato DICO', workspaceId: 'w1', order: 0 },
+    { id: 'f2', name: 'Contrato SICTE', workspaceId: 'w1', order: 1 },
+    { id: 'f3', name: 'Proyectos Directos', workspaceId: 'w1', order: 2 },
+];
+
+// Updated Users for Ceitel S.A.S Structure
 const initialUsers: User[] = [
-    { id: 'u1', name: 'Alex Morgan', avatar: 'https://i.pravatar.cc/150?u=1', role: Role.Admin, title: 'System Owner', email: 'alex@example.com', team: 'Executive', bio: 'Managing the entire Zenith instance.', status: UserStatus.Online, skills: ['System Arch', 'Security'] },
-    { id: 'u2', name: 'Sarah Jenkins', avatar: 'https://i.pravatar.cc/150?u=2', role: Role.Manager, title: 'Product Lead', email: 'sarah@example.com', team: 'Product', bio: 'Leading the product roadmap.', status: UserStatus.Busy, skills: ['Agile', 'Strategy', 'Roadmapping'] },
-    { id: 'u3', name: 'Mike Ross', avatar: 'https://i.pravatar.cc/150?u=3', role: Role.Member, title: 'Senior Developer', email: 'mike@example.com', team: 'Engineering', bio: 'Building features.', status: UserStatus.Online, skills: ['React', 'TypeScript', 'Node.js'] },
-    { id: 'u4', name: 'Emily Blunt', avatar: 'https://i.pravatar.cc/150?u=4', role: Role.Viewer, title: 'Stakeholder', email: 'emily@example.com', team: 'Marketing', bio: 'Observing progress.', status: UserStatus.Offline, skills: ['Marketing', 'SEO'] },
+    { id: 'u1', name: 'Edwin Alba', avatar: 'https://ui-avatars.com/api/?name=Edwin+Alba&background=ef4444&color=fff', role: Role.Admin, title: 'Gerente Operativo', email: 'edwin.alba@ceitel.com', team: 'Gerencia', bio: 'Supervisión general de operaciones DICO, SICTE y Nokia.', status: UserStatus.Busy, skills: ['Gerencia', 'Negociación', 'Operaciones'] },
+    { id: 'u2', name: 'Sebastian Guio', avatar: 'https://ui-avatars.com/api/?name=Sebastian+Guio&background=purple&color=fff', role: Role.Admin, title: 'Gerente Administrativo', email: 'sebastian.guio@ceitel.com', team: 'Administrativa', bio: 'Gestión de recursos y administración.', status: UserStatus.Online, skills: ['Finanzas', 'Recursos Humanos'] },
+    { id: 'u3', name: 'Diego Cardona', avatar: 'https://ui-avatars.com/api/?name=Diego+Cardona&background=0ea5e9&color=fff', role: Role.Manager, title: 'Coord. BTS y TX', email: 'diego.cardona@ceitel.com', team: 'Implementación', bio: 'Coordinador de proyectos BTS y Transmisión (DICO).', status: UserStatus.Online, skills: ['Implementación', 'MW', '4G/5G'] },
+    { id: 'u4', name: 'Natalia Caballero', avatar: 'https://ui-avatars.com/api/?name=Natalia+Caballero&background=pink&color=fff', role: Role.Manager, title: 'Coord. O&M', email: 'natalia.caballero@ceitel.com', team: 'Mantenimiento', bio: 'Coordinadora de Operación y Mantenimiento.', status: UserStatus.Away, skills: ['O&M', 'Preventivos', 'Correctivos'] },
+    { id: 'u5', name: 'Jhon Miranda', avatar: 'https://ui-avatars.com/api/?name=Jhon+Miranda&background=orange&color=fff', role: Role.Manager, title: 'Coord. Nokia', email: 'jhon.miranda@ceitel.com', team: 'Nokia', bio: 'Coordinador proyecto despliegue Nokia.', status: UserStatus.Online, skills: ['Nokia', 'Despliegue'] },
+    { id: 'u6', name: 'Magda Castro', avatar: 'https://ui-avatars.com/api/?name=Magda+Castro&background=teal&color=fff', role: Role.Manager, title: 'Coord. Documentación', email: 'magda.castro@ceitel.com', team: 'Documentación', bio: 'Gestión documental y cierre de proyectos.', status: UserStatus.Busy, skills: ['Documentación', 'Calidad'] },
+    { id: 'u7', name: 'Técnico Campo', avatar: 'https://ui-avatars.com/api/?name=Tecnico+Campo&background=gray&color=fff', role: Role.Member, title: 'Líder de Cuadrilla', email: 'tecnico@ceitel.com', team: 'Campo', bio: 'Ejecución de actividades en sitio.', status: UserStatus.Offline, skills: ['Alturas', 'Electricidad', 'Instalación'] },
+    { id: 'u8', name: 'Auditor Claro', avatar: 'https://ui-avatars.com/api/?name=Auditor+Claro&background=red&color=fff', role: Role.Viewer, title: 'Auditor Externo', email: 'auditor@claro.com.co', team: 'Auditoría', bio: 'Verificación de estándares.', status: UserStatus.Offline, skills: ['Auditoría'] },
 ];
 
 const initialLists: List[] = [
-    { id: 'l1', name: 'Website Redesign', color: 'bg-blue-500', workspaceId: 'w1', order: 0 },
-    { id: 'l2', name: 'Mobile App Launch', color: 'bg-green-500', workspaceId: 'w1', order: 1 },
+    { id: 'l1', name: 'Implementación BTS', color: 'bg-blue-500', workspaceId: 'w1', folderId: 'f1', order: 0 },
+    { id: 'l6', name: 'Transmisión (TX)', color: 'bg-cyan-500', workspaceId: 'w1', folderId: 'f1', order: 1 },
+    { id: 'l2', name: 'Infraestructura Civil', color: 'bg-gray-500', workspaceId: 'w1', folderId: 'f1', order: 2 },
+    { id: 'l3', name: 'Mantenimiento O&M', color: 'bg-green-500', workspaceId: 'w1', folderId: 'f2', order: 0 },
+    { id: 'l4', name: 'Despliegue Nokia', color: 'bg-indigo-500', workspaceId: 'w1', folderId: 'f3', order: 0 },
+    { id: 'l5', name: 'Centro de Documentación', color: 'bg-amber-500', workspaceId: 'w1', order: 4 }, // Sin carpeta (Transversal)
 ];
 
 const initialTasks: Task[] = [
-    { id: 't1', title: 'Design Homepage', description: 'Create new mockups', status: Status.InProgress, priority: Priority.High, assigneeId: 'u3', dueDate: new Date(Date.now() + 86400000).toISOString(), listId: 'l1', subtasks: [], comments: [], attachments: [], reminder: null, createdAt: new Date().toISOString(), dependsOn: [], activityLog: [] },
-    { id: 't2', title: 'Setup CI/CD', description: 'Configure Github Actions', status: Status.Todo, priority: Priority.Medium, assigneeId: 'u3', dueDate: new Date(Date.now() + 172800000).toISOString(), listId: 'l2', subtasks: [], comments: [], attachments: [], reminder: null, createdAt: new Date().toISOString(), dependsOn: [], activityLog: [] },
+    // BTS Tasks (l1)
+    { id: 't1', title: 'Instalación Nodo 4G - Sitio: BOG_CENTRO_01', description: 'Instalación de equipos Huawei, cableado de energía DC y montaje de RRUs.', status: Status.InProgress, priority: Priority.High, assigneeId: 'u7', dueDate: new Date(Date.now() + 86400000).toISOString(), listId: 'l1', subtasks: [{id: 'st1', text: 'Montaje de antenas', completed: true}, {id: 'st2', text: 'Conexión de jumpers', completed: false}], comments: [], attachments: [], reminder: null, createdAt: new Date().toISOString(), dependsOn: [], activityLog: [] },
+    
+    // TX Tasks (l6)
+    { id: 't5', title: 'Alineación Enlace MW - BOG_SUR_02 <-> BOG_SUR_05', description: 'Alineación de microondas banda E, pruebas de BER y comisionamiento.', status: Status.Todo, priority: Priority.High, assigneeId: 'u3', dueDate: new Date(Date.now() + 120000000).toISOString(), listId: 'l6', subtasks: [], comments: [], attachments: [], reminder: null, createdAt: new Date().toISOString(), dependsOn: [], activityLog: [] },
+    
+    // O&M Tasks (l3)
+    { id: 't2', title: 'Mantenimiento Preventivo - Estación Base CALI_NORTE', description: 'Limpieza de equipos, verificación de aires acondicionados y pruebas de baterías.', status: Status.Todo, priority: Priority.Medium, assigneeId: 'u4', dueDate: new Date(Date.now() + 172800000).toISOString(), listId: 'l3', subtasks: [], comments: [], attachments: [], reminder: null, createdAt: new Date().toISOString(), dependsOn: [], activityLog: [] },
+    
+    // Nokia Tasks (l4)
+    { id: 't3', title: 'Carga de TSS y Reporte Fotográfico - Proyecto Nokia', description: 'Subir evidencias al portal de Nokia para el sitio MED_POBLADO.', status: Status.Todo, priority: Priority.High, assigneeId: 'u5', dueDate: new Date(Date.now() + 259200000).toISOString(), listId: 'l4', subtasks: [], comments: [], attachments: [], reminder: null, createdAt: new Date().toISOString(), dependsOn: [], activityLog: [] },
+    
+    // Documentation Tasks (l5)
+    { id: 't4', title: 'Validación Carpeta Calidad Sitio BOG_CENTRO_01', description: 'Revisión de firmas y protocolo de pruebas para facturación a DICO.', status: Status.InProgress, priority: Priority.Low, assigneeId: 'u6', dueDate: new Date(Date.now() + 432000000).toISOString(), listId: 'l5', subtasks: [], comments: [], attachments: [], reminder: null, createdAt: new Date().toISOString(), dependsOn: ['t1'], activityLog: [] },
 ];
 
 // Initial Chat Data
 const initialChannels: ChatChannel[] = [
-    { id: 'c1', name: 'General', type: 'group', participants: ['u1', 'u2', 'u3', 'u4'], lastMessage: 'Welcome everyone!', lastMessageTime: new Date(Date.now() - 86400000).toISOString(), unreadCount: 0 },
-    { id: 'c2', name: 'Engineering', type: 'group', participants: ['u2', 'u3'], lastMessage: 'Deploying to prod...', lastMessageTime: new Date(Date.now() - 3600000).toISOString(), unreadCount: 2 },
+    { id: 'c1', name: 'Coordinación General', type: 'group', participants: ['u1', 'u2', 'u3', 'u4', 'u5', 'u6'], lastMessage: 'Reunión de seguimiento a las 14:00', lastMessageTime: new Date(Date.now() - 86400000).toISOString(), unreadCount: 0 },
+    { id: 'c2', name: 'Implementación DICO', type: 'group', participants: ['u3', 'u7', 'u6'], lastMessage: 'Materiales despachados al sitio.', lastMessageTime: new Date(Date.now() - 3600000).toISOString(), unreadCount: 2 },
 ];
 
 const initialMessages: ChatMessage[] = [
-    { id: 'm1', channelId: 'c1', senderId: 'u1', text: 'Welcome everyone to the new platform!', timestamp: new Date(Date.now() - 86400000).toISOString() },
-    { id: 'm2', channelId: 'c2', senderId: 'u3', text: 'Hey Sarah, deploying to prod in 10.', timestamp: new Date(Date.now() - 3600000).toISOString() },
+    { id: 'm1', channelId: 'c1', senderId: 'u1', text: 'Buenos días equipo, por favor actualizar el estado de los sitios críticos de DICO.', timestamp: new Date(Date.now() - 86400000).toISOString() },
+    { id: 'm2', channelId: 'c2', senderId: 'u7', text: 'Diego, ya estoy en sitio para el enlace MW. Procedo con el desmontaje.', timestamp: new Date(Date.now() - 3600000).toISOString() },
 ];
 
 // --- State & Reducer ---
@@ -213,7 +239,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         users: initialUsers,
         tasks: initialTasks,
         lists: initialLists,
-        folders: [],
+        folders: initialFolders,
         workspaces: initialWorkspaces,
         selectedWorkspaceId: initialWorkspaces[0].id,
         selectedListId: null,
@@ -331,7 +357,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             email: normalizedEmail,
             role: Role.Member, // Default role
             avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random`,
-            title: 'New Member',
+            title: 'Member',
             team: 'General',
             bio: '',
             status: UserStatus.Online,

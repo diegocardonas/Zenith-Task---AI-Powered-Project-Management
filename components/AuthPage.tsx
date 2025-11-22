@@ -53,57 +53,57 @@ const AuthPage: React.FC = () => {
                       {/* Admin */}
                       <button 
                         type="button"
-                        onClick={() => fillCredentials('alex@example.com')}
+                        onClick={() => fillCredentials('edwin.alba@ceitel.com')}
                         className="relative flex flex-col items-start p-4 bg-red-500/5 hover:bg-red-500/10 border border-red-500/20 hover:border-red-500/40 rounded-xl transition-all group text-left"
                       >
                           <div className="flex items-center gap-2 mb-2">
                              <span className="w-2.5 h-2.5 rounded-full bg-red-500 shadow-sm shadow-red-500/50"></span>
                              <span className="text-xs font-bold text-red-400 uppercase tracking-wide">Admin</span>
                           </div>
-                          <span className="text-sm font-bold text-text-primary group-hover:text-white transition-colors">Alex Morgan</span>
-                          <span className="text-[10px] text-text-secondary mt-1 leading-tight">Full System Control</span>
+                          <span className="text-sm font-bold text-text-primary group-hover:text-white transition-colors">Edwin Alba</span>
+                          <span className="text-[10px] text-text-secondary mt-1 leading-tight">Gerente Operativo</span>
                       </button>
 
-                      {/* Manager */}
+                      {/* Manager (Tú) */}
                       <button 
                         type="button"
-                        onClick={() => fillCredentials('sarah@example.com')}
+                        onClick={() => fillCredentials('diego.cardona@ceitel.com')}
                         className="relative flex flex-col items-start p-4 bg-purple-500/5 hover:bg-purple-500/10 border border-purple-500/20 hover:border-purple-500/40 rounded-xl transition-all group text-left"
                       >
                            <div className="flex items-center gap-2 mb-2">
                              <span className="w-2.5 h-2.5 rounded-full bg-purple-500 shadow-sm shadow-purple-500/50"></span>
                              <span className="text-xs font-bold text-purple-400 uppercase tracking-wide">Manager</span>
                           </div>
-                          <span className="text-sm font-bold text-text-primary group-hover:text-white transition-colors">Sarah Jenkins</span>
-                          <span className="text-[10px] text-text-secondary mt-1 leading-tight">Project Lead</span>
+                          <span className="text-sm font-bold text-text-primary group-hover:text-white transition-colors">Diego Cardona</span>
+                          <span className="text-[10px] text-text-secondary mt-1 leading-tight">Coord. BTS y TX</span>
                       </button>
 
                       {/* Member */}
                       <button 
                         type="button"
-                        onClick={() => fillCredentials('mike@example.com')}
+                        onClick={() => fillCredentials('tecnico@ceitel.com')}
                         className="relative flex flex-col items-start p-4 bg-blue-500/5 hover:bg-blue-500/10 border border-blue-500/20 hover:border-blue-500/40 rounded-xl transition-all group text-left"
                       >
                            <div className="flex items-center gap-2 mb-2">
                              <span className="w-2.5 h-2.5 rounded-full bg-blue-500 shadow-sm shadow-blue-500/50"></span>
                              <span className="text-xs font-bold text-blue-400 uppercase tracking-wide">Member</span>
                           </div>
-                          <span className="text-sm font-bold text-text-primary group-hover:text-white transition-colors">Mike Ross</span>
-                          <span className="text-[10px] text-text-secondary mt-1 leading-tight">Standard Access</span>
+                          <span className="text-sm font-bold text-text-primary group-hover:text-white transition-colors">Técnico Campo</span>
+                          <span className="text-[10px] text-text-secondary mt-1 leading-tight">Líder de Cuadrilla</span>
                       </button>
 
                        {/* Viewer */}
                        <button 
                         type="button"
-                        onClick={() => fillCredentials('emily@example.com')}
+                        onClick={() => fillCredentials('auditor@claro.com.co')}
                         className="relative flex flex-col items-start p-4 bg-yellow-500/5 hover:bg-yellow-500/10 border border-yellow-500/20 hover:border-yellow-500/40 rounded-xl transition-all group text-left"
                       >
                            <div className="flex items-center gap-2 mb-2">
                              <span className="w-2.5 h-2.5 rounded-full bg-yellow-500 shadow-sm shadow-yellow-500/50"></span>
                              <span className="text-xs font-bold text-yellow-400 uppercase tracking-wide">Viewer</span>
                           </div>
-                          <span className="text-sm font-bold text-text-primary group-hover:text-white transition-colors">Emily Blunt</span>
-                          <span className="text-[10px] text-text-secondary mt-1 leading-tight">Read Only</span>
+                          <span className="text-sm font-bold text-text-primary group-hover:text-white transition-colors">Auditor Claro</span>
+                          <span className="text-[10px] text-text-secondary mt-1 leading-tight">Acceso Externo</span>
                       </button>
                   </div>
                   <div className="relative my-6">

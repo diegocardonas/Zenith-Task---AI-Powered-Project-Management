@@ -42,7 +42,6 @@ const WorkspaceSwitcher: React.FC<WorkspaceSwitcherProps> = ({ workspaces, selec
                 </div>
                 <div className="flex flex-col items-start min-w-0">
                     <span className="font-bold text-text-primary truncate text-sm w-full text-left group-hover:text-white transition-colors">{selectedWorkspace?.name}</span>
-                    <span className="text-[10px] text-text-secondary uppercase tracking-wider font-medium">Pro Plan</span>
                 </div>
             </div>
             <svg className={`w-4 h-4 text-text-secondary transition-transform duration-200 flex-shrink-0 ${isOpen ? 'rotate-180' : ''}`} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
