@@ -10,7 +10,7 @@ import AISummaryModal from './AISummaryModal';
 const TeamChatView: React.FC = () => {
     const { state, actions } = useAppContext();
     const { chatChannels, chatMessages, activeChatId, currentUser, users, isChatOpen, selectedListId } = state;
-    const { handleSendMessage, handleSetActiveChat, setIsChatOpen, handleAddTask, addToast } = actions;
+    const { handleSendMessage, handleSetActiveChat, setIsChatOpen, handleAddTask, addToast, handleCreateOrOpenDM } = actions;
     const { t } = useTranslation();
     
     const [messageInput, setMessageInput] = useState('');
@@ -21,6 +21,7 @@ const TeamChatView: React.FC = () => {
     const [summaryResult, setSummaryResult] = useState<string | null>(null);
     const [suggestedReplies, setSuggestedReplies] = useState<string[]>([]);
     const [isSuggesting, setIsSuggesting] = useState(false);
+    const [isNewChatModalOpen, setIsNewChatModalOpen] = useState(false);
 
     // Scroll to bottom on new messages
     useEffect(() => {
@@ -146,6 +147,8 @@ const TeamChatView: React.FC = () => {
     const groupChannels = filteredChannels.filter(c => c.type === 'group');
     const dmChannels = filteredChannels.filter(c => c.type === 'dm');
 
+    const availableUsersForDM = users.filter(u => u.id !== currentUser.id);
+
     const formatTime = (isoString: string) => {
         const date = new Date(isoString);
         return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -163,7 +166,7 @@ const TeamChatView: React.FC = () => {
                     title={t('common.close')}
                 >
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                        <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                        <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
                     </svg>
                 </button>
 
@@ -212,39 +215,81 @@ const TeamChatView: React.FC = () => {
                         )}
 
                         {/* DMs */}
-                        {dmChannels.length > 0 && (
-                            <div>
-                                <h3 className="text-[10px] font-bold text-text-secondary/70 uppercase tracking-wider px-3 mb-2">{t('chat.directMessages')}</h3>
-                                <div className="space-y-0.5">
-                                    {dmChannels.map(channel => {
-                                        const otherUserId = channel.participants.find(id => id !== currentUser.id);
-                                        const otherUser = users.find(u => u.id === otherUserId);
-                                        return (
-                                            <button
-                                                key={channel.id}
-                                                onClick={() => handleSetActiveChat(channel.id)}
-                                                className={`w-full flex items-center px-3 py-2.5 rounded-lg transition-all duration-200 group ${activeChatId === channel.id ? 'bg-white/10 text-white border border-white/5' : 'hover:bg-white/5 text-text-secondary hover:text-white border border-transparent'}`}
-                                            >
-                                                <div className="mr-3 relative">
-                                                    {otherUser ? <AvatarWithStatus user={otherUser} className="w-8 h-8" /> : <div className="w-8 h-8 bg-gray-500 rounded-full" />}
-                                                </div>
-                                                <div className="flex-grow text-left min-w-0">
-                                                    <div className="font-medium text-sm truncate">
-                                                        {otherUser ? otherUser.name : channel.name}
-                                                    </div>
-                                                    {channel.lastMessage && <div className="text-xs opacity-60 truncate">{channel.lastMessage}</div>}
-                                                </div>
-                                                {channel.unreadCount > 0 && activeChatId !== channel.id && (
-                                                    <span className="bg-primary text-white text-[10px] font-bold px-1.5 py-0.5 rounded-md ml-2">{channel.unreadCount}</span>
-                                                )}
-                                            </button>
-                                        );
-                                    })}
-                                </div>
+                        <div>
+                            <div className="flex items-center justify-between px-3 mb-2 group">
+                                <h3 className="text-[10px] font-bold text-text-secondary/70 uppercase tracking-wider">{t('chat.directMessages')}</h3>
+                                <button 
+                                    onClick={() => setIsNewChatModalOpen(true)}
+                                    className="text-text-secondary hover:text-white hover:bg-white/10 rounded p-0.5 transition-colors opacity-0 group-hover:opacity-100"
+                                    title="Nuevo Mensaje"
+                                >
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
+                                    </svg>
+                                </button>
                             </div>
-                        )}
+                            <div className="space-y-0.5">
+                                {dmChannels.map(channel => {
+                                    const otherUserId = channel.participants.find(id => id !== currentUser.id);
+                                    const otherUser = users.find(u => u.id === otherUserId);
+                                    return (
+                                        <button
+                                            key={channel.id}
+                                            onClick={() => handleSetActiveChat(channel.id)}
+                                            className={`w-full flex items-center px-3 py-2.5 rounded-lg transition-all duration-200 group ${activeChatId === channel.id ? 'bg-white/10 text-white border border-white/5' : 'hover:bg-white/5 text-text-secondary hover:text-white border border-transparent'}`}
+                                        >
+                                            <div className="mr-3 relative">
+                                                {otherUser ? <AvatarWithStatus user={otherUser} className="w-8 h-8" /> : <div className="w-8 h-8 bg-gray-500 rounded-full" />}
+                                            </div>
+                                            <div className="flex-grow text-left min-w-0">
+                                                <div className="font-medium text-sm truncate">
+                                                    {otherUser ? otherUser.name : channel.name}
+                                                </div>
+                                                {channel.lastMessage && <div className="text-xs opacity-60 truncate">{channel.lastMessage}</div>}
+                                            </div>
+                                            {channel.unreadCount > 0 && activeChatId !== channel.id && (
+                                                <span className="bg-primary text-white text-[10px] font-bold px-1.5 py-0.5 rounded-md ml-2">{channel.unreadCount}</span>
+                                            )}
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        </div>
                     </div>
                 </div>
+
+                {/* New Chat Modal */}
+                {isNewChatModalOpen && (
+                    <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/50 backdrop-blur-sm" onClick={() => setIsNewChatModalOpen(false)}>
+                        <div className="bg-[#1e293b] w-80 max-h-[400px] rounded-xl shadow-2xl border border-white/10 flex flex-col overflow-hidden animate-scaleIn" onClick={e => e.stopPropagation()}>
+                            <div className="p-3 border-b border-white/10 flex justify-between items-center">
+                                <h3 className="font-bold text-white text-sm">Nuevo Mensaje</h3>
+                                <button onClick={() => setIsNewChatModalOpen(false)} className="text-text-secondary hover:text-white"><svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg></button>
+                            </div>
+                            <div className="flex-grow overflow-y-auto p-2 space-y-1 custom-scrollbar">
+                                {availableUsersForDM.map(user => (
+                                    <button
+                                        key={user.id}
+                                        onClick={() => {
+                                            handleCreateOrOpenDM(user.id);
+                                            setIsNewChatModalOpen(false);
+                                        }}
+                                        className="w-full flex items-center gap-3 p-2 rounded-lg hover:bg-white/5 transition-colors text-left"
+                                    >
+                                        <AvatarWithStatus user={user} className="w-8 h-8" />
+                                        <div>
+                                            <p className="text-sm font-medium text-white">{user.name}</p>
+                                            <p className="text-xs text-text-secondary flex items-center gap-1">
+                                                <span className={`w-1.5 h-1.5 rounded-full ${user.status === 'Online' ? 'bg-green-500' : 'bg-gray-500'}`}></span>
+                                                {user.status}
+                                            </p>
+                                        </div>
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                )}
 
                 {/* Chat Window */}
                 <div className={`flex-grow flex flex-col bg-transparent relative z-10 ${!isMobileListVisible ? 'flex' : 'hidden md:flex'}`}>

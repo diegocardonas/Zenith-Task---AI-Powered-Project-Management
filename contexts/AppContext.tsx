@@ -125,7 +125,8 @@ type Action =
     | { type: 'SEND_MESSAGE'; payload: ChatMessage }
     | { type: 'SET_ACTIVE_CHAT'; payload: string | null }
     | { type: 'SET_CHAT_OPEN'; payload: boolean }
-    | { type: 'SET_ADMIN_PANEL_OPEN'; payload: boolean };
+    | { type: 'SET_ADMIN_PANEL_OPEN'; payload: boolean }
+    | { type: 'ADD_CHANNEL'; payload: ChatChannel };
 
 const appReducer = (state: AppState, action: Action): AppState => {
     switch (action.type) {
@@ -177,6 +178,7 @@ const appReducer = (state: AppState, action: Action): AppState => {
         case 'SET_ACTIVE_CHAT': return { ...state, activeChatId: action.payload };
         case 'SET_CHAT_OPEN': return { ...state, isChatOpen: action.payload };
         case 'SET_ADMIN_PANEL_OPEN': return { ...state, isAdminPanelOpen: action.payload };
+        case 'ADD_CHANNEL': return { ...state, chatChannels: [...state.chatChannels, action.payload] };
         default: return state;
     }
 };
@@ -656,6 +658,34 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         dispatch({ type: 'SET_ACTIVE_CHAT', payload: chatId });
     };
 
+    const handleCreateOrOpenDM = (targetUserId: string) => {
+        if (!state.currentUser) return;
+        
+        // Check if DM channel already exists
+        const existingChannel = state.chatChannels.find(c => 
+            c.type === 'dm' && 
+            c.participants.includes(state.currentUser!.id) && 
+            c.participants.includes(targetUserId)
+        );
+
+        if (existingChannel) {
+            dispatch({ type: 'SET_ACTIVE_CHAT', payload: existingChannel.id });
+        } else {
+            // Create new DM channel
+            const newChannel: ChatChannel = {
+                id: `c-dm-${Date.now()}`,
+                name: 'DM',
+                type: 'dm',
+                participants: [state.currentUser.id, targetUserId],
+                unreadCount: 0,
+                lastMessage: '',
+                lastMessageTime: new Date().toISOString()
+            };
+            dispatch({ type: 'ADD_CHANNEL', payload: newChannel });
+            dispatch({ type: 'SET_ACTIVE_CHAT', payload: newChannel.id });
+        }
+    };
+
     const setIsChatOpen = (isOpen: boolean) => {
         dispatch({ type: 'SET_CHAT_OPEN', payload: isOpen });
     };
@@ -786,6 +816,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         handleAIAction,
         handleSendMessage,
         handleSetActiveChat,
+        handleCreateOrOpenDM,
         setIsChatOpen,
         
         setActiveView,
