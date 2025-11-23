@@ -34,17 +34,17 @@ const WorkspaceSwitcher: React.FC<WorkspaceSwitcherProps> = ({ workspaces, selec
       <div ref={wrapperRef} className="relative mb-6 px-2">
         <button 
             onClick={() => setIsOpen(!isOpen)} 
-            className="w-full flex items-center justify-between p-2.5 hover:bg-white/5 rounded-xl transition-all duration-200 group border border-transparent hover:border-white/10"
+            className="w-full flex items-center justify-between p-2.5 hover:bg-white/5 rounded-xl transition-all duration-200 group border border-transparent hover:border-white/10 active:scale-[0.98]"
         >
             <div className="flex items-center min-w-0 gap-3">
-                <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-primary to-purple-600 flex-shrink-0 flex items-center justify-center shadow-lg shadow-primary/20 ring-1 ring-white/10">
+                <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-primary to-purple-600 flex-shrink-0 flex items-center justify-center shadow-lg shadow-primary/20 ring-1 ring-white/10 transition-transform group-hover:scale-105">
                      <span className="font-bold text-white text-lg leading-none">{selectedWorkspace?.name.charAt(0).toUpperCase()}</span>
                 </div>
                 <div className="flex flex-col items-start min-w-0">
                     <span className="font-bold text-text-primary truncate text-sm w-full text-left group-hover:text-white transition-colors">{selectedWorkspace?.name}</span>
                 </div>
             </div>
-            <svg className={`w-4 h-4 text-text-secondary transition-transform duration-200 flex-shrink-0 ${isOpen ? 'rotate-180' : ''}`} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+            <svg className={`w-4 h-4 text-text-secondary transition-transform duration-300 flex-shrink-0 ${isOpen ? 'rotate-180' : ''}`} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                 <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
             </svg>
         </button>
@@ -66,7 +66,7 @@ const WorkspaceSwitcher: React.FC<WorkspaceSwitcherProps> = ({ workspaces, selec
                             >
                                 <span className="font-medium">{workspace.name}</span>
                                 {workspace.id === selectedWorkspace?.id && (
-                                    <svg className="w-4 h-4 text-primary" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                    <svg className="w-4 h-4 text-primary animate-pop" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                                         <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                                     </svg>
                                 )}
@@ -116,13 +116,13 @@ const SidebarItem: React.FC<SidebarItemProps> = ({ icon, label, isActive, onClic
             ${className}
         `}
     >
-        {isActive && <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-5 bg-primary rounded-r-full shadow-[0_0_10px_var(--primary)]"></div>}
-        <span className={`mr-3 transition-colors flex-shrink-0 duration-200 ${isActive ? 'text-primary scale-110' : 'text-text-secondary group-hover:text-text-primary'}`}>
+        {isActive && <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-5 bg-primary rounded-r-full shadow-[0_0_10px_var(--primary)] animate-scaleIn"></div>}
+        <span className={`mr-3 transition-all duration-300 flex-shrink-0 ${isActive ? 'text-primary scale-110' : 'text-text-secondary group-hover:text-text-primary group-hover:scale-110'}`}>
             {icon}
         </span>
         <span className="flex-grow text-left truncate">{label}</span>
         {badge && (
-            <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md min-w-[1.25rem] text-center transition-colors ${isActive ? 'bg-primary text-white shadow-sm' : 'bg-white/5 text-text-secondary group-hover:bg-white/10'}`}>
+            <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md min-w-[1.25rem] text-center transition-colors ${isActive ? 'bg-primary text-white shadow-sm animate-pop' : 'bg-white/5 text-text-secondary group-hover:bg-white/10'}`}>
                 {badge}
             </span>
         )}
@@ -144,7 +144,7 @@ const SidebarSection: React.FC<{
                     onClick={() => setIsOpen(!isOpen)}
                     className="flex items-center text-[11px] font-bold text-text-secondary/70 hover:text-text-secondary uppercase tracking-widest transition-colors flex-grow text-left"
                 >
-                    <svg xmlns="http://www.w3.org/2000/svg" className={`h-3 w-3 mr-1.5 transition-transform duration-200 opacity-50 ${isOpen ? 'rotate-90' : ''}`} viewBox="0 0 20 20" fill="currentColor">
+                    <svg xmlns="http://www.w3.org/2000/svg" className={`h-3 w-3 mr-1.5 transition-transform duration-300 opacity-50 ${isOpen ? 'rotate-90' : ''}`} viewBox="0 0 20 20" fill="currentColor">
                         <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
                     </svg>
                     {title}
@@ -362,7 +362,7 @@ const Sidebar: React.FC = () => {
                 transition-all duration-300 ease-in-out overflow-hidden border-r border-white/5
                 ${isSidebarOpen ? 'w-72 translate-x-0 shadow-2xl md:shadow-none' : 'w-0 -translate-x-full md:w-0 md:translate-x-0'}
             `}>
-                <div className="w-72 flex flex-col h-full">
+                <div className="w-72 flex flex-col h-full animate-slideInRight">
                     <div className="flex-shrink-0 p-5 flex items-center justify-between">
                         <Logo />
                         <button 
@@ -385,7 +385,7 @@ const Sidebar: React.FC = () => {
                         />
                         <button 
                             onClick={() => window.dispatchEvent(new CustomEvent('open-command-palette'))}
-                            className="w-full flex items-center px-3 py-2.5 mb-6 text-sm text-text-secondary bg-[#1e293b] border border-white/5 rounded-lg hover:border-primary/50 hover:text-white focus:outline-none transition-all shadow-sm group"
+                            className="w-full flex items-center px-3 py-2.5 mb-6 text-sm text-text-secondary bg-[#1e293b] border border-white/5 rounded-lg hover:border-primary/50 hover:text-white focus:outline-none transition-all shadow-sm group hover:shadow-glow/20"
                         >
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2 text-text-secondary group-hover:text-primary transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -444,7 +444,7 @@ const Sidebar: React.FC = () => {
                         >
                             <nav className="space-y-1" onDrop={handleDrop} onDragOver={e => e.preventDefault()}>
                                 {folderStructure.structured.map(folder => (
-                                    <div key={folder.id} className="relative"
+                                    <div key={folder.id} className="relative animate-fadeIn"
                                         draggable={isDraggable}
                                         onDragStart={(e) => handleDragStart(e, folder.id, 'folder')}
                                         onDragEnd={handleDragEnd}
@@ -457,10 +457,10 @@ const Sidebar: React.FC = () => {
                                                 onClick={() => toggleFolder(folder.id)} 
                                                 className="w-full flex items-center px-3 py-2.5 text-sm text-text-secondary hover:text-white font-medium hover:bg-white/5 rounded-lg group transition-colors"
                                             >
-                                                <svg xmlns="http://www.w3.org/2000/svg" className={`h-3 w-3 mr-2 transition-transform duration-200 text-text-secondary group-hover:text-white ${openFolders.has(folder.id) ? 'rotate-90' : ''}`} viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" /></svg>
+                                                <svg xmlns="http://www.w3.org/2000/svg" className={`h-3 w-3 mr-2 transition-transform duration-300 text-text-secondary group-hover:text-white ${openFolders.has(folder.id) ? 'rotate-90' : ''}`} viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" /></svg>
                                                 <span className="truncate">{folder.name}</span>
                                             </button>
-                                            {openFolders.has(folder.id) && (
+                                            <div className={`transition-all duration-300 ease-in-out overflow-hidden ${openFolders.has(folder.id) ? 'max-h-[2000px] opacity-100' : 'max-h-0 opacity-0'}`}>
                                                 <ul className="mt-0.5 space-y-0.5 relative">
                                                     <div className="absolute left-[19px] top-0 bottom-0 w-px bg-white/5"></div>
                                                     {folder.lists.map(list => (
@@ -469,9 +469,9 @@ const Sidebar: React.FC = () => {
                                                             <a href="#" onClick={(e) => { e.preventDefault(); handleNavigation(() => { setSelectedListId(list.id); setActiveView('list'); }); }} 
                                                                className={`block pl-8 pr-3 py-2.5 rounded-lg text-sm transition-all duration-200 relative overflow-hidden group ${selectedListId === list.id && activeView === 'list' ? 'bg-primary/10 text-primary font-semibold' : 'hover:bg-white/5 text-text-secondary hover:text-white'} ${draggedItem?.id === list.id ? 'opacity-50' : ''}`}
                                                             >
-                                                                {selectedListId === list.id && activeView === 'list' && <div className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-4 bg-primary rounded-r-full shadow-[0_0_8px_var(--primary)]"></div>}
+                                                                {selectedListId === list.id && activeView === 'list' && <div className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-4 bg-primary rounded-r-full shadow-[0_0_8px_var(--primary)] animate-scaleIn"></div>}
                                                                 <div className="flex items-center">
-                                                                     <span className={`w-2 h-2 rounded-full mr-2 flex-shrink-0 transition-transform group-hover:scale-110 ${list.color} ${selectedListId === list.id ? 'ring-2 ring-primary/30' : ''}`}></span>
+                                                                     <span className={`w-2 h-2 rounded-full mr-2 flex-shrink-0 transition-transform group-hover:scale-125 ${list.color} ${selectedListId === list.id ? 'ring-2 ring-primary/30' : ''}`}></span>
                                                                      <span className="truncate">{list.name}</span>
                                                                 </div>
                                                             </a>
@@ -479,20 +479,20 @@ const Sidebar: React.FC = () => {
                                                         </li>
                                                     ))}
                                                 </ul>
-                                            )}
+                                            </div>
                                         </div>
                                         {dropTarget?.targetId === folder.id && dropTarget.position === 'bottom' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary z-10"></div>}
                                     </div>
                                 ))}
                                  {folderStructure.standaloneLists.map(list => (
-                                    <div key={list.id} className="relative" draggable={isDraggable} onDragStart={(e) => handleDragStart(e, list.id, 'list')} onDragEnd={handleDragEnd} onDragOver={(e) => handleDragOver(e, list.id, 'list')} onDragLeave={handleDragLeave}>
+                                    <div key={list.id} className="relative animate-fadeIn" draggable={isDraggable} onDragStart={(e) => handleDragStart(e, list.id, 'list')} onDragEnd={handleDragEnd} onDragOver={(e) => handleDragOver(e, list.id, 'list')} onDragLeave={handleDragLeave}>
                                          {dropTarget?.targetId === list.id && dropTarget.position === 'top' && <div className="absolute top-0 left-0 right-0 h-0.5 bg-primary z-10"></div>}
                                         <a href="#" onClick={(e) => { e.preventDefault(); handleNavigation(() => { setSelectedListId(list.id); setActiveView('list'); }); }} 
                                            className={`block px-3 py-2.5 rounded-lg text-sm transition-all duration-200 relative overflow-hidden group ${selectedListId === list.id && activeView === 'list' ? 'bg-primary/10 text-primary font-semibold' : 'hover:bg-white/5 text-text-secondary hover:text-white'} ${draggedItem?.id === list.id ? 'opacity-50' : ''}`}
                                         >
-                                            {selectedListId === list.id && activeView === 'list' && <div className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-4 bg-primary rounded-r-full shadow-[0_0_8px_var(--primary)]"></div>}
+                                            {selectedListId === list.id && activeView === 'list' && <div className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-4 bg-primary rounded-r-full shadow-[0_0_8px_var(--primary)] animate-scaleIn"></div>}
                                              <div className="flex items-center">
-                                                 <span className={`w-2.5 h-2.5 rounded-full mr-3 flex-shrink-0 transition-transform group-hover:scale-110 ${list.color} ${selectedListId === list.id ? 'ring-2 ring-primary/30' : ''}`}></span>
+                                                 <span className={`w-2.5 h-2.5 rounded-full mr-3 flex-shrink-0 transition-transform group-hover:scale-125 ${list.color} ${selectedListId === list.id ? 'ring-2 ring-primary/30' : ''}`}></span>
                                                  <span className="truncate">{list.name}</span>
                                              </div>
                                         </a>

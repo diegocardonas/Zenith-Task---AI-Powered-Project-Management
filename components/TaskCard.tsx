@@ -43,7 +43,7 @@ const StatusBadge: React.FC<{ status: Status; onClick: (e: React.MouseEvent) => 
         <button 
             onClick={onClick}
             disabled={!editable}
-            className={`px-2 py-0.5 text-[10px] font-bold rounded-full border ${statusConfig[status]} uppercase tracking-wide transition-all ${editable ? 'hover:bg-white/10 cursor-pointer' : 'cursor-default'}`}
+            className={`px-2 py-0.5 text-[10px] font-bold rounded-full border ${statusConfig[status]} uppercase tracking-wide transition-all duration-300 ${editable ? 'hover:bg-white/10 cursor-pointer hover:scale-105 active:scale-95' : 'cursor-default'}`}
             title={editable ? t('tooltips.changeStatus') : ''}
         >
             {t(`common.${status.replace(/\s+/g, '').toLowerCase()}`)}
@@ -62,7 +62,7 @@ const DependencyIndicator: React.FC<{ task: Task; allTasks: Task[]; onBlockingCl
 
   if (isBlocked) {
     return (
-      <div className="flex items-center gap-1 text-amber-500 bg-amber-500/10 px-2 py-0.5 rounded-md text-xs border border-amber-500/20" title={t('tooltips.blocked')}>
+      <div className="flex items-center gap-1 text-amber-500 bg-amber-500/10 px-2 py-0.5 rounded-md text-xs border border-amber-500/20 animate-pulse" title={t('tooltips.blocked')}>
         <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
           <path fillRule="evenodd" d="M10 1a4.5 4.5 0 00-4.5 4.5V9H5a2 2 0 00-2 2v6a2 2 0 002 2h10a2 2 0 002-2v-6a2 2 0 00-2-2h-.5V5.5A4.5 4.5 0 0010 1zm3 8V5.5a3 3 0 10-6 0V9h6z" clipRule="evenodd" />
         </svg>
@@ -120,7 +120,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, user, onSelectTask, onDragSta
       className={`
         bg-surface rounded-xl p-4 shadow-sm border border-white/5
         transition-all duration-300 transform 
-        hover:-translate-y-1 hover:shadow-card hover:border-white/10 hover:ring-1 hover:ring-white/10
+        hover:-translate-y-1 hover:shadow-card-hover hover:border-white/20 hover:ring-1 hover:ring-white/10
         relative group w-full flex flex-col gap-2
         ${isDraggable ? 'cursor-grab active:cursor-grabbing' : 'cursor-pointer'}
       `}
@@ -132,7 +132,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, user, onSelectTask, onDragSta
                     e.stopPropagation();
                     onDeleteTask(task.id);
                 }}
-                className="absolute top-3 right-3 p-1.5 bg-[#1e293b] text-text-secondary rounded-lg opacity-0 group-hover:opacity-100 hover:text-red-400 hover:bg-red-400/10 transition-all duration-200 border border-white/10 z-10"
+                className="absolute top-3 right-3 p-1.5 bg-[#1e293b] text-text-secondary rounded-lg opacity-0 group-hover:opacity-100 hover:text-red-400 hover:bg-red-400/10 transition-all duration-200 border border-white/10 z-10 transform hover:scale-110"
                 title={t('tooltips.deleteTask')}
             >
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm4 0a1 1 0 012 0v6a1 1 0 11-2 0V8z" clipRule="evenodd" /></svg>
@@ -158,7 +158,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, user, onSelectTask, onDragSta
                 {user ? (
                 <button 
                     onClick={(e) => { e.stopPropagation(); onOpenUserProfile(user); }} 
-                    className="rounded-full focus:outline-none ring-2 ring-transparent hover:ring-primary/50 transition-all"
+                    className="rounded-full focus:outline-none ring-2 ring-transparent hover:ring-primary/50 transition-all transform hover:scale-110"
                     title={t('tooltips.viewProfile', { name: user.name })}
                 >
                     <AvatarWithStatus user={user} className="w-6 h-6" />
@@ -183,15 +183,15 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, user, onSelectTask, onDragSta
       {(task.subtasks.length > 0 || task.comments.length > 0) && (
         <div className="flex items-center gap-4 mt-1 text-[11px] text-text-secondary/70 font-medium">
             {task.subtasks.length > 0 && (
-                 <div className="flex items-center gap-1.5" title={t('tooltips.subtasks')}>
+                 <div className="flex items-center gap-1.5 transition-colors group-hover:text-text-secondary" title={t('tooltips.subtasks')}>
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
-                        <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
+                        <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
                     </svg>
                     <span>{task.subtasks.filter(s => s.completed).length}/{task.subtasks.length}</span>
                  </div>
             )}
             {task.comments.length > 0 && (
-                <div className="flex items-center gap-1.5" title={t('modals.comments')}>
+                <div className="flex items-center gap-1.5 transition-colors group-hover:text-text-secondary" title={t('modals.comments')}>
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
                         <path fillRule="evenodd" d="M18 5v8a2 2 0 01-2 2h-5l-5 4v-4H4a2 2 0 01-2-2V5a2 2 0 012-2h12a2 2 0 012 2zM7 8H5v2h2V8zm2 0h2v2H9V8zm6 0h-2v2h2V8z" clipRule="evenodd" />
                     </svg>

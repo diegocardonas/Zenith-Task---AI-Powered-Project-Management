@@ -126,7 +126,7 @@ const MainContent: React.FC = () => {
                              <button 
                                 key={view.id}
                                 onClick={() => setCurrentView(view.id as ViewType)} 
-                                className={`px-4 py-1.5 text-sm font-medium rounded-md transition-all duration-200 ${currentView === view.id ? 'bg-primary text-white shadow-md' : 'text-text-secondary hover:text-white hover:bg-white/5'}`}
+                                className={`px-4 py-1.5 text-sm font-medium rounded-md transition-all duration-300 ${currentView === view.id ? 'bg-primary text-white shadow-md' : 'text-text-secondary hover:text-white hover:bg-white/5'}`}
                              >
                                  {view.label}
                              </button>
@@ -170,7 +170,7 @@ const MainContent: React.FC = () => {
                             <button 
                                 onClick={handleNewTaskButtonClick} 
                                 disabled={!selectedList}
-                                className="px-4 py-2 bg-primary hover:bg-primary-focus text-white font-semibold rounded-lg transition-all duration-200 flex items-center shadow-lg shadow-primary/20 disabled:bg-gray-600 disabled:cursor-not-allowed disabled:shadow-none hover:scale-[1.02]"
+                                className="px-4 py-2 bg-primary hover:bg-primary-focus text-white font-semibold rounded-lg transition-all duration-200 flex items-center shadow-lg shadow-primary/20 disabled:bg-gray-600 disabled:cursor-not-allowed disabled:shadow-none hover:scale-[1.05] active:scale-95"
                                 title={!selectedList ? t('mainContent.createTaskNoProjectTooltip') : t('mainContent.createTaskTooltip')}
                             >
                               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1.5" viewBox="0 0 20 20" fill="currentColor">
@@ -179,7 +179,7 @@ const MainContent: React.FC = () => {
                               <span className="hidden sm:inline">{t('common.new')}</span>
                             </button>
                              {isTemplateDropdownOpen && taskTemplates.length > 0 && (
-                                <div className="absolute right-0 mt-2 w-56 bg-surface rounded-xl shadow-2xl border border-white/10 z-50 animate-fadeIn backdrop-blur-xl">
+                                <div className="absolute right-0 mt-2 w-56 bg-surface rounded-xl shadow-2xl border border-white/10 z-50 animate-scaleIn backdrop-blur-xl origin-top-right">
                                     <div className="p-1">
                                         <button onClick={() => handleCreateTask()} className="w-full text-left px-3 py-2 text-sm rounded-lg hover:bg-white/5 font-semibold transition-colors">
                                             {t('mainContent.newTaskFromTemplate')}
@@ -199,7 +199,10 @@ const MainContent: React.FC = () => {
                 </div>
             </div>
             <div className="flex-grow p-4 sm:p-6 overflow-x-hidden">
-                {renderCurrentView()}
+                {/* Added key to trigger animation on view change */}
+                <div key={currentView} className="h-full animate-slideUpFade">
+                    {renderCurrentView()}
+                </div>
             </div>
             </>
           

@@ -172,7 +172,7 @@ const TeamChatView: React.FC = () => {
 
                 {/* Chat Sidebar / List */}
                 <div className={`w-full md:w-80 bg-[#1e293b]/50 backdrop-blur-xl border-r border-white/10 flex flex-col z-20 ${isMobileListVisible ? 'flex' : 'hidden md:flex'}`}>
-                    <div className="p-4 border-b border-white/10 space-y-4">
+                    <div className="p-4 pr-12 border-b border-white/10 space-y-4">
                         <h2 className="text-xl font-bold text-white flex items-center gap-2">
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
                             {t('chat.teamChat')}
@@ -296,7 +296,7 @@ const TeamChatView: React.FC = () => {
                     {activeChatId && activeChannel ? (
                         <>
                             {/* Header */}
-                            <div className="p-3 md:p-4 border-b border-white/10 flex items-center bg-[#0f172a]/80 backdrop-blur-md sticky top-0 z-30 shadow-sm justify-between">
+                            <div className="p-3 md:p-4 pr-12 md:pr-14 border-b border-white/10 flex items-center bg-[#0f172a]/80 backdrop-blur-md sticky top-0 z-30 shadow-sm justify-between">
                                 <div className="flex items-center">
                                     <button 
                                         onClick={() => setIsMobileListVisible(true)} 

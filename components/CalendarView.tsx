@@ -49,8 +49,26 @@ const DayTasksModal: React.FC<{
   users: User[];
   onClose: () => void;
   onSelectTask: (task: Task) => void;
-}> = ({ day, tasks, users, onClose, onSelectTask }) => {
+  onUpdateTask: (task: Task) => void;
+}> = ({ day, tasks, users, onClose, onSelectTask, onUpdateTask }) => {
     const { i18n, t } = useTranslation();
+
+    const handleStatusToggle = (e: React.MouseEvent, task: Task) => {
+        e.stopPropagation();
+        const nextStatus = {
+            [Status.Todo]: Status.InProgress,
+            [Status.InProgress]: Status.Done,
+            [Status.Done]: Status.Todo
+        };
+        onUpdateTask({ ...task, status: nextStatus[task.status] });
+    };
+
+    const statusColors = {
+        [Status.Todo]: 'bg-blue-500',
+        [Status.InProgress]: 'bg-amber-500',
+        [Status.Done]: 'bg-emerald-500',
+    };
+
     return (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex justify-center items-center z-50 animate-fadeIn" onClick={onClose}>
             <div className="bg-[#1e293b] rounded-2xl shadow-2xl border border-white/10 w-full max-w-md max-h-[80vh] flex flex-col animate-scaleIn overflow-hidden" onClick={e => e.stopPropagation()}>
@@ -66,15 +84,35 @@ const DayTasksModal: React.FC<{
                     </button>
                 </header>
                 <main className="p-4 overflow-y-auto space-y-2 custom-scrollbar">
-                    {tasks.sort((a,b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime()).map(task => (
-                        <TaskChip 
-                            key={task.id} 
-                            task={task} 
-                            user={users.find(u => u.id === task.assigneeId)}
-                            onClick={() => { onSelectTask(task); onClose(); }} 
-                            draggable={false}
-                        />
-                    ))}
+                    {tasks.sort((a,b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime()).map(task => {
+                        const user = users.find(u => u.id === task.assigneeId);
+                        return (
+                            <div 
+                                key={task.id}
+                                onClick={() => { onSelectTask(task); onClose(); }}
+                                className="flex items-center gap-3 p-3 bg-white/5 hover:bg-white/10 rounded-xl transition-all cursor-pointer group border border-transparent hover:border-white/10"
+                            >
+                                <button 
+                                    onClick={(e) => handleStatusToggle(e, task)}
+                                    className={`w-5 h-5 rounded-full flex-shrink-0 border-2 border-white/10 flex items-center justify-center transition-all hover:scale-110 ${task.status === Status.Done ? 'bg-emerald-500 border-emerald-500' : 'hover:border-white/30'}`}
+                                    title={t('tooltips.changeStatus')}
+                                >
+                                    {task.status === Status.Done && <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd"/></svg>}
+                                    {task.status === Status.InProgress && <div className="w-2 h-2 rounded-full bg-amber-500"></div>}
+                                    {task.status === Status.Todo && <div className="w-2 h-2 rounded-full bg-blue-500 opacity-0 group-hover:opacity-100 transition-opacity"></div>}
+                                </button>
+                                
+                                <div className="flex-grow min-w-0">
+                                    <p className={`text-sm font-medium truncate ${task.status === Status.Done ? 'text-text-secondary line-through' : 'text-text-primary'}`}>{task.title}</p>
+                                    <div className="flex items-center gap-2 mt-0.5">
+                                        <span className={`text-[10px] px-1.5 py-0.5 rounded ${PRIORITY_STYLES[task.priority].replace('border-l-', '')}`}>{task.priority}</span>
+                                    </div>
+                                </div>
+
+                                {user && <AvatarWithStatus user={user} className="w-6 h-6" />}
+                            </div>
+                        );
+                    })}
                 </main>
             </div>
         </div>
@@ -294,6 +332,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({ tasks, onSelectTask,
                     users={users}
                     onClose={() => setModalData(null)}
                     onSelectTask={onSelectTask}
+                    onUpdateTask={onUpdateTask}
                 />
             )}
         </div>

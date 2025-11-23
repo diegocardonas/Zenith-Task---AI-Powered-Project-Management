@@ -1,3 +1,4 @@
+
 import React, { useMemo, useRef, useState, useEffect, useCallback } from 'react';
 import { Task, User, Priority, Status, Role } from '../types';
 import AvatarWithStatus from './AvatarWithStatus';
@@ -373,6 +374,16 @@ const GanttView: React.FC<GanttViewProps> = ({ tasks, allTasks, onSelectTask, us
         document.removeEventListener('mousemove', handleMouseMoveDrag);
     }, []);
 
+    const handleStatusToggle = (e: React.MouseEvent, task: Task) => {
+        e.stopPropagation();
+        const nextStatus = {
+            [Status.Todo]: Status.InProgress,
+            [Status.InProgress]: Status.Done,
+            [Status.Done]: Status.Todo
+        };
+        onUpdateTask({ ...task, status: nextStatus[task.status] });
+    };
+
     const todayLinePosition = getDaysDiff(startDate.toISOString(), new Date().toISOString());
 
     if (sortedTasks.length === 0) {
@@ -418,12 +429,17 @@ const GanttView: React.FC<GanttViewProps> = ({ tasks, allTasks, onSelectTask, us
                              {Object.values(taskPositions).map(({ top, task }) => (
                                 <div
                                     key={task.id}
-                                    className="absolute w-full px-2 flex items-center border-b border-border/50 cursor-pointer hover:bg-secondary-focus overflow-hidden"
+                                    className="absolute w-full px-2 flex items-center gap-2 border-b border-border/50 cursor-pointer hover:bg-secondary-focus overflow-hidden group"
                                     style={{ top: `${top}px`, height: `${rowHeight}px` }}
                                     onClick={() => onSelectTask(task)}
                                     title={task.title}
                                 >
-                                    <span className="break-words leading-tight text-sm">{task.title}</span>
+                                    <button 
+                                        onClick={(e) => handleStatusToggle(e, task)}
+                                        className={`w-2.5 h-2.5 rounded-full flex-shrink-0 transition-transform hover:scale-125 ${task.status === Status.Done ? 'bg-emerald-500' : task.status === Status.InProgress ? 'bg-amber-500' : 'bg-blue-500'}`}
+                                        title={t('tooltips.changeStatus')}
+                                    ></button>
+                                    <span className={`break-words leading-tight text-sm truncate ${task.status === Status.Done ? 'line-through text-text-secondary' : ''}`}>{task.title}</span>
                                 </div>
                             ))}
                         </div>
