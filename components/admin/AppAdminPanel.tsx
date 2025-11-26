@@ -421,15 +421,13 @@ const ChatSettingsTabContent: React.FC = () => {
     const { t } = useTranslation();
     const [enableChat, setEnableChat] = useState(true);
     const [allowEditing, setAllowEditing] = useState(true);
-    const [enableSummaries, setEnableSummaries] = useState(true);
-    const [enableSmartReplies, setEnableSmartReplies] = useState(true);
     const [retentionDays, setRetentionDays] = useState(30);
     const [maxFileSize, setMaxFileSize] = useState(10);
 
     return (
         <div className="p-6 md:p-10 max-w-4xl mx-auto animate-fadeIn h-full overflow-y-auto pb-24 md:pb-10">
             <h2 className="text-3xl font-bold text-white mb-2">{t('admin.chatSettings')}</h2>
-            <p className="text-slate-400 mb-8">Configure messaging, AI features, and storage policies for the team chat.</p>
+            <p className="text-slate-400 mb-8">Configure messaging and storage policies for the team chat.</p>
             
             <div className="bg-slate-800/40 rounded-2xl border border-white/10 p-6 md:p-8 mb-8 shadow-lg">
                 <h3 className="text-lg font-semibold text-white mb-6 flex items-center gap-2">
@@ -440,15 +438,6 @@ const ChatSettingsTabContent: React.FC = () => {
                     <Toggle label={t('admin.enableChat')} checked={enableChat} onChange={setEnableChat} />
                     <Toggle label={t('admin.allowMessageEditing')} checked={allowEditing} onChange={setAllowEditing} />
                 </div>
-            </div>
-
-            <div className="bg-slate-800/40 rounded-2xl border border-white/10 p-6 md:p-8 mb-8 shadow-lg">
-                 <h3 className="text-lg font-semibold text-white mb-2 flex items-center gap-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
-                    {t('admin.aiFeatures')}
-                 </h3>
-                 <Toggle label={t('admin.enableSummaries')} checked={enableSummaries} onChange={setEnableSummaries} />
-                 <Toggle label={t('admin.enableSmartReplies')} checked={enableSmartReplies} onChange={setEnableSmartReplies} />
             </div>
 
              <div className="bg-slate-800/40 rounded-2xl border border-white/10 p-6 md:p-8 shadow-lg">

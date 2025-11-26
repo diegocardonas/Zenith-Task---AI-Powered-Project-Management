@@ -1,3 +1,4 @@
+
 import React from 'react';
 
 const Logo: React.FC = () => {
@@ -31,11 +32,6 @@ const Logo: React.FC = () => {
           strokeWidth="4"
           strokeLinecap="round"
           strokeLinejoin="round"
-        />
-        {/* AI Sparkle */}
-        <path
-          d="M30 5 L31 7 L33 8 L31 9 L30 11 L29 9 L27 8 L29 7 Z"
-          fill="var(--accent)"
         />
       </svg>
       <span className="text-xl font-bold text-text-primary">Zenith Task</span>

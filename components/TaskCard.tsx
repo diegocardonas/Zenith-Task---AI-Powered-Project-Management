@@ -1,6 +1,6 @@
 
-import React from 'react';
-import { Task, User, Priority, Status, Permission } from '../types';
+import React, { useState } from 'react';
+import { Task, User, Priority, Status, Permission, TaskType } from '../types';
 import AvatarWithStatus from './AvatarWithStatus';
 import { useTranslation } from '../i18n';
 import { useAppContext } from '../contexts/AppContext';
@@ -16,75 +16,29 @@ interface TaskCardProps {
   onDeleteTask: (taskId: string) => void;
 }
 
-const PriorityBadge: React.FC<{ priority: Priority }> = ({ priority }) => {
-    const { t } = useTranslation();
-    const priorityConfig = {
-        [Priority.High]: 'bg-red-500/10 text-red-500 border-red-500/20',
-        [Priority.Medium]: 'bg-amber-500/10 text-amber-500 border-amber-500/20',
-        [Priority.Low]: 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20',
-    };
-    
-    return (
-        <span className={`px-2.5 py-0.5 text-[10px] font-bold rounded-full border ${priorityConfig[priority]} uppercase tracking-wide`}>
-            {t(`common.${priority.toLowerCase()}`)}
-        </span>
-    );
+const TypeIcon: React.FC<{ type: TaskType }> = ({ type }) => {
+    const iconClasses = "w-3.5 h-3.5 flex-shrink-0";
+    switch (type) {
+        case TaskType.Bug:
+            return <div className="bg-red-500 p-0.5 rounded-sm"><svg className={`${iconClasses} text-white`} fill="currentColor" viewBox="0 0 20 20"><path d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6zM10 18a3 3 0 01-3-3h6a3 3 0 01-3 3z" /></svg></div>;
+        case TaskType.Story:
+            return <div className="bg-green-500 p-0.5 rounded-sm"><svg className={`${iconClasses} text-white`} fill="currentColor" viewBox="0 0 20 20"><path d="M9 4.804A7.968 7.968 0 005.5 4c-1.255 0-2.443.29-3.5.804v10A7.969 7.969 0 015.5 14c1.669 0 3.218.51 4.5 1.385A7.962 7.962 0 0114.5 14c1.255 0 2.443.29 3.5.804v-10A7.968 7.968 0 0014.5 4c-1.255 0-2.443.29-3.5.804V12a1 1 0 11-2 0V4.804z" /></svg></div>;
+        case TaskType.Epic:
+            return <div className="bg-purple-500 p-0.5 rounded-sm"><svg className={`${iconClasses} text-white`} fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd" /></svg></div>;
+        default: // Task
+            return <div className="bg-blue-500 p-0.5 rounded-sm"><svg className={`${iconClasses} text-white`} fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg></div>;
+    }
 };
 
-const StatusBadge: React.FC<{ status: Status; onClick: (e: React.MouseEvent) => void; editable: boolean }> = ({ status, onClick, editable }) => {
-    const { t } = useTranslation();
-    const statusConfig = {
-        [Status.Todo]: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
-        [Status.InProgress]: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
-        [Status.Done]: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
-    };
-
-    return (
-        <button 
-            onClick={onClick}
-            disabled={!editable}
-            className={`px-2 py-0.5 text-[10px] font-bold rounded-full border ${statusConfig[status]} uppercase tracking-wide transition-all duration-300 ${editable ? 'hover:bg-white/10 cursor-pointer hover:scale-105 active:scale-95' : 'cursor-default'}`}
-            title={editable ? t('tooltips.changeStatus') : ''}
-        >
-            {t(`common.${status.replace(/\s+/g, '').toLowerCase()}`)}
-        </button>
-    );
-};
-
-const DependencyIndicator: React.FC<{ task: Task; allTasks: Task[]; onBlockingClick: () => void }> = ({ task, allTasks, onBlockingClick }) => {
-  const { t } = useTranslation();
-  const isBlocked = (task.dependsOn || []).some(depId => {
-    const depTask = allTasks.find(t => t.id === depId);
-    return depTask && depTask.status !== Status.Done;
-  });
-
-  const blockingTasks = allTasks.filter(t => t.dependsOn?.includes(task.id));
-
-  if (isBlocked) {
-    return (
-      <div className="flex items-center gap-1 text-amber-500 bg-amber-500/10 px-2 py-0.5 rounded-md text-xs border border-amber-500/20 animate-pulse" title={t('tooltips.blocked')}>
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
-          <path fillRule="evenodd" d="M10 1a4.5 4.5 0 00-4.5 4.5V9H5a2 2 0 00-2 2v6a2 2 0 002 2h10a2 2 0 002-2v-6a2 2 0 00-2-2h-.5V5.5A4.5 4.5 0 0010 1zm3 8V5.5a3 3 0 10-6 0V9h6z" clipRule="evenodd" />
-        </svg>
-        <span className="hidden group-hover:inline text-[10px] font-medium">Blocked</span>
-      </div>
-    );
-  }
-
-  if (blockingTasks.length > 0) {
-    const taskTitles = blockingTasks.map(t => t.title).join(', ');
-    return (
-      <button onClick={(e) => { e.stopPropagation(); onBlockingClick(); }} className="flex items-center gap-1 text-text-secondary hover:text-primary transition-colors text-xs bg-surface border border-border px-2 py-0.5 rounded hover:border-primary/50" title={t('tooltips.isBlocking', { tasks: taskTitles })}>
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
-          <path d="M8 9a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z" />
-          <path d="M15.5 6.5a1 1 0 00-1-1h-1.382l-.447-1.342A2 2 0 0011.025 3H8.975a2 2 0 00-1.646 1.158L6.882 5.5H5.5a1 1 0 000 2h1.082l.858 5.146A2 2 0 009.423 14h1.154a2 2 0 001.983-1.854l.858-5.146H14.5a1 1 0 001-1z" />
-        </svg>
-        <span className="font-medium">{blockingTasks.length}</span>
-      </button>
-    );
-  }
-
-  return null;
+const PriorityIcon: React.FC<{ priority: Priority }> = ({ priority }) => {
+    switch (priority) {
+        case Priority.High:
+            return <svg className="w-3.5 h-3.5 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" /></svg>; // Up Arrow
+        case Priority.Low:
+            return <svg className="w-3.5 h-3.5 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" /></svg>; // Down Arrow
+        default:
+            return <svg className="w-3.5 h-3.5 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 12h16" /></svg>; // Equal
+    }
 };
 
 const TaskCard: React.FC<TaskCardProps> = ({ task, user, onSelectTask, onDragStart, allTasks, onOpenBlockingTasks, onOpenUserProfile, onDeleteTask }) => {
@@ -104,11 +58,7 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, user, onSelectTask, onDragSta
   const handleStatusClick = (e: React.MouseEvent) => {
       e.stopPropagation();
       if (!canEdit) return;
-      const nextStatus = {
-          [Status.Todo]: Status.InProgress,
-          [Status.InProgress]: Status.Done,
-          [Status.Done]: Status.Todo
-      };
+      const nextStatus = { [Status.Todo]: Status.InProgress, [Status.InProgress]: Status.Done, [Status.Done]: Status.Todo };
       handleUpdateTask({ ...task, status: nextStatus[task.status] });
   };
 
@@ -118,88 +68,74 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, user, onSelectTask, onDragSta
       onDragStart={(e) => onDragStart(e, task.id)}
       onClick={() => onSelectTask()}
       className={`
-        bg-surface rounded-xl p-4 shadow-sm border border-white/5
-        transition-all duration-300 transform 
-        hover:-translate-y-1 hover:shadow-card-hover hover:border-white/20 hover:ring-1 hover:ring-white/10
-        relative group w-full flex flex-col gap-2
-        ${isDraggable ? 'cursor-grab active:cursor-grabbing' : 'cursor-pointer'}
+        bg-surface rounded-xl p-5 shadow-card border border-white/5 hover:border-primary/30
+        transition-all duration-200 cursor-pointer group w-full flex flex-col gap-3
+        ${isDraggable ? 'active:cursor-grabbing' : ''}
+        hover:-translate-y-1 hover:shadow-card-hover
       `}
-      aria-label={t('tooltips.openTask', { title: task.title })}
     >
-        {canDelete && (
-            <button 
-                onClick={(e) => { 
-                    e.stopPropagation();
-                    onDeleteTask(task.id);
-                }}
-                className="absolute top-3 right-3 p-1.5 bg-[#1e293b] text-text-secondary rounded-lg opacity-0 group-hover:opacity-100 hover:text-red-400 hover:bg-red-400/10 transition-all duration-200 border border-white/10 z-10 transform hover:scale-110"
-                title={t('tooltips.deleteTask')}
-            >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm4 0a1 1 0 012 0v6a1 1 0 11-2 0V8z" clipRule="evenodd" /></svg>
-            </button>
-        )}
-        
-        <div className="flex justify-between items-center mb-1">
-             <StatusBadge status={task.status} onClick={handleStatusClick} editable={canEdit} />
-             <div className="flex gap-2">
-                <PriorityBadge priority={task.priority} />
-                {!selectedListId && projectList && (
-                    <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded ${projectList.color.replace('bg-', 'text-').replace('500', '400')} bg-white/5`}>
-                        {projectList.name}
-                    </span>
+        {/* Header: Type + Key + Actions */}
+        <div className="flex justify-between items-start">
+             <div className="flex items-center gap-2.5">
+                 <TypeIcon type={task.type || TaskType.Task} />
+                 <span className="text-xs font-mono text-text-secondary hover:text-primary transition-colors">{task.issueKey}</span>
+             </div>
+             <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                <button 
+                    onClick={handleStatusClick}
+                    className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border transition-colors
+                    ${task.status === Status.Todo ? 'bg-blue-500/10 text-blue-500 border-blue-500/20 hover:bg-blue-500/20' : ''}
+                    ${task.status === Status.InProgress ? 'bg-amber-500/10 text-amber-500 border-amber-500/20 hover:bg-amber-500/20' : ''}
+                    ${task.status === Status.Done ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20 hover:bg-emerald-500/20' : ''}`}
+                >
+                    {t(`common.${task.status.replace(/\s+/g, '').toLowerCase()}`)}
+                </button>
+                {canDelete && (
+                    <button 
+                        onClick={(e) => { e.stopPropagation(); onDeleteTask(task.id); }}
+                        className="text-text-secondary hover:text-red-400 p-0.5 transition-colors"
+                    >
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                    </button>
                 )}
              </div>
         </div>
 
-      <h4 className="font-semibold text-text-primary mb-1 text-sm leading-relaxed line-clamp-2 group-hover:text-primary transition-colors">{task.title}</h4>
+      <h4 className={`text-sm font-medium text-text-primary leading-snug line-clamp-2 mb-1 group-hover:text-primary transition-colors ${task.status === Status.Done ? 'line-through opacity-60' : ''}`}>
+          {task.title}
+      </h4>
       
-      <div className="flex items-center justify-between mt-auto pt-3 border-t border-white/5">
+      {/* Footer: Priority, Avatar, Project Badge */}
+      <div className="flex items-center justify-between mt-auto pt-2 border-t border-white/5">
           <div className="flex items-center gap-3">
-                {user ? (
-                <button 
-                    onClick={(e) => { e.stopPropagation(); onOpenUserProfile(user); }} 
-                    className="rounded-full focus:outline-none ring-2 ring-transparent hover:ring-primary/50 transition-all transform hover:scale-110"
-                    title={t('tooltips.viewProfile', { name: user.name })}
-                >
-                    <AvatarWithStatus user={user} className="w-6 h-6" />
-                </button>
-                ) : (
-                <div className="w-6 h-6 rounded-full bg-secondary border border-dashed border-text-secondary/50 flex items-center justify-center text-[10px] font-bold text-text-secondary" title={t('tooltips.unassigned')}>
-                    ?
-                </div>
+                <PriorityIcon priority={task.priority} />
+                {task.storyPoints !== undefined && task.storyPoints > 0 && (
+                    <span className="bg-secondary text-[10px] font-bold text-text-secondary px-1.5 py-0.5 rounded-md border border-white/5">
+                        {task.storyPoints}
+                    </span>
                 )}
-                <DependencyIndicator task={task} allTasks={allTasks} onBlockingClick={onOpenBlockingTasks} />
+                {!selectedListId && projectList && (
+                    <span className={`text-[9px] uppercase font-bold px-1.5 py-0.5 rounded ${projectList.color.replace('bg-', 'text-').replace('500', '400')} bg-white/5`}>
+                        {projectList.key}
+                    </span>
+                )}
           </div>
 
-          <div className={`flex items-center gap-1.5 text-xs ${isOverdue ? 'text-red-400 font-semibold bg-red-400/10 px-2 py-0.5 rounded' : 'text-text-secondary'}`} title={t('tooltips.dueDate', { date: new Date(task.dueDate).toLocaleDateString() })}>
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
-            </svg>
-            <span>{new Date(task.dueDate).toLocaleDateString(i18n.language, { month: 'short', day: 'numeric' })}</span>
+          <div className="flex items-center gap-2">
+             {isOverdue && (
+                 <span className="text-[10px] bg-red-500/20 text-red-400 px-1.5 py-0.5 rounded font-bold">
+                     {new Date(task.dueDate).toLocaleDateString(i18n.language, { day: 'numeric', month: 'short'})}
+                 </span>
+             )}
+             {user ? (
+                <button onClick={(e) => { e.stopPropagation(); onOpenUserProfile(user); }} className="transition-transform hover:scale-110">
+                    <AvatarWithStatus user={user} className="w-6 h-6 ring-2 ring-surface" />
+                </button>
+             ) : (
+                <div className="w-6 h-6 rounded-full bg-white/5 border border-dashed border-white/20 flex items-center justify-center text-[9px] text-text-secondary">?</div>
+             )}
           </div>
       </div>
-      
-      {/* Footer Metadata */}
-      {(task.subtasks.length > 0 || task.comments.length > 0) && (
-        <div className="flex items-center gap-4 mt-1 text-[11px] text-text-secondary/70 font-medium">
-            {task.subtasks.length > 0 && (
-                 <div className="flex items-center gap-1.5 transition-colors group-hover:text-text-secondary" title={t('tooltips.subtasks')}>
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
-                        <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
-                    </svg>
-                    <span>{task.subtasks.filter(s => s.completed).length}/{task.subtasks.length}</span>
-                 </div>
-            )}
-            {task.comments.length > 0 && (
-                <div className="flex items-center gap-1.5 transition-colors group-hover:text-text-secondary" title={t('modals.comments')}>
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor">
-                        <path fillRule="evenodd" d="M18 5v8a2 2 0 01-2 2h-5l-5 4v-4H4a2 2 0 01-2-2V5a2 2 0 012-2h12a2 2 0 012 2zM7 8H5v2h2V8zm2 0h2v2H9V8zm6 0h-2v2h2V8z" clipRule="evenodd" />
-                    </svg>
-                    <span>{task.comments.length}</span>
-                </div>
-            )}
-        </div>
-      )}
     </div>
   );
 };

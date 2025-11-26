@@ -3,10 +3,9 @@ import React, { createContext, useContext, useReducer, useState, useEffect, useC
 import { 
     User, Task, List, Folder, Workspace, Notification, Toast, 
     ViewType, Status, Priority, Role, Permission, UserStatus, 
-    TaskTemplate, Activity, ChatChannel, ChatMessage 
+    TaskTemplate, Activity, ChatChannel, ChatMessage, TaskType 
 } from '../types';
 import { useTranslation } from '../i18n';
-import { generateProjectSummary } from '../services/geminiService';
 
 // --- Mock Initial Data ---
 const initialWorkspaces: Workspace[] = [
@@ -32,32 +31,32 @@ const initialUsers: User[] = [
 ];
 
 const initialLists: List[] = [
-    { id: 'l1', name: 'Implementación BTS', color: 'bg-blue-500', workspaceId: 'w1', folderId: 'f1', order: 0 },
-    { id: 'l6', name: 'Transmisión (TX)', color: 'bg-cyan-500', workspaceId: 'w1', folderId: 'f1', order: 1 },
-    { id: 'l2', name: 'Infraestructura Civil', color: 'bg-gray-500', workspaceId: 'w1', folderId: 'f1', order: 2 },
-    { id: 'l3', name: 'Mantenimiento O&M', color: 'bg-green-500', workspaceId: 'w1', folderId: 'f2', order: 0 },
-    { id: 'l4', name: 'Despliegue Nokia', color: 'bg-indigo-500', workspaceId: 'w1', folderId: 'f3', order: 0 },
-    { id: 'l5', name: 'Centro de Documentación', color: 'bg-amber-500', workspaceId: 'w1', order: 4 }, // Sin carpeta (Transversal)
+    { id: 'l1', name: 'Implementación BTS', key: 'BTS', color: 'bg-blue-500', workspaceId: 'w1', folderId: 'f1', order: 0 },
+    { id: 'l6', name: 'Transmisión (TX)', key: 'TX', color: 'bg-cyan-500', workspaceId: 'w1', folderId: 'f1', order: 1 },
+    { id: 'l2', name: 'Infraestructura Civil', key: 'CIV', color: 'bg-gray-500', workspaceId: 'w1', folderId: 'f1', order: 2 },
+    { id: 'l3', name: 'Mantenimiento O&M', key: 'OM', color: 'bg-green-500', workspaceId: 'w1', folderId: 'f2', order: 0 },
+    { id: 'l4', name: 'Despliegue Nokia', key: 'NOK', color: 'bg-indigo-500', workspaceId: 'w1', folderId: 'f3', order: 0 },
+    { id: 'l5', name: 'Centro de Documentación', key: 'DOC', color: 'bg-amber-500', workspaceId: 'w1', order: 4 }, 
 ];
 
 const initialTasks: Task[] = [
     // BTS Tasks (l1)
-    { id: 't1', title: 'Instalación Nodo 4G - Sitio: BOG_CENTRO_01', description: 'Instalación de equipos Huawei, cableado de energía DC y montaje de RRUs.', status: Status.InProgress, priority: Priority.High, assigneeId: 'u7', dueDate: new Date(Date.now() + 86400000).toISOString(), listId: 'l1', subtasks: [{id: 'st1', text: 'Montaje de antenas', completed: true}, {id: 'st2', text: 'Conexión de jumpers', completed: false}], comments: [], attachments: [], reminder: null, createdAt: new Date().toISOString(), dependsOn: [], activityLog: [] },
+    { id: 't1', issueKey: 'BTS-101', type: TaskType.Story, title: 'Instalación Nodo 4G - Sitio: BOG_CENTRO_01', description: 'Instalación de equipos Huawei, cableado de energía DC y montaje de RRUs.', status: Status.InProgress, priority: Priority.High, storyPoints: 5, assigneeId: 'u7', dueDate: new Date(Date.now() + 86400000).toISOString(), listId: 'l1', subtasks: [{id: 'st1', text: 'Montaje de antenas', completed: true}, {id: 'st2', text: 'Conexión de jumpers', completed: false}], comments: [], attachments: [], reminder: null, createdAt: new Date().toISOString(), dependsOn: [], activityLog: [] },
     
     // TX Tasks (l6)
-    { id: 't5', title: 'Alineación Enlace MW - BOG_SUR_02 <-> BOG_SUR_05', description: 'Alineación de microondas banda E, pruebas de BER y comisionamiento.', status: Status.Todo, priority: Priority.High, assigneeId: 'u3', dueDate: new Date(Date.now() + 120000000).toISOString(), listId: 'l6', subtasks: [], comments: [], attachments: [], reminder: null, createdAt: new Date().toISOString(), dependsOn: [], activityLog: [] },
+    { id: 't5', issueKey: 'TX-42', type: TaskType.Task, title: 'Alineación Enlace MW - BOG_SUR_02 <-> BOG_SUR_05', description: 'Alineación de microondas banda E, pruebas de BER y comisionamiento.', status: Status.Todo, priority: Priority.High, storyPoints: 8, assigneeId: 'u3', dueDate: new Date(Date.now() + 120000000).toISOString(), listId: 'l6', subtasks: [], comments: [], attachments: [], reminder: null, createdAt: new Date().toISOString(), dependsOn: [], activityLog: [] },
     
     // O&M Tasks (l3)
-    { id: 't2', title: 'Mantenimiento Preventivo - Estación Base CALI_NORTE', description: 'Limpieza de equipos, verificación de aires acondicionados y pruebas de baterías.', status: Status.Todo, priority: Priority.Medium, assigneeId: 'u4', dueDate: new Date(Date.now() + 172800000).toISOString(), listId: 'l3', subtasks: [], comments: [], attachments: [], reminder: null, createdAt: new Date().toISOString(), dependsOn: [], activityLog: [] },
+    { id: 't2', issueKey: 'OM-305', type: TaskType.Task, title: 'Mantenimiento Preventivo - Estación Base CALI_NORTE', description: 'Limpieza de equipos, verificación de aires acondicionados y pruebas de baterías.', status: Status.Todo, priority: Priority.Medium, storyPoints: 3, assigneeId: 'u4', dueDate: new Date(Date.now() + 172800000).toISOString(), listId: 'l3', subtasks: [], comments: [], attachments: [], reminder: null, createdAt: new Date().toISOString(), dependsOn: [], activityLog: [] },
     
     // Nokia Tasks (l4)
-    { id: 't3', title: 'Carga de TSS y Reporte Fotográfico - Proyecto Nokia', description: 'Subir evidencias al portal de Nokia para el sitio MED_POBLADO.', status: Status.Todo, priority: Priority.High, assigneeId: 'u5', dueDate: new Date(Date.now() + 259200000).toISOString(), listId: 'l4', subtasks: [], comments: [], attachments: [], reminder: null, createdAt: new Date().toISOString(), dependsOn: [], activityLog: [] },
+    { id: 't3', issueKey: 'NOK-88', type: TaskType.Story, title: 'Carga de TSS y Reporte Fotográfico - Proyecto Nokia', description: 'Subir evidencias al portal de Nokia para el sitio MED_POBLADO.', status: Status.Todo, priority: Priority.High, storyPoints: 2, assigneeId: 'u5', dueDate: new Date(Date.now() + 259200000).toISOString(), listId: 'l4', subtasks: [], comments: [], attachments: [], reminder: null, createdAt: new Date().toISOString(), dependsOn: [], activityLog: [] },
     
     // Documentation Tasks (l5)
-    { id: 't4', title: 'Validación Carpeta Calidad Sitio BOG_CENTRO_01', description: 'Revisión de firmas y protocolo de pruebas para facturación a DICO.', status: Status.InProgress, priority: Priority.Low, assigneeId: 'u6', dueDate: new Date(Date.now() + 432000000).toISOString(), listId: 'l5', subtasks: [], comments: [], attachments: [], reminder: null, createdAt: new Date().toISOString(), dependsOn: ['t1'], activityLog: [] },
+    { id: 't4', issueKey: 'DOC-12', type: TaskType.Bug, title: 'Validación Carpeta Calidad Sitio BOG_CENTRO_01', description: 'Revisión de firmas y protocolo de pruebas para facturación a DICO.', status: Status.InProgress, priority: Priority.Low, storyPoints: 1, assigneeId: 'u6', dueDate: new Date(Date.now() + 432000000).toISOString(), listId: 'l5', subtasks: [], comments: [], attachments: [], reminder: null, createdAt: new Date().toISOString(), dependsOn: ['t1'], activityLog: [] },
 ];
 
-// Initial Chat Data
+// ... (Keep Chat Data as is)
 const initialChannels: ChatChannel[] = [
     { id: 'c1', name: 'Coordinación General', type: 'group', participants: ['u1', 'u2', 'u3', 'u4', 'u5', 'u6'], lastMessage: 'Reunión de seguimiento a las 14:00', lastMessageTime: new Date(Date.now() - 86400000).toISOString(), unreadCount: 0 },
     { id: 'c2', name: 'Implementación DICO', type: 'group', participants: ['u3', 'u7', 'u6'], lastMessage: 'Materiales despachados al sitio.', lastMessageTime: new Date(Date.now() - 3600000).toISOString(), unreadCount: 2 },
@@ -67,8 +66,6 @@ const initialMessages: ChatMessage[] = [
     { id: 'm1', channelId: 'c1', senderId: 'u1', text: 'Buenos días equipo, por favor actualizar el estado de los sitios críticos de DICO.', timestamp: new Date(Date.now() - 86400000).toISOString() },
     { id: 'm2', channelId: 'c2', senderId: 'u7', text: 'Diego, ya estoy en sitio para el enlace MW. Procedo con el desmontaje.', timestamp: new Date(Date.now() - 3600000).toISOString() },
 ];
-
-// --- State & Reducer ---
 
 interface AppState {
     currentUser: User | null;
@@ -128,6 +125,7 @@ type Action =
     | { type: 'SET_ADMIN_PANEL_OPEN'; payload: boolean }
     | { type: 'ADD_CHANNEL'; payload: ChatChannel };
 
+// ... (Reducer Logic - Unchanged)
 const appReducer = (state: AppState, action: Action): AppState => {
     switch (action.type) {
         case 'SET_USER': return { ...state, currentUser: action.payload };
@@ -183,45 +181,28 @@ const appReducer = (state: AppState, action: Action): AppState => {
     }
 };
 
-// --- Permissions Helper ---
+// ... (Permissions Helper - Unchanged)
 const getPermissions = (role: Role): Set<Permission> => {
     const permissions = new Set<Permission>();
-    
-    // --- Viewer ---
-    // Read-only access is implied by lack of other permissions.
     if (role === Role.Viewer || role === Role.Member || role === Role.Manager || role === Role.Admin) {
         permissions.add(Permission.COMMENT);
     }
-
-    // --- Member ---
-    // Execution level: Can do work.
     if (role === Role.Member || role === Role.Manager || role === Role.Admin) {
         permissions.add(Permission.CREATE_TASKS);
-        permissions.add(Permission.EDIT_TASKS); // Edit own or others tasks
+        permissions.add(Permission.EDIT_TASKS); 
         permissions.add(Permission.DRAG_AND_DROP);
     }
-
-    // --- Manager ---
-    // Project Control level: Can structure work and delete things.
     if (role === Role.Manager || role === Role.Admin) {
-        permissions.add(Permission.MANAGE_WORKSPACES_AND_PROJECTS); // Create/Edit Projects/Folders
-        permissions.add(Permission.DELETE_TASKS); // Delete capability
-        permissions.add(Permission.VIEW_DASHBOARD); // Project analytics
+        permissions.add(Permission.MANAGE_WORKSPACES_AND_PROJECTS); 
+        permissions.add(Permission.DELETE_TASKS); 
+        permissions.add(Permission.VIEW_DASHBOARD); 
     }
-
-    // --- Admin ---
-    // System Owner level: Can configure the SaaS aspect.
-    // IMPORTANT: Admin inherits all above via the `|| role === Role.Admin` checks above.
-    // PLUS exclusive system rights:
     if (role === Role.Admin) {
-        permissions.add(Permission.MANAGE_APP);   // Access "App Admin" panel (Billing, Global Settings)
-        permissions.add(Permission.MANAGE_USERS); // Create/Delete Users system-wide
+        permissions.add(Permission.MANAGE_APP);   
+        permissions.add(Permission.MANAGE_USERS); 
     }
-
     return permissions;
 };
-
-// --- Context Definition ---
 
 const AppContext = createContext<any>(null);
 
@@ -257,7 +238,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         isAdminPanelOpen: false,
     });
 
-    // --- UI State ---
+    // ... (UI State - Unchanged)
     const [activeView, setActiveView] = useState('board'); 
     const [currentView, setCurrentView] = useState<ViewType>(ViewType.Board);
     const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -272,9 +253,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const [isBlockingTasksModalOpen, setIsBlockingTasksModalOpen] = useState(false);
     const [taskForBlockingModal, setTaskForBlockingModal] = useState<Task | null>(null);
     const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
-    const [isSummaryModalOpen, setIsSummaryModalOpen] = useState(false);
-    const [summaryData, setSummaryData] = useState({ title: '', content: '' });
-    const [isSummaryLoading, setIsSummaryLoading] = useState(false);
     const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
     const [isConfirmationModalOpen, setIsConfirmationModalOpen] = useState(false);
     const [confirmationModalProps, setConfirmationModalProps] = useState<{ title: string, message: string, onConfirm: () => void } | null>(null);
@@ -283,7 +261,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const [statusFilter, setStatusFilter] = useState<Status | 'all'>('all');
     const [priorityFilter, setPriorityFilter] = useState<Priority | 'all'>('all');
 
-    // --- Derived State ---
+    // ... (Derived State - Unchanged)
     const permissions = useMemo(() => {
         return state.currentUser ? getPermissions(state.currentUser.role) : new Set<Permission>();
     }, [state.currentUser]);
@@ -335,8 +313,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         }
     }, [state.tasks]);
 
-    // --- Action Wrappers ---
-
     const handleLogin = (email: string, password?: string) => {
         const normalizedEmail = email.trim().toLowerCase();
         const user = state.users.find(u => u.email.toLowerCase() === normalizedEmail);
@@ -372,7 +348,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     const handleLogout = () => {
         dispatch({ type: 'SET_USER', payload: null });
-        setIsSidebarOpen(false); // Reset some UI state
+        setIsSidebarOpen(false);
     };
 
     const handleDeleteAccount = () => {
@@ -380,7 +356,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         const userId = state.currentUser.id;
         const userName = state.currentUser.name;
 
-        // Validation: Cannot delete account if last admin
         const admins = state.users.filter(u => u.role === Role.Admin);
         if (state.currentUser.role === Role.Admin && admins.length <= 1) {
             addToast({ message: t('tooltips.lastAdminDelete'), type: 'error' });
@@ -401,8 +376,24 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     };
 
     const handleAddTask = (listId: string, template?: TaskTemplate) => {
-        const newTask: Task = template ? { ...template.taskData, id: `t-${Date.now()}`, listId, createdAt: new Date().toISOString() } as Task : {
+        const list = state.lists.find(l => l.id === listId);
+        const projectKey = list ? list.key : 'PROJ';
+        
+        // Generate Next Issue Key
+        const projectTasks = state.tasks.filter(t => t.listId === listId);
+        let maxNum = 0;
+        projectTasks.forEach(t => {
+            if (t.issueKey && t.issueKey.startsWith(projectKey + '-')) {
+                const num = parseInt(t.issueKey.split('-')[1], 10);
+                if (!isNaN(num) && num > maxNum) maxNum = num;
+            }
+        });
+        const newIssueKey = `${projectKey}-${maxNum + 1}`;
+
+        const newTask: Task = template ? { ...template.taskData, id: `t-${Date.now()}`, listId, issueKey: newIssueKey, createdAt: new Date().toISOString() } as Task : {
             id: `t-${Date.now()}`,
+            issueKey: newIssueKey,
+            type: TaskType.Task,
             title: t('common.new') + ' ' + t('common.tasks'),
             description: '',
             status: Status.Todo,
@@ -417,6 +408,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             createdAt: new Date().toISOString(),
             dependsOn: [],
             activityLog: [],
+            storyPoints: 0,
         };
         dispatch({ type: 'ADD_TASK', payload: newTask });
         setSelectedTaskId(newTask.id);
@@ -427,15 +419,31 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
              addToast({ message: t('toasts.selectProjectFirst'), type: 'info' });
              return;
         }
+        const listId = state.selectedListId;
+        const list = state.lists.find(l => l.id === listId);
+        const projectKey = list ? list.key : 'PROJ';
+        
+        const projectTasks = state.tasks.filter(t => t.listId === listId);
+        let maxNum = 0;
+        projectTasks.forEach(t => {
+            if (t.issueKey && t.issueKey.startsWith(projectKey + '-')) {
+                const num = parseInt(t.issueKey.split('-')[1], 10);
+                if (!isNaN(num) && num > maxNum) maxNum = num;
+            }
+        });
+        const newIssueKey = `${projectKey}-${maxNum + 1}`;
+
         const newTask: Task = {
             id: `t-${Date.now()}`,
+            issueKey: newIssueKey,
+            type: TaskType.Task,
             title: t('common.new') + ' ' + t('common.tasks'),
             description: '',
             status: Status.Todo,
             priority: Priority.Medium,
             assigneeId: state.currentUser?.id || null,
             dueDate: date.toISOString().split('T')[0],
-            listId: state.selectedListId,
+            listId: listId,
             subtasks: [],
             comments: [],
             attachments: [],
@@ -443,6 +451,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             createdAt: new Date().toISOString(),
             dependsOn: [],
             activityLog: [],
+            storyPoints: 0,
         };
         dispatch({ type: 'ADD_TASK', payload: newTask });
         setSelectedTaskId(newTask.id);
@@ -483,17 +492,19 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     };
 
     const handleSaveList = (name: string, color: string, folderId: string | null) => {
+        const key = name.substring(0, 3).toUpperCase(); // Simple key generation
         if (listToEdit) {
             dispatch({ type: 'UPDATE_LIST', payload: { ...listToEdit, name, color, folderId } });
              addToast({ message: t('toasts.projectUpdated'), type: 'success' });
         } else {
-            const newList = { id: `l-${Date.now()}`, name, color, folderId, workspaceId: state.selectedWorkspaceId, order: state.lists.length };
+            const newList = { id: `l-${Date.now()}`, name, key, color, folderId, workspaceId: state.selectedWorkspaceId, order: state.lists.length };
             dispatch({ type: 'ADD_LIST', payload: newList });
             dispatch({ type: 'SELECT_LIST', payload: newList.id });
              addToast({ message: t('toasts.projectCreated'), type: 'success' });
         }
     };
 
+    // ... (Rest of the actions like handleDeleteList, handleSaveFolder, User CRUD, etc. remain largely unchanged, referencing existing logic)
     const handleDeleteList = (listId: string) => {
         const list = state.lists.find(l => l.id === listId);
         const listName = list ? list.name : t('sidebar.projects');
@@ -620,21 +631,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
          });
     }
 
-    const handleGenerateSummary = async () => {
-        const list = state.lists.find(l => l.id === state.selectedListId);
-        if (!list) return;
-        
-        setIsSummaryLoading(true);
-        setSummaryData({ title: t('modals.aiSummaryFor', { name: list.name }), content: '' });
-        setIsSummaryModalOpen(true);
-
-        const tasksInList = state.tasks.filter(t => t.listId === list.id);
-        const summary = await generateProjectSummary(tasksInList, list.name);
-        
-        setSummaryData(prev => ({ ...prev, content: summary }));
-        setIsSummaryLoading(false);
-    };
-
     const handleSaveTemplate = (name: string, taskData: Partial<Task>) => {
         const newTemplate: TaskTemplate = { id: `tpl-${Date.now()}`, name, taskData };
         dispatch({ type: 'ADD_TEMPLATE', payload: newTemplate });
@@ -660,8 +656,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     const handleCreateOrOpenDM = (targetUserId: string) => {
         if (!state.currentUser) return;
-        
-        // Check if DM channel already exists
         const existingChannel = state.chatChannels.find(c => 
             c.type === 'dm' && 
             c.participants.includes(state.currentUser!.id) && 
@@ -671,7 +665,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         if (existingChannel) {
             dispatch({ type: 'SET_ACTIVE_CHAT', payload: existingChannel.id });
         } else {
-            // Create new DM channel
             const newChannel: ChatChannel = {
                 id: `c-dm-${Date.now()}`,
                 name: 'DM',
@@ -694,68 +687,27 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         dispatch({ type: 'SET_ADMIN_PANEL_OPEN', payload: isOpen });
     };
 
-    const handleAIAction = useCallback((name: string, args: any) => {
-        switch (name) {
-            case 'create_task': {
-                const { title, description, priority, assigneeName, dueDate, projectName } = args;
-                let listIdToUse = state.selectedListId;
-                if (projectName) {
-                    const foundList = state.lists.find(l => l.name.toLowerCase() === (projectName as string).toLowerCase());
-                    if (foundList) listIdToUse = foundList.id;
-                    else addToast({ message: t('toasts.projectNotFound', { name: String(projectName) }), type: 'info' });
-                }
-                if (!listIdToUse) { addToast({ message: t('toasts.selectProjectFirst'), type: 'info' }); return; }
-                let assigneeIdToUse = null;
-                if (assigneeName) {
-                    const foundUser = state.users.find(u => u.name.toLowerCase() === (assigneeName as string).toLowerCase());
-                    if (foundUser) assigneeIdToUse = foundUser.id;
-                    else addToast({ message: t('toasts.userNotFound', { name: String(assigneeName) }), type: 'info' });
-                }
-                const newTask: Task = {
-                    id: `t-${Date.now()}`, title: title || 'New AI Task', description: description || '', status: Status.Todo,
-                    priority: Object.values(Priority).includes(priority as Priority) ? priority : Priority.Medium, assigneeId: assigneeIdToUse,
-                    dueDate: dueDate || new Date(Date.now() + 3 * 86400000).toISOString().split('T')[0], listId: listIdToUse,
-                    subtasks: [], comments: [], attachments: [], reminder: null, createdAt: new Date().toISOString(), dependsOn: [], activityLog: [],
-                };
-                dispatch({ type: 'ADD_TASK', payload: newTask });
-                addToast({ message: t('toasts.taskCreatedByAI', { title: newTask.title }), type: 'success' });
-                break;
-            }
-            case 'update_task_status': {
-                const { taskTitle, status } = args;
-                const taskToUpdate = state.tasks.find(t => t.title.toLowerCase() === (taskTitle as string).toLowerCase());
-                if (taskToUpdate && Object.values(Status).includes(status as Status)) {
-                    dispatch({ type: 'UPDATE_TASK', payload: { ...taskToUpdate, status } });
-                    addToast({ message: t('toasts.taskStatusUpdated', { title: taskToUpdate.title, status: i18n.t(`common.${(status as string).replace(/\s+/g, '').toLowerCase()}`) }), type: 'success' });
-                } else {
-                    addToast({ message: t('toasts.taskNotFound', { title: String(taskTitle) }), type: 'error' });
-                }
-                break;
-            }
-            case 'assign_task': {
-                const { taskTitle, assigneeName } = args;
-                const taskToUpdate = state.tasks.find(t => t.title.toLowerCase() === (taskTitle as string).toLowerCase());
-                const userToAssign = state.users.find(u => u.name.toLowerCase() === (assigneeName as string).toLowerCase());
-                if (taskToUpdate && userToAssign) {
-                    dispatch({ type: 'UPDATE_TASK', payload: { ...taskToUpdate, assigneeId: userToAssign.id } });
-                    addToast({ message: t('toasts.taskAssigned', { title: taskToUpdate.title, name: userToAssign.name }), type: 'success' });
-                } else if (!taskToUpdate) {
-                     addToast({ message: t('toasts.taskNotFound', { title: String(taskTitle) }), type: 'error' });
-                } else {
-                     addToast({ message: t('toasts.userNotFound', { name: String(assigneeName) }), type: 'error' });
-                }
-                break;
-            }
-            default: console.warn(`Unknown AI action: ${name}`);
+    const handleCompleteSprint = (listId: string | null) => {
+        // Logic to "Complete" sprint - for now, just show toast and maybe archive completed tasks
+        const targetListId = listId;
+        const tasksToArchive = state.tasks.filter(t => t.status === Status.Done && (targetListId ? t.listId === targetListId : true)).map(t => t.id);
+        
+        if(tasksToArchive.length === 0) {
+             addToast({ message: "No hay tareas completadas para archivar.", type: 'info' });
+             return;
         }
-    }, [state.selectedListId, state.lists, state.users, state.tasks, addToast, t, i18n]);
+
+        // In a real app, we would move them to a "Sprint Archive" or just tag them. 
+        // Here we just show a success message as per standard demo behavior.
+        addToast({ message: t('backlog.sprintCompletedMessage', { count: tasksToArchive.length }), type: 'success' });
+    }
 
     const fullState = {
         ...state,
         activeView,
         currentView,
         isSidebarOpen,
-        isAdminPanelOpen: state.isAdminPanelOpen, // Explicit mapping
+        isAdminPanelOpen: state.isAdminPanelOpen,
         isWorkspaceModalOpen,
         workspaceToEdit,
         isProjectModalOpen,
@@ -767,9 +719,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         isBlockingTasksModalOpen,
         taskForBlockingModal,
         isCommandPaletteOpen,
-        isSummaryModalOpen,
-        summaryData,
-        isSummaryLoading,
         isSettingsModalOpen,
         isConfirmationModalOpen,
         confirmationModalProps,
@@ -785,6 +734,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     };
 
     const actions = {
+        // ... all actions
         addToast,
         removeToast,
         showConfirmation,
@@ -811,14 +761,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         handleUpdateUserRole,
         handleDeleteUser,
         handleBulkDeleteUsers,
-        handleGenerateSummary,
         handleSaveTemplate,
-        handleAIAction,
         handleSendMessage,
         handleSetActiveChat,
         handleCreateOrOpenDM,
         setIsChatOpen,
-        
         setActiveView,
         setCurrentView,
         setIsSidebarOpen,
@@ -834,10 +781,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setIsBlockingTasksModalOpen,
         setTaskForBlockingModal,
         setIsCommandPaletteOpen,
-        setIsSummaryModalOpen,
         setIsSettingsModalOpen,
         setStatusFilter,
         setPriorityFilter,
+        handleCompleteSprint,
         handleSelectWorkspace: (id: string) => dispatch({ type: 'SELECT_WORKSPACE', payload: id }),
         setSelectedWorkspaceId: (id: string) => dispatch({ type: 'SELECT_WORKSPACE', payload: id }),
         setSelectedListId: (id: string | null) => dispatch({ type: 'SELECT_LIST', payload: id }),

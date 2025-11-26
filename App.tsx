@@ -13,8 +13,6 @@ import AuthPage from './components/AuthPage';
 import MyTasksView from './components/MyTasksView';
 import TeamChatView from './components/TeamChatView';
 import CommandPalette from './components/CommandPalette';
-import AISummaryModal from './components/AISummaryModal';
-import AIChatbot from './components/AIChatbot';
 import WelcomePage from './components/WelcomePage';
 import SettingsModal from './components/SettingsModal';
 import FolderModal from './components/FolderModal';
@@ -81,10 +79,7 @@ const App: React.FC = () => {
     isBlockingTasksModalOpen,
     taskForBlockingModal,
     isCommandPaletteOpen,
-    isSummaryModalOpen,
     isSettingsModalOpen,
-    summaryData,
-    isSummaryLoading,
     toasts,
     isLoading,
     workspaceToEdit,
@@ -107,7 +102,7 @@ const App: React.FC = () => {
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-        if (selectedTask || editingUser || isWorkspaceModalOpen || isProjectModalOpen || isFolderModalOpen || isCommandPaletteOpen || isSummaryModalOpen || isSettingsModalOpen || isBlockingTasksModalOpen || isConfirmationModalOpen || isChatOpen) return;
+        if (selectedTask || editingUser || isWorkspaceModalOpen || isProjectModalOpen || isFolderModalOpen || isCommandPaletteOpen || isSettingsModalOpen || isBlockingTasksModalOpen || isConfirmationModalOpen || isChatOpen) return;
         const target = event.target as HTMLElement;
         if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.tagName === 'SELECT') return;
 
@@ -129,7 +124,7 @@ const App: React.FC = () => {
     return () => {
         window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [activeView, state.selectedListId, selectedTask, editingUser, isWorkspaceModalOpen, isProjectModalOpen, isFolderModalOpen, isCommandPaletteOpen, isSummaryModalOpen, isSettingsModalOpen, isBlockingTasksModalOpen, isConfirmationModalOpen, isChatOpen, actions, permissions]);
+  }, [activeView, state.selectedListId, selectedTask, editingUser, isWorkspaceModalOpen, isProjectModalOpen, isFolderModalOpen, isCommandPaletteOpen, isSettingsModalOpen, isBlockingTasksModalOpen, isConfirmationModalOpen, isChatOpen, actions, permissions]);
 
   const handleCommand = (command: string, payload?: any) => {
       switch (command) {
@@ -216,13 +211,6 @@ const App: React.FC = () => {
             />
         )}
          <CommandPalette isOpen={isCommandPaletteOpen} onClose={() => actions.setIsCommandPaletteOpen(false)} lists={lists} currentUser={currentUser} onCommand={handleCommand} />
-        <AISummaryModal
-          isOpen={isSummaryModalOpen}
-          onClose={() => actions.setIsSummaryModalOpen(false)}
-          title={summaryData.title}
-          content={summaryData.content}
-          isLoading={isSummaryLoading}
-        />
         <SettingsModal isOpen={isSettingsModalOpen} onClose={() => actions.setIsSettingsModalOpen(false)} theme={theme} setTheme={actions.setTheme} colorScheme={colorScheme} setColorScheme={actions.setColorScheme} />
         {isConfirmationModalOpen && confirmationModalProps && (
           <ConfirmationModal
@@ -233,7 +221,6 @@ const App: React.FC = () => {
               message={confirmationModalProps.message}
           />
         )}
-        <AIChatbot tasks={tasks} lists={lists} users={users} />
       </div>
     );
   };

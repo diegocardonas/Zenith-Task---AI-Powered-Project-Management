@@ -4,11 +4,11 @@ import { List, Task, User, ViewType, Role, Status, Priority, Permission } from '
 import BoardView from './BoardView';
 import ListView from './ListView';
 import Header from './Header';
-// Fix: Changed to a named import for CalendarView as it does not have a default export.
 import { CalendarView } from './CalendarView';
 import ProjectDashboard from './ProjectDashboard';
 import GanttView from './GanttView';
 import EisenhowerView from './EisenhowerView';
+import BacklogView from './BacklogView';
 import { useAppContext } from '../contexts/AppContext';
 import { useTranslation } from '../i18n';
 
@@ -42,6 +42,7 @@ const MainContent: React.FC = () => {
   const [isTemplateDropdownOpen, setTemplateDropdownOpen] = React.useState(false);
   const templateDropdownRef = React.useRef<HTMLDivElement>(null);
 
+  // ... (Keep Template Dropdown Logic)
   React.useEffect(() => {
       const handleClickOutside = (event: MouseEvent) => {
           if (templateDropdownRef.current && !templateDropdownRef.current.contains(event.target as Node)) {
@@ -94,17 +95,17 @@ const MainContent: React.FC = () => {
         return <ProjectDashboard tasks={filteredTasks} />;
       case ViewType.Eisenhower:
         return <EisenhowerView tasks={filteredTasks} onSelectTask={(task) => setSelectedTaskId(task.id)} users={users} />;
+      case ViewType.Backlog:
+        return <BacklogView tasks={filteredTasks} onSelectTask={(task) => setSelectedTaskId(task.id)} onUpdateTask={handleUpdateTask} users={users} lists={state.lists} selectedListId={state.selectedListId} />;
       default:
         return <BoardView />;
     }
   }
 
-  // If selectedList is null, we show "All Projects"
   const title = selectedList ? selectedList.name : t('sidebar.allProjects');
 
   return (
     <main className="flex-grow flex flex-col h-full overflow-y-auto bg-[#0f172a] relative">
-       {/* Subtle Background Gradient */}
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-800/30 via-[#0f172a] to-[#0f172a] pointer-events-none"></div>
       
       <div className="relative z-10 flex flex-col h-full">
@@ -112,12 +113,12 @@ const MainContent: React.FC = () => {
           
             <>
             <div className="flex-shrink-0 p-4 border-b border-white/5 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-[#0f172a]/50 backdrop-blur-sm sticky top-[64px] z-20">
-                {/* Scrollable View Switcher for Mobile */}
                 <div className="w-full md:w-auto overflow-x-auto pb-1 md:pb-0 -mx-4 md:mx-0 px-4 md:px-0 no-scrollbar">
                     <div className="bg-surface p-1 rounded-lg flex items-center whitespace-nowrap w-max border border-white/5">
                         {[
                             { id: ViewType.Board, label: t('mainContent.board') },
                             { id: ViewType.List, label: t('mainContent.list') },
+                            { id: ViewType.Backlog, label: t('mainContent.backlog') }, // Added Backlog
                             { id: ViewType.Calendar, label: t('mainContent.calendar') },
                             { id: ViewType.Gantt, label: t('mainContent.gantt') },
                             { id: ViewType.Eisenhower, label: t('mainContent.eisenhower') },
@@ -135,34 +136,27 @@ const MainContent: React.FC = () => {
                 </div>
 
                 <div className="flex items-center gap-3 flex-wrap w-full md:w-auto justify-between md:justify-end">
+                    {/* Filters and New Button (Same as before) */}
                     <div className="flex gap-2">
                         <div className="relative group">
                             <select
                                 value={statusFilter}
                                 onChange={(e) => setStatusFilter(e.target.value as Status | 'all')}
                                 className="bg-surface pl-3 pr-8 py-2 rounded-lg text-sm font-medium text-text-secondary appearance-none focus:outline-none focus:ring-2 focus:ring-primary/50 border border-white/5 hover:border-white/10 transition-colors w-full sm:w-auto cursor-pointer"
-                                aria-label={t('modals.status')}
                             >
                                 <option value="all">{t('common.allStatuses')}</option>
                                 {Object.values(Status).map(s => <option key={s} value={s}>{translateStatus(s)}</option>)}
                             </select>
-                            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-text-secondary">
-                                <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
-                            </div>
                         </div>
                         <div className="relative group">
                             <select
                                 value={priorityFilter}
                                 onChange={(e) => setPriorityFilter(e.target.value as Priority | 'all')}
                                 className="bg-surface pl-3 pr-8 py-2 rounded-lg text-sm font-medium text-text-secondary appearance-none focus:outline-none focus:ring-2 focus:ring-primary/50 border border-white/5 hover:border-white/10 transition-colors w-full sm:w-auto cursor-pointer"
-                                aria-label={t('modals.priority')}
                             >
                                 <option value="all">{t('common.allPriorities')}</option>
                                 {Object.values(Priority).map(p => <option key={p} value={p}>{translatePriority(p)}</option>)}
                             </select>
-                            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-text-secondary">
-                                <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
-                            </div>
                         </div>
                     </div>
                      {canCreateTasks && (
@@ -173,9 +167,7 @@ const MainContent: React.FC = () => {
                                 className="px-4 py-2 bg-primary hover:bg-primary-focus text-white font-semibold rounded-lg transition-all duration-200 flex items-center shadow-lg shadow-primary/20 disabled:bg-gray-600 disabled:cursor-not-allowed disabled:shadow-none hover:scale-[1.05] active:scale-95"
                                 title={!selectedList ? t('mainContent.createTaskNoProjectTooltip') : t('mainContent.createTaskTooltip')}
                             >
-                              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1.5" viewBox="0 0 20 20" fill="currentColor">
-                                <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
-                              </svg>
+                              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1.5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" /></svg>
                               <span className="hidden sm:inline">{t('common.new')}</span>
                             </button>
                              {isTemplateDropdownOpen && taskTemplates.length > 0 && (
@@ -199,7 +191,6 @@ const MainContent: React.FC = () => {
                 </div>
             </div>
             <div className="flex-grow p-4 sm:p-6 overflow-x-hidden">
-                {/* Added key to trigger animation on view change */}
                 <div key={currentView} className="h-full animate-slideUpFade">
                     {renderCurrentView()}
                 </div>

@@ -11,40 +11,41 @@ export enum Priority {
   High = 'High',
 }
 
+export enum TaskType {
+  Story = 'Story',
+  Task = 'Task',
+  Bug = 'Bug',
+  Epic = 'Epic',
+}
+
 export enum ViewType {
   Board = 'board',
   List = 'list',
   Calendar = 'calendar',
   Gantt = 'gantt',
   ProjectDashboard = 'project_dashboard',
-  Eisenhower = 'eisenhower'
+  Eisenhower = 'eisenhower',
+  Backlog = 'backlog'
 }
 
 export enum Role {
-  Admin = 'Admin',     // System Admin (App settings, billing, user mgmt)
-  Manager = 'Manager', // Project Manager (Project structure, team tasks)
-  Member = 'Member',   // Worker (Tasks only)
+  Admin = 'Admin',     // System Admin
+  Manager = 'Manager', // Project Manager
+  Member = 'Member',   // Worker
   Viewer = 'Viewer',   // Read-only
   Guest = 'Guest',     // Limited
 }
 
 export enum Permission {
-  // High-level admin (System level)
-  MANAGE_APP = 'MANAGE_APP', // Access App Admin Panel, global settings, billing
-  MANAGE_USERS = 'MANAGE_USERS', // Create/Delete system users
-
-  // Project management (Operational level)
-  VIEW_DASHBOARD = 'VIEW_DASHBOARD', // Access Project Dashboard/Stats
-  MANAGE_WORKSPACES_AND_PROJECTS = 'MANAGE_WORKSPACES_AND_PROJECTS', // Create/edit/delete workspaces, folders, projects
-
-  // Task-level permissions
+  MANAGE_APP = 'MANAGE_APP',
+  MANAGE_USERS = 'MANAGE_USERS',
+  VIEW_DASHBOARD = 'VIEW_DASHBOARD',
+  MANAGE_WORKSPACES_AND_PROJECTS = 'MANAGE_WORKSPACES_AND_PROJECTS',
   CREATE_TASKS = 'CREATE_TASKS',
-  EDIT_TASKS = 'EDIT_TASKS', // Edit all fields of a task, move it, etc.
-  DELETE_TASKS = 'DELETE_TASKS', // Ability to delete tasks
-  
-  // Interaction permissions
+  EDIT_TASKS = 'EDIT_TASKS',
+  DELETE_TASKS = 'DELETE_TASKS',
   COMMENT = 'COMMENT',
-  DRAG_AND_DROP = 'DRAG_AND_DROP', // For tasks and sidebar items
+  DRAG_AND_DROP = 'DRAG_AND_DROP',
 }
 
 export enum UserStatus {
@@ -96,7 +97,7 @@ export interface Subtask {
 export interface Attachment {
     id: string;
     name: string;
-    url: string; // data URL for now
+    url: string;
     type: string;
     size: number;
 }
@@ -111,10 +112,13 @@ export interface Activity {
 
 export interface Task {
   id: string;
+  issueKey: string; // e.g. BTS-101
+  type: TaskType;
   title: string;
   description: string;
   status: Status;
   priority: Priority;
+  storyPoints?: number;
   assigneeId: string | null;
   dueDate: string;
   listId: string;
@@ -130,6 +134,7 @@ export interface Task {
 export interface List {
   id: string;
   name: string;
+  key: string; // e.g. BTS, TX, OM
   color: string;
   workspaceId: string;
   folderId?: string | null;
@@ -157,7 +162,6 @@ export interface TaskTemplate {
     taskData: Partial<Task>;
 }
 
-// Chat Types
 export interface ChatMessage {
     id: string;
     channelId: string;
@@ -168,11 +172,11 @@ export interface ChatMessage {
 
 export interface ChatChannel {
     id: string;
-    name: string; // Group name or User Name for DM
+    name: string;
     type: 'group' | 'dm';
-    participants: string[]; // User IDs
+    participants: string[];
     lastMessage?: string;
     lastMessageTime?: string;
     unreadCount?: number;
-    avatar?: string; // Specific avatar for group or user avatar for DM
+    avatar?: string;
 }

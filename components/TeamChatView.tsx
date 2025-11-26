@@ -4,8 +4,6 @@ import { useAppContext } from '../contexts/AppContext';
 import AvatarWithStatus from './AvatarWithStatus';
 import { useTranslation } from '../i18n';
 import { User, ChatMessage } from '../types';
-import { generateChatSummary, generateChatReplySuggestions } from '../services/geminiService';
-import AISummaryModal from './AISummaryModal';
 
 const TeamChatView: React.FC = () => {
     const { state, actions } = useAppContext();
@@ -17,10 +15,6 @@ const TeamChatView: React.FC = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const [isMobileListVisible, setIsMobileListVisible] = useState(true);
-    const [isSummarizing, setIsSummarizing] = useState(false);
-    const [summaryResult, setSummaryResult] = useState<string | null>(null);
-    const [suggestedReplies, setSuggestedReplies] = useState<string[]>([]);
-    const [isSuggesting, setIsSuggesting] = useState(false);
     const [isNewChatModalOpen, setIsNewChatModalOpen] = useState(false);
 
     // Scroll to bottom on new messages
@@ -31,11 +25,6 @@ const TeamChatView: React.FC = () => {
     // Mobile view handling
     useEffect(() => {
         if (activeChatId) setIsMobileListVisible(false);
-    }, [activeChatId]);
-
-    // Reset suggestions when changing chat
-    useEffect(() => {
-        setSuggestedReplies([]);
     }, [activeChatId]);
 
     const activeChannel = chatChannels.find(c => c.id === activeChatId);
@@ -66,48 +55,23 @@ const TeamChatView: React.FC = () => {
                     };
                     handleAddTask(selectedListId, tempTemplate);
                     // Add system message essentially
-                    handleSendMessage(activeChatId, `🤖 ${t('chat.taskCreated', {title: content})}`);
+                    handleSendMessage(activeChatId, `🤖 Tarea creada: ${content}`);
                 } else {
                      addToast({ message: t('mainContent.createTaskNoProjectTooltip'), type: 'error' });
                 }
                 setMessageInput('');
-                setSuggestedReplies([]);
                 return;
             } else if (command === '/urgent' && content) {
                  handleSendMessage(activeChatId, `🚨 **URGENT:** ${content}`);
                  setMessageInput('');
-                 setSuggestedReplies([]);
                  return;
             }
         }
 
         handleSendMessage(activeChatId, messageInput);
         setMessageInput('');
-        setSuggestedReplies([]);
     };
     
-    const handleSummarize = async () => {
-        if (!currentMessages.length) return;
-        setIsSummarizing(true);
-        const summary = await generateChatSummary(currentMessages, users);
-        setSummaryResult(summary);
-        setIsSummarizing(false);
-    };
-
-    const handleGenerateSuggestions = async () => {
-        if (!currentMessages.length || !currentUser) return;
-        setIsSuggesting(true);
-        const suggestions = await generateChatReplySuggestions(currentMessages, currentUser);
-        setSuggestedReplies(suggestions);
-        setIsSuggesting(false);
-    };
-
-    const handleSuggestionClick = (reply: string) => {
-        setMessageInput(reply);
-        // Optional: auto send or just fill? User prefers fill usually to edit.
-        // Let's fill it so they can edit.
-    };
-
     const getChannelName = (channel) => {
         if (channel.type === 'dm') {
             const otherUserId = channel.participants.find(id => id !== currentUser?.id);
@@ -324,19 +288,6 @@ const TeamChatView: React.FC = () => {
                                         </div>
                                     </div>
                                 </div>
-                                
-                                <button 
-                                    onClick={handleSummarize}
-                                    disabled={isSummarizing || currentMessages.length === 0}
-                                    className="p-2 rounded-lg bg-white/5 hover:bg-primary/20 text-text-secondary hover:text-primary transition-colors border border-white/5 hover:border-primary/30 disabled:opacity-50"
-                                    title={t('chat.summarize')}
-                                >
-                                    {isSummarizing ? (
-                                        <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                                    ) : (
-                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M5 2a1 1 0 011 1v1h1a1 1 0 010 2H6v1a1 1 0 01-2 0V6H3a1 1 0 010-2h1V3a1 1 0 011-1zm0 10a1 1 0 011 1v1h1a1 1 0 110 2H6v1a1 1 0 11-2 0v-1H3a1 1 0 110-2h1v-1a1 1 0 011-1zM12 2a1 1 0 01.967.744L14.146 7.2 17.5 9.134a1 1 0 010 1.732l-3.354 1.935-1.18 4.455a1 1 0 01-1.933 0L9.854 12.8 6.5 10.866a1 1 0 010-1.732l3.354-1.935 1.18-4.455A1 1 0 0112 2z" clipRule="evenodd" /></svg>
-                                    )}
-                                </button>
                             </div>
 
                             {/* Messages Area */}
@@ -376,41 +327,10 @@ const TeamChatView: React.FC = () => {
                                 <div ref={messagesEndRef} />
                             </div>
 
-                            {/* Input Area with Smart Replies */}
+                            {/* Input Area */}
                             <div className="p-4 bg-[#0f172a] border-t border-white/10 z-30 relative">
-                                {/* Smart Suggestions Chips */}
-                                {suggestedReplies.length > 0 && (
-                                    <div className="absolute bottom-full left-0 right-0 p-2 px-4 bg-gradient-to-t from-[#0f172a] to-transparent flex gap-2 overflow-x-auto no-scrollbar pb-4">
-                                        {suggestedReplies.map((reply, index) => (
-                                            <button
-                                                key={index}
-                                                onClick={() => handleSuggestionClick(reply)}
-                                                className="bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 rounded-full px-3 py-1.5 text-xs font-medium whitespace-nowrap transition-colors animate-scaleIn"
-                                                style={{animationDelay: `${index * 50}ms`}}
-                                            >
-                                                ✨ {reply}
-                                            </button>
-                                        ))}
-                                    </div>
-                                )}
-
                                 <form onSubmit={handleSend} className="flex gap-3 items-end max-w-4xl mx-auto relative">
                                     <div className="flex-grow bg-[#1e293b] rounded-3xl border border-white/10 focus-within:border-primary/50 focus-within:ring-1 focus-within:ring-primary/50 transition-all flex items-end py-2 pl-2 pr-2 shadow-lg">
-                                        <button 
-                                            type="button" 
-                                            onClick={handleGenerateSuggestions}
-                                            disabled={isSuggesting || currentMessages.length === 0}
-                                            className="p-2 text-text-secondary hover:text-primary transition-colors rounded-full hover:bg-white/5 flex-shrink-0"
-                                            title={t('chat.suggestReplies')}
-                                        >
-                                            {isSuggesting ? (
-                                                <svg className="animate-spin h-5 w-5 text-primary" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                                            ) : (
-                                                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" viewBox="0 0 20 20" fill="currentColor">
-                                                    <path fillRule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clipRule="evenodd" />
-                                                </svg>
-                                            )}
-                                        </button>
                                         <textarea
                                             value={messageInput}
                                             onChange={(e) => setMessageInput(e.target.value)}
@@ -449,14 +369,6 @@ const TeamChatView: React.FC = () => {
                     )}
                 </div>
             </div>
-            {/* Summary Modal */}
-            <AISummaryModal 
-                isOpen={!!summaryResult} 
-                onClose={() => setSummaryResult(null)} 
-                title={t('chat.summary')} 
-                content={summaryResult || ''} 
-                isLoading={false} 
-            />
         </div>
     );
 };
