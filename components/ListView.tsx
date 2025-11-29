@@ -160,48 +160,50 @@ const ListView: React.FC = () => {
                 users={users}
             />
         )}
-        <div className="flex-shrink-0 sticky top-0 z-10 bg-[#0f172a]/95 backdrop-blur-md pb-2 pt-2">
-            {/* Header Row - CSS Grid matched to TaskRow */}
-            <div className="hidden md:grid grid-cols-[40px_90px_1fr_150px_120px_80px_150px_80px] gap-4 px-6 py-3 text-[11px] text-text-secondary font-bold uppercase tracking-wider items-center rounded-lg bg-surface border border-white/5 mx-4 shadow-sm">
-                <div className="flex items-center justify-center">
-                    <div className="group relative">
-                        <input 
+        <div className="flex-shrink-0 sticky top-0 z-10 bg-[#0f172a]/95 backdrop-blur-md pb-2 pt-2 border-b border-white/5 md:border-none">
+            <div className="max-w-[1600px] mx-auto px-4 w-full">
+                {/* Header Row - CSS Grid matched to TaskRow */}
+                <div className="hidden md:grid grid-cols-[40px_90px_1fr_150px_120px_80px_150px_80px] gap-4 px-6 py-3 text-[11px] text-text-secondary font-bold uppercase tracking-wider items-center rounded-xl bg-surface border border-white/5 shadow-sm">
+                    <div className="flex items-center justify-center">
+                        <div className="group relative">
+                            <input 
+                                type="checkbox" 
+                                className="w-3.5 h-3.5 rounded bg-transparent border-white/20 checked:bg-primary focus:ring-0 focus:ring-offset-0 cursor-pointer transition-all appearance-none border checked:border-primary"
+                                onChange={handleToggleAll}
+                                checked={selectedTaskIds.size === tasks.length && tasks.length > 0}
+                                disabled={!canEdit}
+                            />
+                            <svg className={`pointer-events-none absolute top-0.5 left-0.5 w-2.5 h-2.5 text-white ${selectedTaskIds.size === tasks.length && tasks.length > 0 ? 'opacity-100' : 'opacity-0'}`} viewBox="0 0 20 20" fill="currentColor">
+                                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                            </svg>
+                        </div>
+                    </div>
+                    <div>{t('common.key')}</div>
+                    <div>{t('listView.task')}</div>
+                    <div>{t('listView.assignee')}</div>
+                    <div>{t('listView.dueDate')}</div>
+                    <div className="text-center">{t('listView.priority')}</div>
+                    <div>{t('listView.status')}</div>
+                    <div className="text-right">{t('listView.actions')}</div>
+                </div>
+                 {/* Mobile "Select All" helper */}
+                 <div className="md:hidden p-3 flex items-center justify-between bg-white/[0.02] rounded-lg border border-white/5">
+                    <label className="flex items-center gap-3 text-xs font-semibold text-text-secondary uppercase tracking-wide">
+                         <input 
                             type="checkbox" 
-                            className="w-3.5 h-3.5 rounded bg-transparent border-white/20 checked:bg-primary focus:ring-0 focus:ring-offset-0 cursor-pointer transition-all appearance-none border checked:border-primary"
+                            className="w-4 h-4 rounded bg-transparent border-white/30 checked:bg-primary focus:ring-0 cursor-pointer"
                             onChange={handleToggleAll}
                             checked={selectedTaskIds.size === tasks.length && tasks.length > 0}
                             disabled={!canEdit}
                         />
-                        <svg className={`pointer-events-none absolute top-0.5 left-0.5 w-2.5 h-2.5 text-white ${selectedTaskIds.size === tasks.length && tasks.length > 0 ? 'opacity-100' : 'opacity-0'}`} viewBox="0 0 20 20" fill="currentColor">
-                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                        </svg>
-                    </div>
-                </div>
-                <div>{t('common.key')}</div>
-                <div>{t('listView.task')}</div>
-                <div>{t('listView.assignee')}</div>
-                <div>{t('listView.dueDate')}</div>
-                <div className="text-center">{t('listView.priority')}</div>
-                <div>{t('listView.status')}</div>
-                <div className="text-right">{t('listView.actions')}</div>
+                        Select All
+                    </label>
+                    <span className="text-xs text-text-secondary">{tasks.length} tasks</span>
+                 </div>
             </div>
-             {/* Mobile "Select All" helper */}
-             <div className="md:hidden p-3 border-b border-white/5 flex items-center justify-between bg-white/[0.02]">
-                <label className="flex items-center gap-3 text-xs font-semibold text-text-secondary uppercase tracking-wide">
-                     <input 
-                        type="checkbox" 
-                        className="w-4 h-4 rounded bg-transparent border-white/30 checked:bg-primary focus:ring-0 cursor-pointer"
-                        onChange={handleToggleAll}
-                        checked={selectedTaskIds.size === tasks.length && tasks.length > 0}
-                        disabled={!canEdit}
-                    />
-                    Select All
-                </label>
-                <span className="text-xs text-text-secondary">{tasks.length} tasks</span>
-             </div>
         </div>
         <div className="overflow-y-auto pb-20 md:pb-6 px-4 no-scrollbar">
-            <div className="flex flex-col space-y-2">
+            <div className="flex flex-col space-y-2 max-w-[1600px] mx-auto w-full">
                 {tasks.map((task, index) => (
                     <div key={task.id} className="animate-slideUpFade" style={{ animationDelay: `${Math.min(index * 50, 300)}ms`, animationFillMode: 'both' }}>
                         <TaskRow
