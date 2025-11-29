@@ -302,7 +302,7 @@ const es = {
     "reliability": "Fiabilidad",
     "searchSettings": "Buscar ajustes...",
     "density": "Densidad",
-    "compact": "Compacta",
+    "compact": "Compact",
     "comfortable": "Cómoda",
     "dangerZone": "Zona de Peligro",
     "deleteAccount": "Eliminar Cuenta",
@@ -474,7 +474,12 @@ const es = {
   },
   "help": {
     "title": "Centro de Ayuda",
-    "search": "Buscar ayuda...",
+    "search": "Buscar en ayuda...",
+    "tabs": {
+        "guide": "Guía de Usuario",
+        "shortcuts": "Atajos",
+        "faq": "FAQ"
+    },
     "categories": {
       "general": "Conceptos Generales",
       "views": "Vistas de Proyecto",
@@ -485,50 +490,66 @@ const es = {
     "articles": {
       "workspace": {
         "title": "Espacios de Trabajo",
-        "content": "Un **Espacio de Trabajo** es el contenedor principal de tu organización (Ej: Ceitel Operaciones). Dentro de él, puedes organizar tus proyectos en carpetas y listas."
+        "content": "Un **Espacio de Trabajo** es el contenedor principal de tu organización (Ej: Ceitel Operaciones). Dentro de él, puedes organizar tus proyectos en carpetas y listas. Es el nivel más alto de jerarquía."
       },
       "projects": {
         "title": "Proyectos y Carpetas",
-        "content": "Los **Proyectos (Listas)** contienen tus tareas. Puedes agrupar varios proyectos relacionados (ej: Contrato DICO) dentro de una **Carpeta** para mantener el orden."
+        "content": "Los **Proyectos (Listas)** contienen tus tareas. Puedes agrupar varios proyectos relacionados (ej: Contrato DICO) dentro de una **Carpeta** para mantener el orden. Las carpetas ayudan a mantener limpio tu menú lateral."
       },
       "board": {
         "title": "Vista de Tablero (Kanban)",
-        "content": "Visualiza el flujo de trabajo moviendo tarjetas entre columnas (Por Hacer, En Progreso, Hecho). Arrastra y suelta para actualizar el estado."
+        "content": "Visualiza el flujo de trabajo moviendo tarjetas entre columnas (Por Hacer, En Progreso, Hecho). Arrastra y suelta para actualizar el estado instantáneamente. Ideal para gestión ágil visual."
       },
       "list": {
         "title": "Vista de Lista",
-        "content": "Una tabla detallada ideal para gestión masiva. Permite filtrar, ordenar y realizar acciones en lote (seleccionar múltiples tareas para editar/borrar)."
+        "content": "Una tabla detallada ideal para gestión masiva. Permite filtrar, ordenar y realizar acciones en lote. Selecciona múltiples tareas con las casillas de verificación para editar estado, prioridad o asignado de una sola vez."
       },
       "backlog": {
         "title": "Vista Backlog",
-        "content": "Inspirada en Jira. Divide el trabajo en un **Sprint Activo** (tareas en curso) y un **Backlog** (pila de producto). Usa los Story Points para estimar esfuerzo."
+        "content": "Inspirada en Jira. Divide el trabajo en un **Sprint Activo** (tareas que se están trabajando ahora) y un **Backlog** (pila de producto futura). Usa los Story Points para estimar el esfuerzo de cada tarea."
       },
       "gantt": {
         "title": "Diagrama de Gantt",
-        "content": "Cronograma visual para ver la duración y dependencias de las tareas. Arrastra los bordes de las barras para ajustar fechas de inicio o fin."
+        "content": "Un cronograma visual para ver la duración y las dependencias de las tareas. Puedes arrastrar las barras para mover tareas en el tiempo o arrastrar los bordes para extender/acortar su duración."
       },
       "eisenhower": {
         "title": "Matriz de Eisenhower",
-        "content": "Prioriza tareas automáticamente en 4 cuadrantes según su Urgencia (Fecha) e Importancia (Prioridad). Ayuda a decidir qué hacer ahora o delegar."
+        "content": "Prioriza tareas automáticamente en 4 cuadrantes según su Urgencia (Fecha de Vencimiento) e Importancia (Prioridad). \n\n- **Hacer:** Urgente & Importante\n- **Planificar:** No Urgente & Importante\n- **Delegar:** Urgente & No Importante\n- **Eliminar:** Ni Urgente ni Importante"
       },
       "approvals": {
-        "title": "Aprobaciones",
-        "content": "Flujo de revisión formal. Los miembros pueden enviar una tarea a 'Revisión'. Los Managers/Admins verán la solicitud en el centro de Aprobaciones para Aprobar o Rechazar."
+        "title": "Flujo de Aprobaciones",
+        "content": "Un flujo de revisión formal. Los miembros pueden enviar una tarea a 'Revisión'. Los Managers o Admins verán la solicitud en el centro de Aprobaciones para Aprobar (mueve a Hecho) o Rechazar (devuelve a Por Hacer)."
       },
       "roles": {
         "title": "Roles de Usuario",
-        "content": "- **Admin:** Dueño del sistema. Gestiona facturación y usuarios globales.\n- **Manager:** Jefe de Proyecto. Crea proyectos y gestiona equipos.\n- **Member:** Trabajador. Crea y edita tareas.\n- **Viewer:** Solo lectura. Puede comentar pero no editar."
+        "content": "- **Admin:** Dueño del sistema. Gestiona facturación, configuración global y usuarios.\n- **Manager:** Jefe de Proyecto. Crea proyectos, gestiona equipos y ve dashboards.\n- **Member:** Trabajador estándar. Crea y edita tareas.\n- **Viewer:** Solo lectura. Puede comentar pero no editar contenido."
       },
       "tasks": {
-        "title": "Creación de Tareas",
-        "content": "Usa el botón **'Nuevo'** o la tecla `N`. Puedes asignar responsables, fechas, prioridad y adjuntar archivos. Las tareas pueden tener subtareas y dependencias."
+        "title": "Gestión de Tareas",
+        "content": "Usa el botón **'Nuevo'** o la tecla `N` para crear tareas. Puedes asignar responsables, fechas, prioridad, Story Points y adjuntar archivos. Las tareas pueden tener subtareas para dividir el trabajo."
       }
+    },
+    "shortcuts": {
+        "createTask": "Crear nueva tarea",
+        "commandPalette": "Abrir Paleta de Comandos",
+        "search": "Búsqueda Global",
+        "close": "Cerrar modal / Cancelar"
+    },
+    "faq": {
+        "q1": "¿Cómo cambio mi avatar?",
+        "a1": "Ve a tu perfil haciendo clic en tu nombre en el encabezado y selecciona 'Ver Perfil'. Haz clic en tu imagen actual para subir una nueva.",
+        "q2": "¿Puedo recuperar una tarea eliminada?",
+        "a2": "Actualmente, la eliminación de tareas es permanente. Recomendamos cerrar o archivar tareas en lugar de eliminarlas si crees que las necesitarás luego.",
+        "q3": "¿Quién puede crear proyectos?",
+        "a3": "Solo los usuarios con rol de **Admin** o **Manager** tienen permisos para crear nuevos Proyectos y Carpetas.",
+        "q4": "¿Cómo funcionan las dependencias?",
+        "a4": "En la vista de detalle de la tarea, puedes agregar una tarea 'Bloqueante'. Esto se visualizará en el diagrama de Gantt con una línea conectora."
     }
   }
 };
 
 const en = {
-  // ... English translations (Simplified for this output, ideally mirror Spanish)
+  // ... existing English translations (Simplified for this output, ideally mirror Spanish)
   "common": {
     "admin": "Admin",
     "manager": "Manager",
@@ -635,19 +656,6 @@ const en = {
     "completeSprint": "Complete Sprint",
     "sprintCompleted": "Sprint Completed!",
     "sprintCompletedMessage": "{{count}} tasks moved to archive."
-  },
-  "listView": {
-      "selected_plural": "{{count}} selected",
-      "changeStatus": "Change Status",
-      "changePriority": "Change Priority",
-      "changeAssignee": "Change Assignee",
-      "task": "Task",
-      "assignee": "Assignee",
-      "dueDate": "Due Date",
-      "priority": "Priority",
-      "status": "Status",
-      "actions": "Actions",
-      "noTasks": "No tasks to show."
   },
   "sidebar": {
     "menu": "Menu",
@@ -950,6 +958,11 @@ const en = {
   "help": {
     "title": "Help Center",
     "search": "Search help...",
+    "tabs": {
+        "guide": "User Guide",
+        "shortcuts": "Shortcuts",
+        "faq": "FAQ"
+    },
     "categories": {
       "general": "General Concepts",
       "views": "Project Views",
@@ -998,6 +1011,22 @@ const en = {
         "title": "Creating Tasks",
         "content": "Use the **'New'** button or press `N`. You can assign owners, dates, priority, and attach files. Tasks support subtasks and dependencies."
       }
+    },
+    "shortcuts": {
+        "createTask": "Create New Task",
+        "commandPalette": "Open Command Palette",
+        "search": "Global Search",
+        "close": "Close Modal / Cancel"
+    },
+    "faq": {
+        "q1": "How do I change my avatar?",
+        "a1": "Go to your profile by clicking your name in the header and select 'View Profile'. Click on your current image to upload a new one.",
+        "q2": "Can I recover a deleted task?",
+        "a2": "Currently, task deletion is permanent. We recommend closing or archiving tasks instead of deleting them if you might need them later.",
+        "q3": "Who can create projects?",
+        "a3": "Only users with the **Admin** or **Manager** role have permissions to create new Projects and Folders.",
+        "q4": "How do dependencies work?",
+        "a4": "In the task detail view, you can add a 'Blocking' task. This will be visualized in the Gantt chart with a connector line."
     }
   }
 };

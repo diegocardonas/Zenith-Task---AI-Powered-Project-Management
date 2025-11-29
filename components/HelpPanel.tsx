@@ -3,47 +3,98 @@ import React, { useState, useMemo } from 'react';
 import { useTranslation } from '../i18n';
 import { useAppContext } from '../contexts/AppContext';
 
+const ShortcutKey: React.FC<{ keys: string[] }> = ({ keys }) => (
+    <div className="flex items-center gap-1">
+        {keys.map((key, index) => (
+            <React.Fragment key={index}>
+                <span className="bg-white/10 border border-white/20 rounded px-1.5 py-0.5 text-xs font-mono text-white shadow-sm min-w-[20px] text-center">
+                    {key}
+                </span>
+                {index < keys.length - 1 && <span className="text-text-secondary text-xs">+</span>}
+            </React.Fragment>
+        ))}
+    </div>
+);
+
+const AccordionItem: React.FC<{ question: string; answer: string }> = ({ question, answer }) => {
+    const [isOpen, setIsOpen] = useState(false);
+    return (
+        <div className="border border-white/5 rounded-lg bg-surface/30 overflow-hidden">
+            <button 
+                onClick={() => setIsOpen(!isOpen)}
+                className="w-full flex justify-between items-center p-3 text-left hover:bg-white/5 transition-colors"
+            >
+                <span className="font-semibold text-sm text-text-primary">{question}</span>
+                <svg className={`w-4 h-4 text-text-secondary transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+            </button>
+            <div className={`transition-all duration-300 ease-in-out ${isOpen ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'}`}>
+                <div className="p-3 pt-0 text-sm text-text-secondary leading-relaxed border-t border-white/5 bg-black/10">
+                    {answer}
+                </div>
+            </div>
+        </div>
+    );
+};
+
 const HelpPanel: React.FC = () => {
     const { t } = useTranslation();
     const { state, actions } = useAppContext();
     const { isHelpOpen } = state;
     const { setIsHelpOpen } = actions;
     const [searchTerm, setSearchTerm] = useState('');
+    const [activeTab, setActiveTab] = useState<'guide' | 'shortcuts' | 'faq'>('guide');
     const [openCategory, setOpenCategory] = useState<string | null>('general');
 
     const helpData = useMemo(() => {
         return {
-            general: [
-                { id: 'workspace', ...t('help.articles.workspace', { returnObjects: true }) },
-                { id: 'projects', ...t('help.articles.projects', { returnObjects: true }) },
+            guide: {
+                categories: [
+                    { id: 'general', label: t('help.categories.general') },
+                    { id: 'views', label: t('help.categories.views') },
+                    { id: 'roles', label: t('help.categories.roles') },
+                    { id: 'actions', label: t('help.categories.actions') },
+                ],
+                articles: {
+                    general: [
+                        { id: 'workspace', ...t('help.articles.workspace', { returnObjects: true }) },
+                        { id: 'projects', ...t('help.articles.projects', { returnObjects: true }) },
+                    ],
+                    views: [
+                        { id: 'board', ...t('help.articles.board', { returnObjects: true }) },
+                        { id: 'list', ...t('help.articles.list', { returnObjects: true }) },
+                        { id: 'backlog', ...t('help.articles.backlog', { returnObjects: true }) },
+                        { id: 'gantt', ...t('help.articles.gantt', { returnObjects: true }) },
+                        { id: 'eisenhower', ...t('help.articles.eisenhower', { returnObjects: true }) },
+                    ],
+                    roles: [
+                        { id: 'roles', ...t('help.articles.roles', { returnObjects: true }) },
+                    ],
+                    actions: [
+                        { id: 'tasks', ...t('help.articles.tasks', { returnObjects: true }) },
+                        { id: 'approvals', ...t('help.articles.approvals', { returnObjects: true }) },
+                    ]
+                }
+            },
+            shortcuts: [
+                { label: t('help.shortcuts.createTask'), keys: ['N'] },
+                { label: t('help.shortcuts.commandPalette'), keys: ['⌘', 'K'] },
+                { label: t('help.shortcuts.search'), keys: ['F'] },
+                { label: t('help.shortcuts.close'), keys: ['Esc'] },
             ],
-            views: [
-                { id: 'board', ...t('help.articles.board', { returnObjects: true }) },
-                { id: 'list', ...t('help.articles.list', { returnObjects: true }) },
-                { id: 'backlog', ...t('help.articles.backlog', { returnObjects: true }) },
-                { id: 'gantt', ...t('help.articles.gantt', { returnObjects: true }) },
-                { id: 'eisenhower', ...t('help.articles.eisenhower', { returnObjects: true }) },
-            ],
-            roles: [
-                { id: 'roles', ...t('help.articles.roles', { returnObjects: true }) },
-            ],
-            actions: [
-                { id: 'tasks', ...t('help.articles.tasks', { returnObjects: true }) },
-                { id: 'approvals', ...t('help.articles.approvals', { returnObjects: true }) },
+            faq: [
+                { q: t('help.faq.q1'), a: t('help.faq.a1') },
+                { q: t('help.faq.q2'), a: t('help.faq.a2') },
+                { q: t('help.faq.q3'), a: t('help.faq.a3') },
+                { q: t('help.faq.q4'), a: t('help.faq.a4') },
             ]
         };
     }, [t]);
 
-    const categories = [
-        { id: 'general', label: t('help.categories.general') },
-        { id: 'views', label: t('help.categories.views') },
-        { id: 'roles', label: t('help.categories.roles') },
-        { id: 'actions', label: t('help.categories.actions') },
-    ];
-
-    const filteredContent = useMemo(() => {
+    const filteredArticles = useMemo(() => {
         if (!searchTerm) return null;
-        const allArticles = Object.values(helpData).flat();
+        const allArticles = Object.values(helpData.guide.articles).flat();
         return allArticles.filter((article: any) => 
             article.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
             article.content.toLowerCase().includes(searchTerm.toLowerCase())
@@ -67,13 +118,15 @@ const HelpPanel: React.FC = () => {
                 
                 {/* Header */}
                 <div className="p-5 border-b border-white/10 flex items-center justify-between bg-white/5">
-                    <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        {t('help.title')}
-                    </h2>
-                    <button onClick={() => setIsHelpOpen(false)} className="text-text-secondary hover:text-white p-1 rounded-full hover:bg-white/10">
+                    <div className="flex items-center gap-3">
+                        <div className="p-2 bg-primary/20 rounded-lg text-primary">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                        </div>
+                        <h2 className="text-xl font-bold text-white">{t('help.title')}</h2>
+                    </div>
+                    <button onClick={() => setIsHelpOpen(false)} className="text-text-secondary hover:text-white p-1 rounded-full hover:bg-white/10 transition-colors">
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                         </svg>
@@ -81,61 +134,109 @@ const HelpPanel: React.FC = () => {
                 </div>
 
                 {/* Search */}
-                <div className="p-4 border-b border-white/10">
-                    <div className="relative">
+                <div className="p-4 border-b border-white/10 bg-[#1e293b]">
+                    <div className="relative group">
                         <input 
                             type="text" 
                             placeholder={t('help.search')} 
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full bg-[#0f172a] border border-white/10 rounded-lg py-2 pl-9 pr-3 text-sm text-text-primary placeholder-text-secondary focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
+                            className="w-full bg-black/20 border border-white/10 rounded-xl py-2.5 pl-10 pr-3 text-sm text-text-primary placeholder-text-secondary focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
                         />
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-text-secondary absolute left-3 top-1/2 -translate-y-1/2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-text-secondary absolute left-3 top-1/2 -translate-y-1/2 group-focus-within:text-primary transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                         </svg>
                     </div>
                 </div>
 
+                {/* Tabs */}
+                {!searchTerm && (
+                    <div className="flex border-b border-white/10 px-2 bg-white/[0.02]">
+                        {[
+                            { id: 'guide', label: t('help.tabs.guide') },
+                            { id: 'shortcuts', label: t('help.tabs.shortcuts') },
+                            { id: 'faq', label: t('help.tabs.faq') }
+                        ].map(tab => (
+                            <button
+                                key={tab.id}
+                                onClick={() => setActiveTab(tab.id as any)}
+                                className={`flex-1 py-3 text-sm font-medium border-b-2 transition-colors ${activeTab === tab.id ? 'border-primary text-primary' : 'border-transparent text-text-secondary hover:text-white'}`}
+                            >
+                                {tab.label}
+                            </button>
+                        ))}
+                    </div>
+                )}
+
                 {/* Content */}
-                <div className="flex-grow overflow-y-auto p-4 custom-scrollbar">
+                <div className="flex-grow overflow-y-auto p-4 custom-scrollbar bg-[#1e293b]">
                     {searchTerm ? (
                         <div className="space-y-4">
-                            {filteredContent && filteredContent.length > 0 ? (
-                                filteredContent.map((article: any) => (
-                                    <div key={article.id} className="bg-surface border border-white/5 rounded-lg p-4 animate-fadeIn">
-                                        <h3 className="font-bold text-primary mb-2">{article.title}</h3>
+                            <h3 className="text-xs font-bold text-text-secondary uppercase tracking-wider mb-2">Search Results</h3>
+                            {filteredArticles && filteredArticles.length > 0 ? (
+                                filteredArticles.map((article: any) => (
+                                    <div key={article.id} className="bg-surface border border-white/5 rounded-xl p-4 animate-fadeIn">
+                                        <h3 className="font-bold text-primary mb-2 flex items-center gap-2">
+                                            <span className="w-1.5 h-1.5 rounded-full bg-primary"></span>
+                                            {article.title}
+                                        </h3>
                                         <div className="text-sm text-text-secondary leading-relaxed" dangerouslySetInnerHTML={renderMarkdown(article.content)} />
                                     </div>
                                 ))
                             ) : (
-                                <p className="text-center text-text-secondary italic mt-10">{t('modals.noResultsFound')}</p>
+                                <div className="text-center py-10">
+                                    <p className="text-text-secondary italic">{t('modals.noResultsFound')}</p>
+                                </div>
                             )}
                         </div>
                     ) : (
-                        <div className="space-y-2">
-                            {categories.map(cat => (
-                                <div key={cat.id} className="border border-white/5 rounded-lg overflow-hidden bg-surface/30">
-                                    <button 
-                                        onClick={() => setOpenCategory(openCategory === cat.id ? null : cat.id)}
-                                        className="w-full flex items-center justify-between p-3 text-left font-semibold text-text-primary hover:bg-white/5 transition-colors"
-                                    >
-                                        {cat.label}
-                                        <svg className={`w-4 h-4 transition-transform ${openCategory === cat.id ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                                        </svg>
-                                    </button>
-                                    {openCategory === cat.id && (
-                                        <div className="p-3 pt-0 space-y-3 bg-black/10 border-t border-white/5">
-                                            {(helpData as any)[cat.id].map((article: any) => (
-                                                <div key={article.id} className="p-2">
-                                                    <h4 className="text-sm font-bold text-primary mb-1">{article.title}</h4>
-                                                    <div className="text-xs text-text-secondary leading-relaxed" dangerouslySetInnerHTML={renderMarkdown(article.content)} />
+                        <div className="animate-fadeIn">
+                            {activeTab === 'guide' && (
+                                <div className="space-y-3">
+                                    {helpData.guide.categories.map(cat => (
+                                        <div key={cat.id} className="border border-white/5 rounded-xl overflow-hidden bg-surface/30">
+                                            <button 
+                                                onClick={() => setOpenCategory(openCategory === cat.id ? null : cat.id)}
+                                                className="w-full flex items-center justify-between p-3 text-left font-semibold text-text-primary hover:bg-white/5 transition-colors"
+                                            >
+                                                {cat.label}
+                                                <svg className={`w-4 h-4 transition-transform ${openCategory === cat.id ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                                </svg>
+                                            </button>
+                                            {openCategory === cat.id && (
+                                                <div className="p-3 pt-0 space-y-3 bg-black/10 border-t border-white/5">
+                                                    {(helpData.guide.articles as any)[cat.id].map((article: any) => (
+                                                        <div key={article.id} className="p-2 hover:bg-white/5 rounded-lg transition-colors">
+                                                            <h4 className="text-sm font-bold text-primary mb-1">{article.title}</h4>
+                                                            <div className="text-xs text-text-secondary leading-relaxed" dangerouslySetInnerHTML={renderMarkdown(article.content)} />
+                                                        </div>
+                                                    ))}
                                                 </div>
-                                            ))}
+                                            )}
                                         </div>
-                                    )}
+                                    ))}
                                 </div>
-                            ))}
+                            )}
+
+                            {activeTab === 'shortcuts' && (
+                                <div className="grid grid-cols-1 gap-3">
+                                    {helpData.shortcuts.map((shortcut, index) => (
+                                        <div key={index} className="flex items-center justify-between p-3 bg-surface/30 border border-white/5 rounded-xl hover:border-white/10 transition-colors">
+                                            <span className="text-sm text-text-secondary font-medium">{shortcut.label}</span>
+                                            <ShortcutKey keys={shortcut.keys} />
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+
+                            {activeTab === 'faq' && (
+                                <div className="space-y-3">
+                                    {helpData.faq.map((item, index) => (
+                                        <AccordionItem key={index} question={item.q} answer={item.a} />
+                                    ))}
+                                </div>
+                            )}
                         </div>
                     )}
                 </div>
